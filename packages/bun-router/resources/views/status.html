@@ -1,0 +1,124 @@
+<!-- Status Page -->
+<div class="status-page">
+    <div class="status-header">
+        <h2>System Status</h2>
+        <div class="status-indicator {{status}}">
+            <span class="status-text">{{status}}</span>
+        </div>
+    </div>
+
+    <div class="status-details">
+        <h3>Service Status</h3>
+        <div class="services-grid">
+            <div class="service-item">
+                <div class="service-name">API</div>
+                <div class="service-status {{services.api}}">{{services.api}}</div>
+            </div>
+            <div class="service-item">
+                <div class="service-name">Database</div>
+                <div class="service-status {{services.database}}">{{services.database}}</div>
+            </div>
+            <div class="service-item">
+                <div class="service-name">Cache</div>
+                <div class="service-status {{services.cache}}">{{services.cache}}</div>
+            </div>
+            <div class="service-item">
+                <div class="service-name">WebSockets</div>
+                <div class="service-status online">online</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-info">
+        <p>Last updated: {{#if lastUpdated}}{{lastUpdated}}{{else}}{{currentTime}}{{/if}}</p>
+        <p><small>System reports are updated every 5 minutes.</small></p>
+    </div>
+</div>
+
+<script>
+    // Add current time to the page
+    document.querySelector('.status-page').dataset.time = new Date().toISOString();
+</script>
+
+<style>
+    .status-page {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .status-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .status-header h2 {
+        margin: 0;
+    }
+    .status-indicator {
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+    }
+    .status-indicator.operational {
+        background: #d4edda;
+        color: #155724;
+    }
+    .status-indicator.degraded {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .status-indicator.down {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .service-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .service-name {
+        font-weight: 600;
+    }
+    .service-status {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .service-status.online {
+        background: #d4edda;
+        color: #155724;
+    }
+    .service-status.degraded {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .service-status.offline {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .status-info {
+        margin-top: 2rem;
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+</style>

@@ -1,0 +1,205 @@
+<div class="blog-list">
+  <h1>{{title}}</h1>
+
+  <div class="post-filters">
+    <div class="search">
+      <input type="text" placeholder="Search posts...">
+      <button>Search</button>
+    </div>
+    <div class="categories">
+      <span>Filter by: </span>
+      <a href="#" class="active">All</a>
+      <a href="#">Tutorials</a>
+      <a href="#">Updates</a>
+      <a href="#">News</a>
+    </div>
+  </div>
+
+  <div class="posts">
+    {{#each posts}}
+    <div class="post-card">
+      <div class="post-date">{{this.date}}</div>
+      <h2 class="post-title"><a href="/blog/{{this.slug}}">{{this.title}}</a></h2>
+      <div class="post-excerpt">{{this.excerpt}}</div>
+      <div class="post-meta">
+        <span class="post-author">By {{this.author}}</span>
+        <span class="post-tags">
+          {{#each this.tags}}
+          <a href="/tag/{{this}}" class="tag">{{this}}</a>
+          {{/each}}
+        </span>
+      </div>
+      <a href="/blog/{{this.slug}}" class="read-more">Read More →</a>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="pagination">
+    <a href="#" class="prev">&laquo; Previous</a>
+    <span class="page-numbers">
+      <a href="#" class="active">1</a>
+      <a href="#">2</a>
+      <a href="#">3</a>
+    </span>
+    <a href="#" class="next">Next &raquo;</a>
+  </div>
+</div>
+
+<style>
+  .blog-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .blog-list h1 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: #333;
+  }
+
+  .post-filters {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .search {
+    display: flex;
+  }
+
+  .search input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    width: 200px;
+  }
+
+  .search button {
+    background: #0070f3;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+  }
+
+  .categories {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .categories a {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .categories a.active {
+    color: #0070f3;
+    font-weight: bold;
+  }
+
+  .posts {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
+
+  .post-card {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+  }
+
+  .post-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .post-date {
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+  }
+
+  .post-title {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .post-title a {
+    color: #333;
+    text-decoration: none;
+  }
+
+  .post-title a:hover {
+    color: #0070f3;
+  }
+
+  .post-excerpt {
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+  }
+
+  .post-author {
+    color: #666;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 5px;
+  }
+
+  .tag {
+    background: #f1f1f1;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #555;
+    text-decoration: none;
+    font-size: 0.8rem;
+  }
+
+  .read-more {
+    display: inline-block;
+    color: #0070f3;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .pagination {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pagination a {
+    color: #555;
+    text-decoration: none;
+    padding: 5px 10px;
+  }
+
+  .pagination a.active {
+    background: #0070f3;
+    color: white;
+    border-radius: 4px;
+  }
+
+  .pagination .prev, .pagination .next {
+    font-weight: bold;
+  }
+</style>

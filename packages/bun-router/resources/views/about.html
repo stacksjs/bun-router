@@ -1,0 +1,96 @@
+<!-- About Page -->
+<div class="about-content">
+    <section class="about-section">
+        <h2>About Bun Router</h2>
+        <p>
+            Bun Router is a high-performance, feature-rich routing library for Bun applications.
+            It provides a robust set of tools for building web applications with Bun's native runtime.
+        </p>
+        <p>
+            Our goal is to provide the most efficient and developer-friendly routing solution
+            for the Bun ecosystem, combining the best features of modern frameworks with the performance
+            benefits of Bun.
+        </p>
+    </section>
+
+    <section class="team-section">
+        <h3>Our Team</h3>
+        <div class="team-grid">
+            {{#each team}}
+            <div class="team-member">
+                <div class="avatar">{{this.name.charAt(0)}}</div>
+                <div class="member-info">
+                    <h4>{{this.name}}</h4>
+                    <p class="role">{{this.role}}</p>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="tech-section">
+        <h3>Technology Stack</h3>
+        <ul class="tech-list">
+            <li><strong>Bun:</strong> Core runtime environment</li>
+            <li><strong>TypeScript:</strong> Type-safe development</li>
+            <li><strong>HTML Templates:</strong> View rendering</li>
+            <li><strong>WebSockets:</strong> Real-time communication</li>
+        </ul>
+    </section>
+</div>
+
+<style>
+    .about-content {
+        line-height: 1.6;
+    }
+    .about-section {
+        margin-bottom: 2rem;
+    }
+    .team-section {
+        margin-bottom: 2rem;
+    }
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .team-member {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #0066cc;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    .member-info h4 {
+        margin: 0 0 0.25rem 0;
+    }
+    .role {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    .tech-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .tech-list li {
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+</style>

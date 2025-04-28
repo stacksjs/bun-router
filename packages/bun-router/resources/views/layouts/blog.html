@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Blog</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #333;
+        }
+        header {
+            margin-bottom: 1.5rem;
+        }
+        .blog-container {
+            border-left: 4px solid #0066cc;
+            padding-left: 1.5rem;
+        }
+        .blog-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .blog-meta {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .blog-content {
+            font-size: 1.1rem;
+        }
+        nav {
+            margin-bottom: 2rem;
+        }
+        nav a {
+            display: inline-block;
+            padding: 0.5rem 0.75rem;
+            background-color: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 0.875rem;
+        }
+        nav a:hover {
+            background-color: #e0e0e0;
+        }
+        footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            font-size: 0.875rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">← Back to home</a>
+    </nav>
+
+    <div class="blog-container">
+        <h1 class="blog-title">{{title}}</h1>
+        <div class="blog-meta">
+            By {{author}} • {{date}}
+        </div>
+        <div class="blog-content">
+            {{content}}
+        </div>
+    </div>
+
+    <footer>
+        <p>Blog post #{{id}} from the bun-router example</p>
+    </footer>
+</body>
+</html>

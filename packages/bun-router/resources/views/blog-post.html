@@ -1,0 +1,133 @@
+<!-- Blog Post Template -->
+<article class="blog-post">
+    <div class="post-content">
+        <p>{{content}}</p>
+    </div>
+
+    <div class="post-meta">
+        <div class="tags">
+            <span class="tag">BunRouter</span>
+            <span class="tag">Views</span>
+            <span class="tag">Example</span>
+        </div>
+
+        <div class="share">
+            <button class="share-button">Share</button>
+        </div>
+    </div>
+
+    <div class="post-comments">
+        <h3>Comments</h3>
+        <div class="comment">
+            <div class="comment-author">John Doe</div>
+            <div class="comment-date">Today</div>
+            <div class="comment-text">This is a great example of how to use views with bun-router!</div>
+        </div>
+
+        <div class="comment">
+            <div class="comment-author">Jane Smith</div>
+            <div class="comment-date">Yesterday</div>
+            <div class="comment-text">I like how the templates can be automatically loaded from files.</div>
+        </div>
+
+        <form class="comment-form">
+            <textarea placeholder="Add your comment..."></textarea>
+            <button type="submit">Post Comment</button>
+        </form>
+    </div>
+</article>
+
+<style>
+    .blog-post {
+        font-size: 1.1rem;
+        line-height: 1.7;
+    }
+
+    .post-content {
+        margin-bottom: 2rem;
+    }
+
+    .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        margin: 2rem 0;
+    }
+
+    .tag {
+        display: inline-block;
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.25rem 0.75rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+    }
+
+    .share-button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .share-button:hover {
+        background: #0055aa;
+    }
+
+    .post-comments {
+        margin-top: 2rem;
+    }
+
+    .comment {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .comment-author {
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .comment-date {
+        color: #666;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .comment-text {
+        margin-top: 0.5rem;
+    }
+
+    .comment-form {
+        margin-top: 1.5rem;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 100px;
+        margin-bottom: 0.75rem;
+        font-family: inherit;
+    }
+
+    .comment-form button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>

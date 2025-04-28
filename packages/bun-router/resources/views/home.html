@@ -1,0 +1,74 @@
+<!-- Home Page -->
+<div class="home-content">
+    <section class="intro">
+        <h2>Welcome to Bun Router</h2>
+        <p>{{description}}</p>
+    </section>
+
+    <section class="features">
+        <h3>Key Features</h3>
+        <div class="feature-list">
+            {{#each features}}
+            <div class="feature-item">
+                <h4>{{this.name}}</h4>
+                <p>{{this.description}}</p>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="getting-started">
+        <h3>Getting Started</h3>
+        <pre><code>$ bun add bun-router</code></pre>
+
+        <p>Create your first route:</p>
+        <pre><code>import { BunRouter } from 'bun-router'
+
+const router = new BunRouter()
+
+router.get('/', () => new Response('Hello, World!'))
+
+router.serve({ port: 3000 })</code></pre>
+    </section>
+</div>
+
+<style>
+    .home-content {
+        line-height: 1.6;
+    }
+    .intro {
+        margin-bottom: 2rem;
+    }
+    .features {
+        margin-bottom: 2rem;
+    }
+    .feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    .feature-item {
+        background: #f8f9fa;
+        padding: 1.25rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .feature-item h4 {
+        margin-top: 0;
+        color: #0066cc;
+    }
+    pre {
+        background: #f1f1f1;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 0.9em;
+    }
+    .getting-started {
+        margin-top: 2rem;
+    }
+</style>

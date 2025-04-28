@@ -1,0 +1,97 @@
+<!-- STX Template Example -->
+<div class="stx-example">
+    <h2>STX Template Example</h2>
+    <p>This is an example of an STX template. It uses the same syntax as HTML templates but with the .stx extension.</p>
+
+    <div class="stx-demo">
+        <h3>Data Binding Example</h3>
+
+        <p>Current user: <strong>{{user.name}}</strong></p>
+
+        <h4>Conditional Example</h4>
+        {{#if user.admin}}
+            <div class="admin-panel">
+                <p>Welcome, administrator!</p>
+                <button class="admin-button">Admin Dashboard</button>
+            </div>
+        {{else}}
+            <p>You don't have admin access.</p>
+        {{/if}}
+
+        <h4>Loop Example</h4>
+        <ul class="permissions-list">
+            {{#each user.permissions}}
+                <li class="permission-item">
+                    <span class="permission-name">{{this.name}}</span>:
+                    <span class="permission-status {{#if this.enabled}}enabled{{else}}disabled{{/if}}">
+                        {{#if this.enabled}}Enabled{{else}}Disabled{{/if}}
+                    </span>
+                </li>
+            {{/each}}
+        </ul>
+    </div>
+</div>
+
+<style>
+    .stx-example {
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .stx-demo {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-top: 1.5rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .admin-panel {
+        background: #e6f7ff;
+        border: 1px solid #91d5ff;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+    }
+
+    .admin-button {
+        background: #1890ff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .permissions-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .permission-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .permission-name {
+        font-weight: bold;
+    }
+
+    .permission-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .permission-status.enabled {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .permission-status.disabled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
