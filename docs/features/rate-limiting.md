@@ -13,7 +13,25 @@ import { rateLimit } from 'bun-router/middleware'
 const router = new Router()
 
 // Apply rate limiting to all routes (100 requests per minute by default)
-router.use(rateLimit().handle.bind(rateLimit()))
+router.use(rateLimit())
+
+// Start the server
+router.serve({ port: 3000 })
+```
+
+You can also directly use the RateLimit class:
+
+```ts
+import { Router } from 'bun-router'
+import { RateLimit } from 'bun-router/middleware'
+
+const router = new Router()
+
+// Apply rate limiting with custom options
+router.use(new RateLimit({
+  maxRequests: 50,
+  windowMs: 30 * 1000 // 30 seconds
+}))
 
 // Start the server
 router.serve({ port: 3000 })
@@ -149,18 +167,18 @@ const authLimiter = rateLimit({
 })
 
 // Apply global limiter to all routes
-router.use(globalLimiter.handle.bind(globalLimiter))
+router.use(globalLimiter)
 
 // Apply API limiter to API routes
 router.group({ prefix: '/api' }, () => {
-  router.use(apiLimiter.handle.bind(apiLimiter))
+  router.use(apiLimiter)
 
   // API routes here...
 })
 
 // Apply auth limiter to auth routes
 router.group({ prefix: '/auth' }, () => {
-  router.use(authLimiter.handle.bind(authLimiter))
+  router.use(authLimiter)
 
   // Auth routes here...
 })
@@ -275,4 +293,48 @@ export default {
     }
   }
 }
+```
+
+## More Examples
+
+### Class-based Usage
+
+You can also use the `RateLimit` class directly:
+
+```ts
+import { Router } from 'bun-router'
+import { RateLimit } from 'bun-router/middleware'
+
+const router = new Router()
+
+// Apply rate limiting with specific options
+// Note: This works but doesn't use the factory function
+router.use(new RateLimit({
+  maxRequests: 200,
+  windowMs: 60 * 1000,
+}))
+```
+
+### Multiple Rate Limiters with Custom Options
+
+```ts
+import { Router, RateLimit } from 'bun-router'
+
+const router = new Router()
+
+// API routes with one rate limit
+router.group({ prefix: '/api' }, () => {
+  router.use(new RateLimit({
+    maxRequests: 100,
+    windowMs: 60 * 1000,
+  }))
+})
+
+// Auth routes with stricter limits
+router.group({ prefix: '/auth' }, () => {
+  router.use(new RateLimit({
+    maxRequests: 5,
+    windowMs: 60 * 60 * 1000, // 1 hour
+  }))
+})
 ```

@@ -11,7 +11,7 @@ import Auth, {
 import Cors from './cors'
 import Csrf from './csrf'
 import JsonBody from './json_body'
-import RateLimit from './rate_limit'
+import RateLimit, { rateLimit as createRateLimit } from './rate_limit'
 import RequestId from './request_id'
 import Session from './session'
 
@@ -47,7 +47,7 @@ export function auth(): Auth {
     validator: () => true, // Default just passes through - must be configured correctly
   })
 }
-export const rateLimit = (options = {}): RateLimit => new RateLimit(options)
+export const rateLimit: typeof createRateLimit = createRateLimit
 
 // Named middleware mapping for string-based middleware references
 export const middleware: Record<string, any> = {
@@ -60,7 +60,7 @@ export const middleware: Record<string, any> = {
     type: 'bearer',
     validator: () => true, // Default just passes through - must be configured correctly
   }),
-  'Middleware/RateLimit': new RateLimit(),
+  'Middleware/RateLimit': createRateLimit(),
 }
 
 export default middleware

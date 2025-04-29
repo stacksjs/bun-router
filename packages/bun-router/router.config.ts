@@ -353,6 +353,8 @@ const config: RouterOptions = {
         advanced: {
           skipFailedRequests: false, // Count failed auth attempts
           algorithm: 'fixed-window',
+          tokensPerInterval: 50, // Match max value for token bucket algorithm
+          interval: 300000, // Match timeWindow
         },
       },
       cors: {

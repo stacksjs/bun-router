@@ -54,7 +54,7 @@ const strictRateLimiter = rateLimit({
 })
 
 // Apply global rate limiter to all routes
-router.use(globalRateLimiter.handle.bind(globalRateLimiter))
+router.use(globalRateLimiter)
 
 // Public routes - using global rate limit
 router.get('/', async (_req: EnhancedRequest) => {
@@ -68,7 +68,7 @@ router.get('/about', async (_req: EnhancedRequest) => {
 // API routes - using API-specific rate limiter
 router.group({ prefix: '/api' }, () => {
   // Apply API rate limiter to all routes in this group
-  router.use(apiRateLimiter.handle.bind(apiRateLimiter))
+  router.use(apiRateLimiter)
 
   router.get('/users', async (_req: EnhancedRequest) => {
     return new Response(JSON.stringify({ users: [{ id: 1, name: 'User 1' }] }), {
@@ -86,7 +86,7 @@ router.group({ prefix: '/api' }, () => {
 // Auth routes - using security-specific rate limiter
 router.group({ prefix: '/auth' }, () => {
   // Apply auth rate limiter to auth routes
-  router.use(authRateLimiter.handle.bind(authRateLimiter))
+  router.use(authRateLimiter)
 
   router.post('/login', async (_req: EnhancedRequest) => {
     return new Response(JSON.stringify({ success: true, token: 'dummy-token' }), {
@@ -104,7 +104,7 @@ router.group({ prefix: '/auth' }, () => {
 // Admin routes - using custom strict rate limiter
 router.group({ prefix: '/admin' }, () => {
   // Apply strict rate limiter to admin routes
-  router.use(strictRateLimiter.handle.bind(strictRateLimiter))
+  router.use(strictRateLimiter)
 
   router.get('/dashboard', async (_req: EnhancedRequest) => {
     return new Response('Admin Dashboard')

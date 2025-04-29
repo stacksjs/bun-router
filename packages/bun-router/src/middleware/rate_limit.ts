@@ -1,5 +1,5 @@
 import type { RateLimiterOptions } from 'ts-rate-limiter'
-import type { EnhancedRequest, NextFunction } from '../types'
+import type { EnhancedRequest, Middleware, MiddlewareHandler, NextFunction } from '../types'
 import { createRateLimiter } from 'ts-rate-limiter'
 import { config } from '../config'
 
@@ -26,7 +26,16 @@ export interface RateLimitOptions {
   }
 }
 
-export default class RateLimit {
+// Factory function to create a callable middleware instance
+function createRateLimitMiddleware(options: RateLimitOptions = {}): MiddlewareHandler {
+  const instance = new RateLimit(options)
+  const middlewareHandler = async (req: EnhancedRequest, next: NextFunction): Promise<Response> => {
+    return instance.handle(req, next)
+  }
+  return middlewareHandler
+}
+
+export default class RateLimit implements Middleware {
   private limiter: any // Will be initialized in constructor
   private options: RateLimitOptions
 
@@ -152,6 +161,7 @@ export default class RateLimit {
     })
   }
 
+  // The middleware interface implementation
   async handle(req: EnhancedRequest, next: NextFunction): Promise<Response> {
     // If rate limiting is disabled in config, skip it
     if (config.server?.rateLimit?.enabled === false) {
@@ -211,4 +221,9 @@ export default class RateLimit {
       return next()
     }
   }
+}
+
+// Export a factory function to create middleware handlers
+export function rateLimit(options: RateLimitOptions = {}): MiddlewareHandler {
+  return createRateLimitMiddleware(options)
 }
