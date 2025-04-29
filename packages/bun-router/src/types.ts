@@ -45,11 +45,14 @@ export interface RateLimitConfig {
   max?: number
   timeWindow?: number
   message?: string
+  draftMode?: boolean
   advanced?: {
     tokensPerInterval?: number
     interval?: number
     burst?: number
     skipFailedRequests?: boolean
+    keyGenerator?: (req: Request) => string
+    algorithm?: 'fixed-window' | 'sliding-window' | 'token-bucket'
   }
   stores?: {
     type: 'memory' | 'redis'

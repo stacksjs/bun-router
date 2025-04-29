@@ -50,7 +50,6 @@ const config: RouterOptions = {
     web: [
       'Middleware/Session',
       'Middleware/Csrf',
-      'Middleware/Flash',
     ],
   },
 
@@ -109,20 +108,39 @@ const config: RouterOptions = {
       privateNetworkAccess: true,
     },
 
-    // Rate limiting
+    // Rate limiting configuration
     rateLimit: {
+      // Enable/disable rate limiting globally
       enabled: true,
-      max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-      timeWindow: 60000,
+
+      // Basic settings
+      max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Max requests per timeWindow
+      timeWindow: 60000, // Time window in milliseconds (1 minute)
+
+      // Custom message for rate limit exceeded response
       message: 'Rate limit exceeded. Please try again later.',
+
+      // Advanced rate limiting options
       advanced: {
+        // Token bucket algorithm settings (alternative to fixed window)
         tokensPerInterval: 100,
         interval: 60000,
         burst: 50,
+
+        // Skip rate limiting for failed requests (status >= 400)
         skipFailedRequests: true,
+
+        // Rate limiting algorithm
+        // Supported values: 'fixed-window' (default), 'sliding-window', 'token-bucket'
+        algorithm: 'sliding-window',
       },
+
+      // Storage options for rate limiting data
       stores: {
-        type: 'redis',
+        // Storage type: 'memory' (default) or 'redis'
+        type: process.env.NODE_ENV === 'production' ? 'redis' : 'memory',
+
+        // Redis configuration (when type is 'redis')
         redis: {
           url: process.env.REDIS_URL || 'redis://localhost:6379',
           prefix: 'ratelimit:',
@@ -326,11 +344,16 @@ const config: RouterOptions = {
           bearerFormat: 'JWT',
         },
       },
+      // Security-specific rate limit configuration (for auth routes, etc.)
       rateLimit: {
         enabled: true,
-        max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-        timeWindow: 60000,
-        message: 'Rate limit exceeded. Please try again later.',
+        max: process.env.NODE_ENV === 'production' ? 50 : 200, // Stricter limits for sensitive routes
+        timeWindow: 300000, // 5 minutes
+        message: 'Too many authentication attempts. Please try again later.',
+        advanced: {
+          skipFailedRequests: false, // Count failed auth attempts
+          algorithm: 'fixed-window',
+        },
       },
       cors: {
         enabled: true,
