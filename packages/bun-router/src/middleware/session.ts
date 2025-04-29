@@ -11,13 +11,8 @@ export default class Session {
     // Initialize an empty session object
     req.session = {}
 
-    // Skip if sessions are disabled
-    if (!sessionConfig || !sessionConfig.enabled) {
-      return next()
-    }
-
     // Get session ID from cookie if it exists
-    let sessionId = req.cookies?.get?.(sessionConfig.name || 'session')
+    let sessionId = req.cookies?.get?.(sessionConfig?.name || 'session')
 
     // If there's a session ID, retrieve the session data
     if (sessionId && Session.sessions.has(sessionId)) {

@@ -1,5 +1,6 @@
 import type { ActionHandler, RouteGroup } from '../types'
 import type { Router } from './core'
+import { joinPaths } from '../utils'
 
 /**
  * Route grouping and organization extension for Router class
@@ -14,8 +15,27 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
         // Save the current group if there is one
         const previousGroup = this.currentGroup
 
+        // Create a new group by merging with previous group
+        const newGroup: RouteGroup = { ...previousGroup }
+
+        // Handle prefix nesting
+        if (options.prefix && previousGroup?.prefix) {
+          newGroup.prefix = joinPaths(previousGroup.prefix, options.prefix)
+        }
+        else if (options.prefix) {
+          newGroup.prefix = options.prefix
+        }
+
+        // Merge middleware
+        if (options.middleware) {
+          newGroup.middleware = [
+            ...(previousGroup?.middleware || []),
+            ...options.middleware,
+          ]
+        }
+
         // Set the new group
-        this.currentGroup = options
+        this.currentGroup = newGroup
 
         // Execute the callback to register routes in this group
         callback()

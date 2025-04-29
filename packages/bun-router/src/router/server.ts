@@ -121,19 +121,24 @@ export function registerServerHandling(RouterClass: typeof Router): void {
               middlewareStack.push(...match.route.middleware)
             }
 
-            // Run middleware stack
-            const middlewareResponse = await this.runMiddleware(enhancedReq, middlewareStack)
-
-            // If middleware produced a response, return it
-            if (middlewareResponse) {
-              return this.applyModifiedCookies(middlewareResponse, enhancedReq)
+            // Create a final middleware that executes the route handler
+            const routeHandlerMiddleware = async (req: EnhancedRequest, _next: any) => {
+              return await this.resolveHandler(match.route.handler, req)
             }
 
-            // If no middleware response, execute the route handler
-            const response = await this.resolveHandler(match.route.handler, enhancedReq)
+            // Add the route handler as the final middleware
+            middlewareStack.push(routeHandlerMiddleware)
 
-            // Apply any modified cookies to the response
-            return this.applyModifiedCookies(response, enhancedReq)
+            // Run middleware stack with the route handler at the end
+            const response = await this.runMiddleware(enhancedReq, middlewareStack)
+
+            // Apply modified cookies to the response
+            if (response) {
+              return this.applyModifiedCookies(response, enhancedReq)
+            }
+
+            // This should not happen since we're always returning a response now
+            return new Response('No response from middleware chain', { status: 500 })
           }
 
           // No route found, try the fallback handler
@@ -258,7 +263,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
       value(name: string, value: string, options: any = {}): string {
         let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`
 
-        if (options.maxAge) {
+        if (options.maxAge !== undefined) {
           cookie += `; Max-Age=${options.maxAge}`
         }
 

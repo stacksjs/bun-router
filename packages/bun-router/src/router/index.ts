@@ -8,7 +8,7 @@ import { registerRouteMatching } from './route-matching'
 import { registerServerHandling } from './server'
 import { registerViewRendering } from './view-rendering'
 import { registerWebSocketHandling } from './websocket'
-import './types' // Import types for type augmentation
+import '../types' // Import types for type augmentation
 
 // Register all the extensions to the Router class
 registerHttpMethods(Router)

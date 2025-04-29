@@ -68,8 +68,6 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
           return null // No middleware to run
         }
 
-        const index = 0
-
         const executeMiddleware = async (i: number): Promise<Response | null> => {
           // If we've gone through all middleware without a response, return null
           if (i >= middlewareStack.length) {
@@ -79,29 +77,30 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
           const currentMiddleware = middlewareStack[i]
 
           // Create the next function for this middleware
-          const next = (): Promise<Response> | Response => {
+          const next = async (): Promise<Response> => {
             // Run the next middleware in the stack
-            const nextResult = executeMiddleware(i + 1)
+            const result = await executeMiddleware(i + 1)
 
-            // If no middleware further down the stack returned a response,
-            // and we're at the end, throw an error
-            return nextResult.then((result) => {
-              if (!result && i === middlewareStack.length - 1) {
-                throw new Error('Middleware chain reached end without producing a response')
-              }
+            // If there's no result, create a default response for middleware to modify
+            if (!result) {
+              return new Response(null, {
+                status: 200,
+                statusText: 'OK',
+                headers: new Headers(),
+              })
+            }
 
-              return result as Response
-            })
+            return result
           }
 
           // Run the current middleware with the next function
           const result = await currentMiddleware(req, next)
-          return result || null
+          return result
         }
 
         try {
           // Start executing the middleware chain
-          return await executeMiddleware(index)
+          return await executeMiddleware(0)
         }
         catch (error) {
           if (this.errorHandler) {

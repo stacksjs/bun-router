@@ -623,8 +623,8 @@ export interface ActionHandlerClass {
 
 export type ActionHandler = string | RouteHandler | (new () => ActionHandlerClass)
 
-export type NextFunction = () => Promise<Response> | Response
-export type MiddlewareHandler = (req: EnhancedRequest, next: NextFunction) => Promise<Response> | Response
+export type NextFunction = () => Promise<Response | null> | Response | null
+export type MiddlewareHandler = (req: EnhancedRequest, next: NextFunction) => Promise<Response | null> | Response | null
 
 export interface Middleware {
   handle: MiddlewareHandler

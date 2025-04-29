@@ -90,10 +90,13 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
      */
     health: {
       async value(): Promise<Router> {
-        await this.get('/health', () => {
-          return new Response(JSON.stringify({ status: 'ok' }), {
+        const path = '/health'
+        const fullPath = this.config.apiPrefix ? `${this.config.apiPrefix}${path}` : path
+
+        await this.get(fullPath, () => {
+          return new Response('OK', {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'text/plain',
             },
           })
         })
