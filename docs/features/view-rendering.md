@@ -120,26 +120,26 @@ router.view('/api/docs', 'api-docs', docsData, {}, 'api')
 
 By default, bun-router uses a simple template engine that supports:
 
-- Variable substitution: `{{ variable }}`
-- Conditionals: `{{#if condition}} content {{else}} alternative {{/if}}`
-- Loops: `{{#each items}} content with {{ this.property }} {{/each}}`
+- Variable substitution: `&#123;&#123; variable &#125;&#125;`
+- Conditionals: `&#123;&#123;#if condition&#125;&#125; content &#123;&#123;else&#125;&#125; alternative &#123;&#123;/if&#125;&#125;`
+- Loops: `&#123;&#123;#each items&#125;&#125; content with &#123;&#123; this.property &#125;&#125; &#123;&#123;/each&#125;&#125;`
 
 Example template:
 
 ```html
-<h1>{{ title }}</h1>
+<h1>&#123;&#123; title &#125;&#125;</h1>
 
-{{#if user}}
-  <p>Welcome back, {{ user.name }}!</p>
-{{else}}
+&#123;&#123;#if user&#125;&#125;
+  <p>Welcome back, &#123;&#123; user.name &#125;&#125;!</p>
+&#123;&#123;else&#125;&#125;
   <p>Please log in</p>
-{{/if}}
+&#123;&#123;/if&#125;&#125;
 
 <h2>Products:</h2>
 <ul>
-  {{#each products}}
-    <li>{{ this.name }} - ${{ this.price }}</li>
-  {{/each}}
+  &#123;&#123;#each products&#125;&#125;
+    <li>&#123;&#123; this.name &#125;&#125; - $&#123;&#123; this.price &#125;&#125;</li>
+  &#123;&#123;/each&#125;&#125;
 </ul>
 ```
 
@@ -222,6 +222,5 @@ router.serve({ port: 3000 })
 
 Check out these related topics:
 
-- [Layouts and Partials](/features/layouts-and-partials) - More advanced view structuring
 - [Route Parameters](/features/route-parameters) - Handling dynamic parameters in routes
 - [Named Routes](/features/named-routes) - More on naming routes for URL generation
