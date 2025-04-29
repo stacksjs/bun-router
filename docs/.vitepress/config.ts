@@ -75,6 +75,8 @@ const sidebar = [
       { text: 'File Streaming', link: '/features/file-streaming' },
       { text: 'CSRF Protection', link: '/features/csrf-protection' },
       { text: 'Domain Routing', link: '/features/domain-routing' },
+      { text: 'Authentication', link: '/features/authentication' },
+      { text: 'Session Management', link: '/features/session-management' },
     ],
   },
   {

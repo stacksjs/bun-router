@@ -477,6 +477,103 @@ router.get('/logout', (req) => {
 })
 ```
 
+### Authentication Helper
+
+Built-in methods for handling various authentication strategies:
+
+```typescript
+// Basic Authentication
+router.get('/api/protected', (req) => {
+  const auth = req.auth.basic()
+
+  if (!auth.isValid()) {
+    return auth.unauthorized('Protected area')
+  }
+
+  const { username, password } = auth.credentials()
+  // Verify against your user database
+
+  return Response.json({ message: 'Authenticated' })
+})
+
+// Bearer Token Authentication
+router.get('/api/user-profile', (req) => {
+  const auth = req.auth.bearer()
+
+  if (!auth.isValid()) {
+    return auth.unauthorized('Invalid token')
+  }
+
+  const token = auth.token()
+  // Verify token validity
+
+  return Response.json({ message: 'Valid token' })
+})
+
+// JWT Authentication
+router.post('/api/login', async (req) => {
+  const { username, password } = await req.json()
+  // Verify credentials
+
+  const auth = req.auth.jwt()
+  const token = auth.sign({ userId: 123, role: 'admin' }, {
+    expiresIn: '1h',
+    secret: 'your-secret-key'
+  })
+
+  return Response.json({ token })
+})
+
+router.get('/api/dashboard', (req) => {
+  const auth = req.auth.jwt()
+
+  if (!auth.verify({ secret: 'your-secret-key' })) {
+    return auth.unauthorized('Invalid JWT')
+  }
+
+  const payload = auth.payload()
+  return Response.json({ user: payload })
+})
+
+// API Key Authentication
+router.get('/api/data', (req) => {
+  const auth = req.auth.apiKey('x-api-key')
+
+  if (!auth.isValid()) {
+    return auth.unauthorized('Invalid API key')
+  }
+
+  const apiKey = auth.key()
+  // Verify API key against database and check scopes
+
+  return Response.json({ data: 'Secure data' })
+})
+
+// OAuth2 Authentication
+router.get('/auth/github', (req) => {
+  const auth = req.auth.oauth2({
+    provider: 'github',
+    clientId: 'your-client-id',
+    redirectUri: 'http://localhost:3000/auth/callback'
+  })
+
+  return auth.redirect()
+})
+
+router.get('/auth/callback', async (req) => {
+  const auth = req.auth.oauth2({
+    provider: 'github',
+    clientId: 'your-client-id',
+    clientSecret: 'your-client-secret',
+    redirectUri: 'http://localhost:3000/auth/callback'
+  })
+
+  const { accessToken, profile } = await auth.handleCallback(req)
+  // Create or update user record
+
+  return Response.redirect('/dashboard')
+})
+
 ### File Streaming
 
 Easily stream files with range support:

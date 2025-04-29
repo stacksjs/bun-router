@@ -68,6 +68,306 @@ router.post('/logout', (req) => {
 })
 ```
 
+## Authentication Helper
+
+bun-router provides a comprehensive authentication helper that makes it easy to implement various authentication methods in your application. The authentication helper supports:
+
+- Basic Authentication
+- Bearer Token Authentication
+- JWT Authentication
+- API Key Authentication
+- OAuth2 Authentication
+
+Here's how to use each method:
+
+### Basic Authentication
+
+```typescript
+import { Router, basicAuth } from 'bun-router'
+
+const router = new Router()
+
+// Basic auth middleware
+const auth = basicAuth(async (credentials, req) => {
+  // Verify credentials against your user database
+  if (credentials.username === 'admin' && credentials.password === 'secret') {
+    return true
+  }
+  return false
+}, { realm: 'Protected Area' })
+
+// Apply to a route
+router.get('/admin', auth, (req) => {
+  return new Response('Welcome to the admin area!')
+})
+
+// Apply to a group of routes
+router.group({
+  middleware: [auth]
+}, () => {
+  router.get('/dashboard', (req) => {
+    return new Response('Dashboard')
+  })
+
+  router.get('/settings', (req) => {
+    return new Response('Settings')
+  })
+})
+```
+
+### Bearer Token Authentication
+
+```typescript
+import { Router, bearerAuth } from 'bun-router'
+
+const router = new Router()
+
+// Bearer auth middleware
+const auth = bearerAuth(async (token, req) => {
+  // Verify the token against your token storage
+  const validTokens = ['valid-token-123', 'another-valid-token']
+  return validTokens.includes(token)
+})
+
+router.get('/api/protected', auth, (req) => {
+  return Response.json({ message: 'Protected data' })
+})
+```
+
+### JWT Authentication
+
+```typescript
+import { Router, jwtAuth, Auth } from 'bun-router'
+
+const router = new Router()
+const JWT_SECRET = 'your-jwt-secret'
+
+// Create a JWT instance for signing tokens
+const jwt = new Auth.JWT(JWT_SECRET)
+
+// JWT auth middleware
+const auth = jwtAuth(async (token, req) => {
+  try {
+    // Verify the token
+    const payload = jwt.verify(token, {
+      issuer: 'your-app',
+      audience: 'your-api'
+    })
+
+    if (payload) {
+      // Attach the payload to the request
+      (req as any).user = payload
+      return true
+    }
+
+    return false
+  } catch (error) {
+    return false
+  }
+})
+
+// Login and token generation
+router.post('/api/login', async (req) => {
+  const { username, password } = await req.json()
+
+  // Authenticate user (example)
+  const user = await authenticateUser(username, password)
+
+  if (!user) {
+    return Response.json({ error: 'Invalid credentials' }, { status: 401 })
+  }
+
+  // Generate JWT
+  const token = jwt.sign(
+    {
+      sub: user.id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles
+    },
+    {
+      expiresIn: '1h',
+      issuer: 'your-app',
+      audience: 'your-api'
+    }
+  )
+
+  return Response.json({ token })
+})
+
+// Protected route
+router.get('/api/user', auth, (req) => {
+  // User payload is attached to req.user by the middleware
+  return Response.json({ user: (req as any).user })
+})
+```
+
+### API Key Authentication
+
+```typescript
+import { Router, apiKeyAuth, Auth } from 'bun-router'
+
+const router = new Router()
+
+// Create an API key manager
+const apiKeyManager = new Auth.ApiKeyManager({
+  source: 'header', // Can be 'header', 'query', or 'cookie'
+  keyName: 'X-API-Key'
+})
+
+// Generate some API keys
+const userKey = apiKeyManager.generateKey('user1', ['read'])
+const adminKey = apiKeyManager.generateKey('admin', ['read', 'write', 'admin'])
+
+console.log('User API Key:', userKey)
+console.log('Admin API Key:', adminKey)
+
+// API key middleware
+const auth = apiKeyAuth(async (key, req) => {
+  return apiKeyManager.validateKey(key)
+}, { source: 'header', key: 'X-API-Key' })
+
+// Middleware for checking specific scopes
+const requireScope = (scope: string) => {
+  return async (req: any, next: Function) => {
+    const apiKey = apiKeyManager.extractFromRequest(req)
+
+    if (!apiKey) {
+      return new Response('Unauthorized', { status: 401 })
+    }
+
+    const keyInfo = apiKeyManager.getKeyInfo(apiKey)
+
+    if (!keyInfo || !keyInfo.scopes.includes(scope)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+
+    return next()
+  }
+}
+
+// Public endpoint that requires authentication
+router.get('/api/data', auth, (req) => {
+  return Response.json({ message: 'Data accessed successfully' })
+})
+
+// Admin endpoint that requires specific permission
+router.group({
+  middleware: [auth, requireScope('admin')]
+}, () => {
+  router.get('/api/admin', (req) => {
+    return Response.json({ message: 'Admin access granted' })
+  })
+})
+```
+
+### OAuth2 Authentication
+
+```typescript
+import { Router, oauth2Auth, Auth } from 'bun-router'
+
+const router = new Router()
+
+// Create OAuth2 helper
+const oauth = new Auth.OAuth2Helper({
+  clientId: 'your-client-id',
+  clientSecret: 'your-client-secret',
+  authorizeUrl: 'https://provider.com/oauth/authorize',
+  tokenUrl: 'https://provider.com/oauth/token',
+  redirectUri: 'http://localhost:3000/auth/callback',
+  scope: 'email profile'
+})
+
+// Start OAuth flow
+router.get('/auth/login', (req) => {
+  // Generate state for CSRF protection
+  const state = crypto.randomUUID()
+
+  // Store state in session or other storage
+  // req.session.oauthState = state
+
+  // Get authorization URL
+  const authUrl = oauth.getAuthorizationUrl({
+    state,
+    prompt: 'consent'
+  })
+
+  // Redirect user to authorization page
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: authUrl
+    }
+  })
+})
+
+// Handle OAuth callback
+router.get('/auth/callback', async (req) => {
+  const url = new URL(req.url)
+  const code = url.searchParams.get('code')
+  const state = url.searchParams.get('state')
+
+  // Verify state parameter
+  // const sessionState = req.session.oauthState
+  // if (!state || state !== sessionState) {
+  //   return new Response('Invalid state', { status: 400 })
+  // }
+
+  if (!code) {
+    return new Response('Missing authorization code', { status: 400 })
+  }
+
+  try {
+    // Exchange code for token
+    const tokenResponse = await oauth.exchangeCodeForToken(code)
+
+    // Extract tokens
+    const accessToken = tokenResponse.access_token
+    const refreshToken = tokenResponse.refresh_token
+
+    // TODO: Store tokens and authenticate user
+
+    return Response.json({
+      message: 'Authentication successful',
+      tokenInfo: tokenResponse
+    })
+  } catch (error) {
+    return Response.json({
+      error: 'Failed to exchange code for token',
+      details: error.message
+    }, { status: 400 })
+  }
+})
+
+// OAuth token verification middleware
+const auth = oauth2Auth(async (token, req) => {
+  // Verify token with provider
+  try {
+    const response = await fetch('https://provider.com/api/tokeninfo', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    if (response.ok) {
+      // Attach user info to request
+      const userData = await response.json()
+      (req as any).user = userData
+      return true
+    }
+
+    return false
+  } catch (error) {
+    return false
+  }
+})
+
+// Protected route
+router.get('/api/profile', auth, (req) => {
+  return Response.json({ user: (req as any).user })
+})
+```
+
 ## User Registration
 
 When registering new users, you'll need to hash passwords before storing them:
