@@ -26,6 +26,11 @@ const router = createRouter({
       component: RequestComparisonView
     },
     {
+      path: '/collections',
+      name: 'collections',
+      component: () => import('../views/CollectionsView.vue'),
+    },
+    {
       path: '/capture',
       name: 'capture',
       component: () => import('../views/LiveCaptureView.vue'),
