@@ -60,6 +60,36 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
     },
 
     /**
+     * Build an optimized middleware chain
+     */
+    buildMiddlewareChain: {
+      value(middlewares: MiddlewareHandler[]): (req: EnhancedRequest) => Promise<Response | null> {
+        if (middlewares.length === 0) {
+          return async (_req: EnhancedRequest) => null
+        }
+
+        // Build the chain from the end to start for better performance
+        let chain = async (_req: EnhancedRequest): Promise<Response | null> => null
+
+        for (let i = middlewares.length - 1; i >= 0; i--) {
+          const middleware = middlewares[i]
+          const nextChain = chain
+          chain = async (req: EnhancedRequest): Promise<Response | null> => {
+            const next = async (): Promise<Response> => {
+              const result = await nextChain(req)
+              return result || new Response(null, { status: 200 })
+            }
+            return middleware(req, next)
+          }
+        }
+
+        return chain
+      },
+      writable: true,
+      configurable: true,
+    },
+
+    /**
      * Run middleware stack for a request
      */
     runMiddleware: {
@@ -68,39 +98,10 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
           return null // No middleware to run
         }
 
-        const executeMiddleware = async (i: number): Promise<Response | null> => {
-          // If we've gone through all middleware without a response, return null
-          if (i >= middlewareStack.length) {
-            return null
-          }
-
-          const currentMiddleware = middlewareStack[i]
-
-          // Create the next function for this middleware
-          const next = async (): Promise<Response> => {
-            // Run the next middleware in the stack
-            const result = await executeMiddleware(i + 1)
-
-            // If there's no result, create a default response for middleware to modify
-            if (!result) {
-              return new Response(null, {
-                status: 200,
-                statusText: 'OK',
-                headers: new Headers(),
-              })
-            }
-
-            return result
-          }
-
-          // Run the current middleware with the next function
-          const result = await currentMiddleware(req, next)
-          return result
-        }
-
         try {
-          // Start executing the middleware chain
-          return await executeMiddleware(0)
+          // Build and execute optimized middleware chain
+          const chain = this.buildMiddlewareChain(middlewareStack)
+          return await chain(req)
         }
         catch (error) {
           if (this.errorHandler) {

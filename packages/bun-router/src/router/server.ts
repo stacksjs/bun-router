@@ -13,6 +13,9 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     serve: {
       async value(options: ServerOptions = {}): Promise<Server> {
+        // Invalidate route cache before starting server
+        this.invalidateCache()
+
         // Create server options
         const serverOptions: any = {
           ...options,
@@ -67,6 +70,9 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         if (!this.serverInstance) {
           throw new Error('Server not started, cannot reload')
         }
+
+        // Invalidate route cache before reloading
+        this.invalidateCache()
 
         // Save the current server port and hostname
         const port = this.serverInstance.port
@@ -171,23 +177,29 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     enhanceRequest: {
       value(req: Request, params: Record<string, string> = {}): EnhancedRequest {
-        // Parse cookies from the request
-        const cookieHeader = req.headers.get('cookie') || ''
-        const cookieMap: Record<string, string> = {}
+        // Lazy cookie parsing
+        let parsedCookies: Record<string, string> | null = null
 
-        // Parse cookie string
-        cookieHeader.split(';').forEach((cookie) => {
-          const parts = cookie.trim().split('=')
-          if (parts.length >= 2) {
-            const name = parts[0].trim()
-            const value = parts.slice(1).join('=').trim()
-            cookieMap[name] = decodeURIComponent(value)
+        const getCookies = () => {
+          if (parsedCookies === null) {
+            parsedCookies = {}
+            const cookieHeader = req.headers.get('cookie') || ''
+
+            cookieHeader.split(';').forEach((cookie) => {
+              const parts = cookie.trim().split('=')
+              if (parts.length >= 2) {
+                const name = parts[0].trim()
+                const value = parts.slice(1).join('=').trim()
+                parsedCookies![name] = decodeURIComponent(value)
+              }
+            })
           }
-        })
+          return parsedCookies
+        }
 
-        // Create cookie utilities
+        // Create cookie utilities with lazy parsing
         const cookies = {
-          get: (name: string) => cookieMap[name],
+          get: (name: string) => getCookies()[name],
           set: (name: string, value: string, options: any = {}) => {
             const enhancedRequest = req as EnhancedRequest
             if (!enhancedRequest._cookiesToSet) {
@@ -202,7 +214,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             }
             enhancedRequest._cookiesToDelete.push({ name, options })
           },
-          getAll: () => ({ ...cookieMap }),
+          getAll: () => ({ ...getCookies() }),
         }
 
         // Create enhanced request

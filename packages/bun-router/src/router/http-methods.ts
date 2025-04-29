@@ -104,7 +104,17 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
                   continue
 
                 // If the param doesn't match the pattern, return null (no match)
-                const regex = new RegExp(`^${pattern}$`)
+                const patternKey = `param:${param}:${pattern}`
+                let regex: RegExp
+
+                if (!this.precompiledPatterns.has(patternKey)) {
+                  regex = new RegExp(`^${pattern}$`)
+                  this.precompiledPatterns.set(patternKey, regex)
+                }
+                else {
+                  regex = this.precompiledPatterns.get(patternKey)!
+                }
+
                 if (!regex.test(params[param])) {
                   return null
                 }
@@ -122,6 +132,15 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         // Add to the main routes array
         this.routes.push(route)
 
+        // Register static routes for fast lookup
+        if (!routePath.includes('{') && !routePath.includes('*')) {
+          // Static route
+          if (!this.staticRoutes.has(route.method)) {
+            this.staticRoutes.set(route.method, new Map())
+          }
+          this.staticRoutes.get(route.method)!.set(routePath, route)
+        }
+
         // Add to domain-specific routes if applicable
         if (domain) {
           if (!this.domains[domain]) {
@@ -134,6 +153,9 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         if (name) {
           this.namedRoutes.set(name, route)
         }
+
+        // Invalidate route cache when a new route is added
+        this.routeCache.clear()
 
         return this
       },

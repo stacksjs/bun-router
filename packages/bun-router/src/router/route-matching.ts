@@ -13,6 +13,27 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
       value(path: string, method: HTTPMethod, domain?: string): MatchResult | undefined {
         const url = new URL(path, 'http://localhost')
 
+        // Generate cache key
+        const cacheKey = `${domain || ''}:${method}:${url.pathname}`
+
+        // Check cache first
+        if (this.routeCache.has(cacheKey)) {
+          return this.routeCache.get(cacheKey)
+        }
+
+        // Fast path for static routes
+        if (this.staticRoutes.has(method)) {
+          const staticRoute = this.staticRoutes.get(method)!.get(url.pathname)
+          if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
+            const result = {
+              route: staticRoute,
+              params: {},
+            }
+            this.routeCache.set(cacheKey, result)
+            return result
+          }
+        }
+
         // Get potential routes - either all routes or domain-specific routes
         const potentialRoutes: Route[] = domain && this.domains[domain]
           ? this.domains[domain]
@@ -24,10 +45,12 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
         // First, try to find an exact match
         for (const route of methodRoutes) {
           if (route.path === url.pathname) {
-            return {
+            const result = {
               route,
               params: {},
             }
+            this.routeCache.set(cacheKey, result)
+            return result
           }
         }
 
@@ -36,10 +59,12 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
           if (route.pattern) {
             const match = route.pattern.exec(url)
             if (match) {
-              return {
+              const result = {
                 route,
                 params: match.pathname.groups,
               }
+              this.routeCache.set(cacheKey, result)
+              return result
             }
           }
         }
@@ -53,12 +78,14 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
           for (const route of wildcardRoutes) {
             const basePath = route.path.slice(0, -1) // Remove the '*'
             if (url.pathname.startsWith(basePath)) {
-              return {
+              const result = {
                 route,
                 params: {
                   wildcard: url.pathname.slice(basePath.length),
                 },
               }
+              this.routeCache.set(cacheKey, result)
+              return result
             }
           }
         }
@@ -71,12 +98,14 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
         for (const route of globalWildcardRoutes) {
           const basePath = route.path.slice(0, -1) // Remove the '*'
           if (url.pathname.startsWith(basePath)) {
-            return {
+            const result = {
               route,
               params: {
                 wildcard: url.pathname.slice(basePath.length),
               },
             }
+            this.routeCache.set(cacheKey, result)
+            return result
           }
         }
 
@@ -93,10 +122,12 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
           )
 
           if (optionsMatch) {
-            return {
+            const result = {
               route: optionsMatch,
               params: {},
             }
+            this.routeCache.set(cacheKey, result)
+            return result
           }
 
           // Check if the path matches any route of another method
@@ -105,7 +136,7 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
             if (match) {
               // We found a route that matches this path with another method,
               // so this is a valid OPTIONS request
-              return {
+              const result = {
                 route: {
                   ...match.route,
                   method: 'OPTIONS',
@@ -113,6 +144,8 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
                 },
                 params: match.params,
               }
+              this.routeCache.set(cacheKey, result)
+              return result
             }
           }
         }
@@ -142,8 +175,16 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
 
         // Dynamic parameters ({subdomain}.example.com)
         if (pattern.includes('{')) {
-          const regex = pattern.replace(/\./g, '\\.').replace(/\{[^}]+\}/g, '([^.]+)')
-          return new RegExp(`^${regex}$`).test(hostname)
+          let regex: RegExp
+          if (!this.domainPatternCache.has(pattern)) {
+            const regexStr = pattern.replace(/\./g, '\\.').replace(/\{[^}]+\}/g, '([^.]+)')
+            regex = new RegExp(`^${regexStr}$`)
+            this.domainPatternCache.set(pattern, regex)
+          }
+          else {
+            regex = this.domainPatternCache.get(pattern)!
+          }
+          return regex.test(hostname)
         }
 
         return false

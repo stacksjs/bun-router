@@ -24,6 +24,10 @@ export class Router {
   wsConfig: WebSocketConfig | null = null
   errorHandler: ((error: Error) => Response | Promise<Response>) | null = null
   templateCache: Map<string, string> = new Map<string, string>()
+  routeCache: Map<string, { route: Route, params: Record<string, string> }> = new Map()
+  staticRoutes: Map<string, Map<string, Route>> = new Map()
+  precompiledPatterns: Map<string, RegExp> = new Map()
+  domainPatternCache: Map<string, RegExp> = new Map()
   config: RouterConfig = {
     verbose: false,
     routesPath: 'routes',
@@ -60,5 +64,12 @@ export class Router {
       }
     }
     return this
+  }
+
+  /**
+   * Invalidate route caches
+   */
+  invalidateCache(): void {
+    this.routeCache.clear()
   }
 }
