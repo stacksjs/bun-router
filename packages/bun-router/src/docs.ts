@@ -1,3 +1,4 @@
+/* eslint-disable regexp/no-super-linear-backtracking */
 import { join } from 'node:path'
 import process from 'node:process'
 
@@ -60,7 +61,7 @@ async function loadActionDocs(handlerPath: string): Promise<Partial<RouteDoc>> {
       return {}
 
     const doc = docComment[1]
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
+
     const description = doc.match(/@description\s+(.+?)(?=@|\n\s*\*\/|$)/s)?.[1].trim() || ''
     const params: { [key: string]: string } = {}
     const query: { [key: string]: string } = {}
