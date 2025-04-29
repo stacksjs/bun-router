@@ -7,9 +7,9 @@ bun-router provides a robust session management system to maintain state across 
 To use sessions in your application, first add the session middleware:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add session middleware
 router.use(session({
@@ -393,10 +393,10 @@ Here's a complete example of using sessions for user authentication:
 
 ```typescript
 import { compare } from 'bcrypt'
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 import { db } from './database'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add session middleware
 router.use(session({
@@ -499,11 +499,11 @@ router.post('/logout', async (req) => {
 When running bun-router in a clustered or distributed environment (multiple server instances), you must use a shared session store to ensure session data is consistent across instances:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 import { redis, RedisClient } from 'bun'
 import { redisStore } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Use Bun's built-in Redis client
 // It automatically reads from process.env.REDIS_URL or defaults to localhost:6379
@@ -541,10 +541,10 @@ This ensures that users can be routed to any server instance while maintaining t
 You can combine sessions with JWT for enhanced security and flexibility:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
-const router = new BunRouter()
+const router = new Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret'
 
 router.use(session({
@@ -633,10 +633,10 @@ When writing tests for code that uses sessions, you'll need to set up the sessio
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
 test('authenticated route should return user data', async () => {
-  const router = new BunRouter()
+  const router = new Router()
 
   // Setup session middleware with test secret
   router.use((req, next) => {
@@ -676,7 +676,7 @@ test('authenticated route should return user data', async () => {
 })
 
 test('unauthenticated route should return 401', async () => {
-  const router = new BunRouter()
+  const router = new Router()
 
   // Setup session middleware with empty session
   router.use((req, next) => {

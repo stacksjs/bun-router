@@ -7,9 +7,9 @@ Route parameters allow you to capture values from URL segments and access them i
 To define a route parameter, use curly braces `{}` in your route path:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.get('/users/{id}', (req) => {
   // Access the 'id' parameter
@@ -122,7 +122,7 @@ router.get('/users', getAllUsersHandler)
 Query parameters (the part after `?` in a URL) are automatically parsed and available in the `req.query` object:
 
 ```typescript
-// For a request to /search?q=bunrouter&page=1
+// For a request to /search?q=Router&page=1
 router.get('/search', (req) => {
   const query = req.query.q
   const page = req.query.page

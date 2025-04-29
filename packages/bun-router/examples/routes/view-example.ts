@@ -1,7 +1,7 @@
-import { BunRouter } from '../../src'
+import { Router } from '../../src'
 
 // Create a router
-const router: BunRouter = new BunRouter({
+const router: Router = new Router({
   // Configure view system
   views: {
     viewsPath: 'resources/views',

@@ -7,9 +7,9 @@ Routing is the core functionality of bun-router. This page covers the basics of 
 Routes in bun-router follow a simple pattern: HTTP method + path + handler function.
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.get('/hello', () => {
   return new Response('Hello, World!')

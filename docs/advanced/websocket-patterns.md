@@ -7,9 +7,9 @@ This guide explores effective design patterns for WebSocket applications in bun-
 The publish-subscribe pattern is ideal for broadcasting messages to multiple clients:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Store for active subscriptions
 const subscriptions = new Map()
@@ -128,9 +128,9 @@ function handlePublish(channel, message) {
 For applications requiring collaborative features:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Store rooms and their members
 const rooms = new Map()
@@ -241,9 +241,9 @@ function broadcastToRoom(roomId, message, excludeClient = null) {
 Implement a request-response pattern for client-server exchanges:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.ws('/api', {
   open(ws) {
@@ -347,9 +347,9 @@ async function updateDataInDB(params) {
 Implement event sourcing for maintaining state across clients:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Event store
 const events = []

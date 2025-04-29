@@ -8,7 +8,7 @@ To enable WebSocket support, use the `websocket` method on your router:
 
 ```typescript
 import type { ServerWebSocket } from 'bun'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 // Define the type for your WebSocket client data
 interface ClientData {
@@ -16,7 +16,7 @@ interface ClientData {
   room: string
 }
 
-const router = new BunRouter<ClientData>()
+const router = new Router<ClientData>()
 
 // Set up HTTP routes
 router.get('/', () => new Response('WebSocket Server'))

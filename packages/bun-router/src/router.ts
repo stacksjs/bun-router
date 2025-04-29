@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import process from 'node:process'
 import { fileExists, isActionClass, isRouteHandler, matchPath, normalizePath, processHtmlTemplate, resolveViewPath, toActionPath } from './utils'
 
-export class BunRouter {
+export class Router {
   private routes: Route[] = []
   private currentGroup: RouteGroup | null = null
   private globalMiddleware: MiddlewareHandler[] = []
@@ -32,7 +32,7 @@ export class BunRouter {
     this.config = { ...this.config, ...config }
   }
 
-  private async addRoute(method: string, path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  private async addRoute(method: string, path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     // Apply prefix from configuration based on route type
     let prefixedPath = path
     if (type === 'api' && this.config.apiPrefix) {
@@ -107,34 +107,34 @@ export class BunRouter {
     return this
   }
 
-  async get(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async get(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('GET', path, handler, type, name)
   }
 
-  async post(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async post(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('POST', path, handler, type, name)
   }
 
-  async put(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async put(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('PUT', path, handler, type, name)
   }
 
-  async patch(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async patch(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('PATCH', path, handler, type, name)
   }
 
-  async delete(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async delete(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('DELETE', path, handler, type, name)
   }
 
-  async options(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async options(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.addRoute('OPTIONS', path, handler, type, name)
   }
 
   /**
    * Register a route that responds to multiple HTTP methods
    */
-  async match(methods: string[], path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async match(methods: string[], path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     for (const method of methods) {
       await this.addRoute(method, path, handler, type, name)
     }
@@ -144,7 +144,7 @@ export class BunRouter {
   /**
    * Register a route that responds to any HTTP method
    */
-  async any(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<BunRouter> {
+  async any(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
     return this.match(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], path, handler, type, name)
   }
 
@@ -153,7 +153,7 @@ export class BunRouter {
    * @param options Group configuration options
    * @param callback Function that registers routes in this group
    */
-  async group(options: RouteGroup, callback: () => void): Promise<BunRouter> {
+  async group(options: RouteGroup, callback: () => void): Promise<Router> {
     const previousGroup = this.currentGroup
     this.currentGroup = options
 
@@ -168,7 +168,7 @@ export class BunRouter {
    * @param prefix The route name prefix to use
    * @param callback Function that registers routes with this name prefix
    */
-  async name(prefix: string, callback: () => void): Promise<BunRouter> {
+  async name(prefix: string, callback: () => void): Promise<Router> {
     const previousNamePrefix = (this as any)._namePrefix || ''
     ;(this as any)._namePrefix = previousNamePrefix + prefix
 
@@ -183,7 +183,7 @@ export class BunRouter {
    * @param controller The controller class
    * @param callback Function that registers routes using the controller
    */
-  async controller(controller: string | (new () => any), callback: () => void): Promise<BunRouter> {
+  async controller(controller: string | (new () => any), callback: () => void): Promise<Router> {
     const previousController = (this as any)._currentController
     ;(this as any)._currentController = controller
 
@@ -198,7 +198,7 @@ export class BunRouter {
    * @param domain The domain/subdomain pattern (e.g., '{account}.example.com')
    * @param callback Function that registers routes for this domain
    */
-  async domain(domain: string, callback: () => void): Promise<BunRouter> {
+  async domain(domain: string, callback: () => void): Promise<Router> {
     const previousDomain = this.currentDomain
     this.currentDomain = domain
 
@@ -213,14 +213,14 @@ export class BunRouter {
    * @param prefix The URI prefix to use
    * @param callback Function that registers routes with this prefix
    */
-  async prefix(prefix: string, callback: () => void): Promise<BunRouter> {
+  async prefix(prefix: string, callback: () => void): Promise<Router> {
     return this.group({ prefix }, callback)
   }
 
   /**
    * Register a healthcheck route at /health
    */
-  async health(): Promise<BunRouter> {
+  async health(): Promise<Router> {
     return this.get('/health', () => {
       return new Response('OK', { status: 200 })
     }, 'api')
@@ -230,12 +230,12 @@ export class BunRouter {
    * Register a fallback handler for 404 routes
    * @param handler The handler to use for unmatched routes
    */
-  async fallback(handler: ActionHandler): Promise<BunRouter> {
+  async fallback(handler: ActionHandler): Promise<Router> {
     this.fallbackHandler = handler
     return this
   }
 
-  async resource(name: string, handler: string | { [key: string]: ActionHandler }, type: 'api' | 'web' = 'api'): Promise<BunRouter> {
+  async resource(name: string, handler: string | { [key: string]: ActionHandler }, type: 'api' | 'web' = 'api'): Promise<Router> {
     const basePath = `/${name}`
     const resourcePath = (subPath: string = '') => `${basePath}${subPath}`
 
@@ -291,7 +291,7 @@ export class BunRouter {
    * Register global middleware
    * @param middleware The middleware to register
    */
-  async use(...middleware: (string | MiddlewareHandler)[]): Promise<BunRouter> {
+  async use(...middleware: (string | MiddlewareHandler)[]): Promise<Router> {
     for (const m of middleware) {
       const resolvedMiddleware = await this.resolveMiddleware(m)
       if (resolvedMiddleware) {
@@ -397,7 +397,7 @@ export class BunRouter {
    * @param to Path to redirect to
    * @param status HTTP status code (default: 302)
    */
-  async redirectRoute(from: string, to: string, status: 301 | 302 | 303 | 307 | 308 = 302): Promise<BunRouter> {
+  async redirectRoute(from: string, to: string, status: 301 | 302 | 303 | 307 | 308 = 302): Promise<Router> {
     return this.get(from, () => this.redirect(to, status))
   }
 
@@ -406,7 +406,7 @@ export class BunRouter {
    * @param from Path to redirect from
    * @param to Path to redirect to
    */
-  async permanentRedirectRoute(from: string, to: string): Promise<BunRouter> {
+  async permanentRedirectRoute(from: string, to: string): Promise<Router> {
     return this.redirectRoute(from, to, 301)
   }
 
@@ -415,7 +415,7 @@ export class BunRouter {
    * @param name Parameter name
    * @param pattern Regular expression pattern
    */
-  pattern(name: string, pattern: string): BunRouter {
+  pattern(name: string, pattern: string): Router {
     this.patterns.set(name, pattern)
     return this
   }
@@ -424,7 +424,7 @@ export class BunRouter {
    * Add constraints to the most recently added route
    * @param params Object with parameter names and pattern strings
    */
-  where(params: Record<string, string>): BunRouter {
+  where(params: Record<string, string>): Router {
     const lastRoute = this.routes[this.routes.length - 1]
     if (lastRoute) {
       lastRoute.constraints = {
@@ -442,7 +442,7 @@ export class BunRouter {
    * Add a numeric constraint to the most recently added route
    * @param param The parameter name to constrain
    */
-  whereNumber(param: string): BunRouter {
+  whereNumber(param: string): Router {
     return this.where({ [param]: '\\d+' })
   }
 
@@ -450,7 +450,7 @@ export class BunRouter {
    * Add an alphabetic constraint to the most recently added route
    * @param param The parameter name to constrain
    */
-  whereAlpha(param: string): BunRouter {
+  whereAlpha(param: string): Router {
     return this.where({ [param]: '[A-Za-z]+' })
   }
 
@@ -458,7 +458,7 @@ export class BunRouter {
    * Add an alphanumeric constraint to the most recently added route
    * @param param The parameter name to constrain
    */
-  whereAlphaNumeric(param: string): BunRouter {
+  whereAlphaNumeric(param: string): Router {
     return this.where({ [param]: '[A-Za-z0-9]+' })
   }
 
@@ -466,11 +466,11 @@ export class BunRouter {
    * Add a UUID constraint to the most recently added route
    * @param param The parameter name to constrain
    */
-  whereUuid(param: string): BunRouter {
+  whereUuid(param: string): Router {
     return this.where({ [param]: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' })
   }
 
-  whereIn(param: string, values: string[]): BunRouter {
+  whereIn(param: string, values: string[]): Router {
     return this.where({ [param]: values.join('|') })
   }
 
@@ -616,7 +616,7 @@ export class BunRouter {
     optionsOrType: { layout?: string, status?: number, headers?: Record<string, string> } | 'web' | 'api' = {},
     typeOrName: 'web' | 'api' | string = 'web',
     name?: string,
-  ): Promise<BunRouter> {
+  ): Promise<Router> {
     // Handle overloaded parameters
     let view: string
     let data: Record<string, any>
@@ -1067,7 +1067,7 @@ export class BunRouter {
   /**
    * Register an error handler for the server
    */
-  async onError(handler: (error: Error) => Response | Promise<Response>): Promise<BunRouter> {
+  async onError(handler: (error: Error) => Response | Promise<Response>): Promise<Router> {
     this.errorHandler = handler
     return this
   }
@@ -1077,7 +1077,7 @@ export class BunRouter {
    * @param config WebSocket configuration
    * @returns This router instance for chaining
    */
-  websocket(config: WebSocketConfig): BunRouter {
+  websocket(config: WebSocketConfig): Router {
     this.wsConfig = config
     return this
   }
@@ -1263,5 +1263,5 @@ export class BunRouter {
   }
 }
 
-export const route: BunRouter = new BunRouter()
+export const route: Router = new Router()
 export default route

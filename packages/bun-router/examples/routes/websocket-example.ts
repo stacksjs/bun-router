@@ -1,4 +1,4 @@
-import { BunRouter } from '../../src'
+import { Router } from '../../src'
 import type { ServerWebSocket } from 'bun'
 
 // Define client data type
@@ -10,7 +10,7 @@ interface ClientData {
 }
 
 // Create a router
-const router: BunRouter = new BunRouter()
+const router: Router = new Router()
 
 // Simple HTML page with WebSocket client
 router.get('/', () => {

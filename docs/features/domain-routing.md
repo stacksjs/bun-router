@@ -7,9 +7,9 @@ Domain routing in bun-router allows you to route requests based on the domain or
 To define routes for specific domains, use the domain option when defining routes:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Route for the main domain
 router.get('/', (req) => {
@@ -42,9 +42,9 @@ With this configuration:
 You can group routes under specific domains using the `group` method with a domain option:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Main domain routes
 router.get('/', (req) => {
@@ -91,9 +91,9 @@ router.group({
 bun-router allows you to capture dynamic subdomains as parameters, making it possible to create multi-tenant applications:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Main site
 router.get('/', (req) => {
@@ -201,10 +201,10 @@ When testing domain routes, you need to set the `Host` header in your requests:
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 test('domain routing should work', async () => {
-  const router = new BunRouter()
+  const router = new Router()
 
   router.get('/', {
     domain: 'example.com'
@@ -245,9 +245,9 @@ test('domain routing should work', async () => {
 ### Multi-tenant SaaS Application
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Main marketing site
 router.group({
@@ -309,9 +309,9 @@ router.group({
 ### Localized Content Based on Country Domains
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // US site
 router.group({

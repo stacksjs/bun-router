@@ -9,9 +9,9 @@ Middleware allows you to run code before or after a route handler executes. This
 To apply middleware to all routes, use the `use` method:
 
 ```typescript
-import { BunRouter, jsonBody, cors } from 'bun-router'
+import { Router, jsonBody, cors } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Apply middleware globally
 router.use(jsonBody())
@@ -59,9 +59,9 @@ bun-router includes several built-in middleware components:
 Parses JSON request bodies and makes them available as `req.jsonBody`:
 
 ```typescript
-import { BunRouter, jsonBody } from 'bun-router'
+import { Router, jsonBody } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 router.use(jsonBody())
 
 router.post('/api/users', (req) => {
@@ -78,9 +78,9 @@ router.post('/api/users', (req) => {
 Handles Cross-Origin Resource Sharing headers:
 
 ```typescript
-import { BunRouter, cors } from 'bun-router'
+import { Router, cors } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Simple CORS with defaults
 router.use(cors())
@@ -101,9 +101,9 @@ router.use(cors({
 Adds unique IDs to requests via the `X-Request-ID` header:
 
 ```typescript
-import { BunRouter, requestId } from 'bun-router'
+import { Router, requestId } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 router.use(requestId())
 
 router.get('/api/status', (req) => {
@@ -120,9 +120,9 @@ router.get('/api/status', (req) => {
 Provides session management:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.use(session({
   secret: 'your-secret-key',
@@ -166,9 +166,9 @@ router.post('/login', async (req) => {
 Protects against Cross-Site Request Forgery attacks:
 
 ```typescript
-import { BunRouter, csrf, session } from 'bun-router'
+import { Router, csrf, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Session middleware is required for CSRF
 router.use(session({ secret: 'your-secret-key' }))
@@ -207,9 +207,9 @@ router.post('/submit', (req) => {
 Basic authentication middleware:
 
 ```typescript
-import { BunRouter, auth } from 'bun-router'
+import { Router, auth } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Basic auth middleware
 router.use(auth({

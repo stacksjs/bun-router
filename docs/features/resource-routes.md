@@ -7,9 +7,9 @@ Resource routes allow you to quickly define a set of RESTful routes for a resour
 To define a complete set of resource routes, use the `resource` method:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.resource('posts', 'PostsController')
 ```
@@ -215,9 +215,9 @@ router.group({
 Here's a complete example of a blog API using resource routes:
 
 ```typescript
-import { auth, BunRouter, jsonBody } from 'bun-router'
+import { auth, Router, jsonBody } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Apply global middleware
 router.use(jsonBody())

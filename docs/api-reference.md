@@ -2,12 +2,12 @@
 
 This page provides detailed documentation for the bun-router API.
 
-## BunRouter
+## Router
 
 ### Constructor
 
 ```typescript
-new BunRouter(options?: RouterOptions)
+new Router(options?: RouterOptions)
 ```
 
 Creates a new router instance.
@@ -19,9 +19,9 @@ Creates a new router instance.
 **Example:**
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter({
+const router = new Router({
   verbose: true,
   apiPrefix: '/api',
 })

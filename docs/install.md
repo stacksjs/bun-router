@@ -42,10 +42,10 @@ bun-router is designed specifically for Bun applications and requires:
 After installation, you can create a basic server to verify everything is working correctly:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 // Create a new router
-const router = new BunRouter()
+const router = new Router()
 
 // Add a route
 router.get('/', () => new Response('Hello from bun-router!'))

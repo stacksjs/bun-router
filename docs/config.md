@@ -7,9 +7,9 @@ bun-router can be configured when initializing a new router instance. This page 
 When creating a new router instance, you can pass a configuration object:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter({
+const router = new Router({
   // Configuration options here
   verbose: true,
   apiPrefix: '/api',
@@ -36,7 +36,7 @@ Here's a complete list of configuration options:
 When `verbose` is set to `true`, bun-router will log detailed information about route registration and request handling:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   verbose: true,
 })
 ```
@@ -48,7 +48,7 @@ This is useful during development to debug routing issues.
 The `apiPrefix` option adds a global prefix to all routes:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   apiPrefix: '/api/v1',
 })
 
@@ -61,7 +61,7 @@ router.get('/users', getUsersHandler)
 You can specify default middleware to be applied to different route types:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   defaultMiddleware: {
     api: [corsMiddleware, jsonBodyMiddleware],
     web: [sessionMiddleware, csrfMiddleware],
@@ -74,7 +74,7 @@ const router = new BunRouter({
 Configure Cross-Origin Resource Sharing (CORS) globally:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   corsOptions: {
     origin: ['https://example.com'],
     methods: ['GET', 'POST'],
@@ -91,7 +91,7 @@ const router = new BunRouter({
 Customize how errors are handled:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   // Custom 500 error handler
   serverErrorHandler: (error) => {
     console.error('Server error:', error)
@@ -110,7 +110,7 @@ const router = new BunRouter({
 Configure default WebSocket behavior:
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   webSocketOptions: {
     maxPayloadLength: 32 * 1024 * 1024, // 32MB
     idleTimeout: 300, // 5 minutes
@@ -128,7 +128,7 @@ You can create different configurations based on the environment:
 ```typescript
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-const router = new BunRouter({
+const router = new Router({
   verbose: isDevelopment,
   corsOptions: isDevelopment
     ? { origin: '*' }

@@ -7,9 +7,9 @@ Named routes allow you to reference routes by a name rather than their URL patte
 To define a named route, add a name parameter when defining the route:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Define a named route
 router.get('/users/{id}', getUserHandler, 'users.show')
@@ -121,7 +121,7 @@ By default, `route` generates relative URLs. To generate absolute URLs, configur
 
 ```typescript
 // During router initialization
-const router = new BunRouter({
+const router = new Router({
   baseUrl: 'https://example.com',
 })
 
@@ -138,9 +138,9 @@ const url = router.route('users.show', { id: '123' })
 Here's a more comprehensive example showing how named routes can be used in a blog application:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Public routes
 router.get('/', getHomeHandler, 'home')

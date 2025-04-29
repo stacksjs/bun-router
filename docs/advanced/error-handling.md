@@ -7,9 +7,9 @@ Proper error handling is crucial for building robust web applications. This guid
 The most straightforward approach to catch all errors is to implement a global error handling middleware:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Global error handling middleware
 function errorHandler(req, next) {

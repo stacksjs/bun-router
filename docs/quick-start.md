@@ -13,10 +13,10 @@ bun add bun-router
 Create a new file called `server.ts` in your project:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 // Create a new router
-const router = new BunRouter()
+const router = new Router()
 
 // Define a basic route
 router.get('/', () => {
@@ -44,9 +44,9 @@ Visit `http://localhost:3000` in your browser to see "Welcome to my API!".
 Let's add more routes to our API:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Home route
 router.get('/', () => {
@@ -108,9 +108,9 @@ router.get('/users/by-username/{username}', (req) => {
 Middleware allows you to process requests before they reach your route handlers:
 
 ```typescript
-import { BunRouter, jsonBody } from 'bun-router'
+import { Router, jsonBody } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Apply middleware globally
 router.use(jsonBody())

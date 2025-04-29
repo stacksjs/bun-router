@@ -7,9 +7,9 @@ bun-router provides flexible tools for implementing authentication in your web a
 The simplest form of authentication verifies credentials against a database or other source:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add session middleware
 router.use(session({
@@ -249,10 +249,10 @@ router.get('/reports', requireAnyRole(['admin', 'analyst']), (req) => {
 For stateless APIs, JSON Web Tokens (JWT) provide a popular authentication mechanism:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
-const router = new BunRouter()
+const router = new Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret'
 
 // Login and generate token
@@ -320,10 +320,10 @@ router.get('/api/profile', verifyJWT, (req) => {
 For applications that serve both browser clients and API consumers, you can combine approaches:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
-const router = new BunRouter()
+const router = new Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret'
 
 // Add session middleware for browser clients
@@ -396,9 +396,9 @@ router.get('/public', (req) => {
 For third-party authentication (Google, GitHub, etc.), implement OAuth flows:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET
 const REDIRECT_URI = 'http://localhost:3000/auth/github/callback'
@@ -505,9 +505,9 @@ router.get('/auth/github/callback', async (req) => {
 Implement passwordless authentication with email magic links:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 const EMAIL_SECRET = process.env.EMAIL_SECRET || 'email-token-secret'
 
 router.use(session({
@@ -577,11 +577,11 @@ router.get('/auth/email/verify', async (req) => {
 Implement MFA using TOTP (Time-based One-Time Password):
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 import { authenticator } from 'otplib'
 import { toDataURL } from 'qrcode'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.use(session({
   secret: process.env.SESSION_SECRET
@@ -722,9 +722,9 @@ router.post('/mfa/login', async (req) => {
 Implement "Remember Me" for longer-lived sessions:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.use(session({
   secret: process.env.SESSION_SECRET,
@@ -764,9 +764,9 @@ Implement account lockout after multiple failed login attempts:
 
 ```typescript
 import { redis } from 'bun'
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 const MAX_FAILED_ATTEMPTS = 5
 const LOCKOUT_TIME = 15 * 60 // 15 minutes (in seconds)
 

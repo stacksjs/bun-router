@@ -9,9 +9,9 @@ bun-router provides a simple yet powerful API for working with HTTP cookies. Thi
 To read cookies from an incoming request:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.get('/', (req) => {
   // Get all cookies as an object
@@ -118,9 +118,9 @@ router.get('/logout', (req) => {
 For more advanced cookie handling, bun-router provides a cookie parser middleware:
 
 ```typescript
-import { BunRouter, cookieParser } from 'bun-router'
+import { Router, cookieParser } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add cookie parser middleware with options
 router.use(cookieParser({
@@ -152,9 +152,9 @@ router.get('/profile', (req) => {
 Signed cookies help verify that a cookie hasn't been tampered with by the client:
 
 ```typescript
-import { BunRouter, cookieParser } from 'bun-router'
+import { Router, cookieParser } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add cookie parser middleware with secret
 router.use(cookieParser({
@@ -416,10 +416,10 @@ When writing tests for code that uses cookies:
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 test('should set theme cookie', async () => {
-  const router = new BunRouter()
+  const router = new Router()
 
   router.get('/set-theme', (req) => {
     const { theme } = req.query
@@ -446,7 +446,7 @@ test('should set theme cookie', async () => {
 })
 
 test('should read theme cookie', async () => {
-  const router = new BunRouter()
+  const router = new Router()
 
   router.get('/theme', (req) => {
     return new Response(`Theme: ${req.cookies.theme || 'default'}`)

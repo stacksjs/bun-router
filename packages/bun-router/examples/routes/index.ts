@@ -1,4 +1,4 @@
-import { BunRouter } from '../../src'
+import { Router } from '../../src'
 import type { EnhancedRequest } from '../../src/types'
 
 /**
@@ -6,7 +6,7 @@ import type { EnhancedRequest } from '../../src/types'
  */
 
 // Create a router instance
-const router: BunRouter = new BunRouter()
+const router: Router = new Router()
 
 // Static response route
 router.get('/api/status', () => new Response('OK'))

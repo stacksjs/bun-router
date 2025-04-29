@@ -1,8 +1,8 @@
-import { BunRouter } from '../../src'
+import { Router } from '../../src'
 import type { RouteDefinition, EnhancedRequest } from '../../src/types'
 
 // Create a router instance
-const router: BunRouter = new BunRouter()
+const router: Router = new Router()
 
 // Add the blog route
 router.view('/blog-example', {

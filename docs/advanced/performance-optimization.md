@@ -15,9 +15,9 @@ Bun is designed to be fast by default. To maximize performance:
 How you organize your routes can significantly impact performance:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Organize routes from most specific to most general
 // Frequently accessed routes should be defined first
@@ -381,7 +381,7 @@ const serverOptions = {
   http2: true
 }
 
-const router = new BunRouter()
+const router = new Router()
 // Define your routes...
 
 const server = createSecureServer(serverOptions, (req, res) => {

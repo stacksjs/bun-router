@@ -9,9 +9,9 @@ Always serve your application over HTTPS in production environments. This encryp
 ```typescript
 import { readFileSync } from 'node:fs'
 import { createSecureServer } from 'node:https'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Define your routes
 router.get('/', (req) => {
@@ -69,9 +69,9 @@ router.get('/set-cookie', (req) => {
 Properly configure CORS to restrict which domains can access your API:
 
 ```typescript
-import { BunRouter, cors } from 'bun-router'
+import { Router, cors } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Basic CORS configuration
 router.use(cors({
@@ -128,9 +128,9 @@ router.use(cspMiddleware)
 Use bun-router's built-in CSRF protection for forms and state-changing requests:
 
 ```typescript
-import { BunRouter, csrfProtection, session } from 'bun-router'
+import { Router, csrfProtection, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Add session middleware (required for CSRF protection)
 router.use(session({
@@ -177,9 +177,9 @@ Implement rate limiting to prevent brute force attacks and abuse:
 
 ```typescript
 import { redis } from 'bun'
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Rate limiting middleware using Bun's Redis client
 function rateLimit({ windowMs = 60 * 1000, maxRequests = 100, message = 'Too many requests' } = {}) {
@@ -234,10 +234,10 @@ router.use(rateLimit({ maxRequests: 100, windowMs: 60 * 1000 }))
 Always validate and sanitize user inputs:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 import { z } from 'zod' // Popular validation library
 
-const router = new BunRouter()
+const router = new Router()
 
 // Define validation schema
 const userSchema = z.object({
@@ -280,9 +280,9 @@ router.post('/register', async (req) => {
 Use Bun's built-in password hashing functions to securely handle passwords:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Register a new user
 router.post('/register', async (req) => {
@@ -368,9 +368,9 @@ When working with databases, always use parameterized queries:
 
 ```typescript
 import { Database } from 'bun:sqlite'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 const db = new Database('app.db')
 
 router.get('/users/:id', (req) => {
@@ -397,9 +397,9 @@ router.get('/users/:id', (req) => {
 Configure sessions to expire after a period of inactivity:
 
 ```typescript
-import { BunRouter, session } from 'bun-router'
+import { Router, session } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.use(session({
   secret: process.env.SESSION_SECRET,
@@ -425,9 +425,9 @@ router.use((req, next) => {
 When handling file uploads, implement proper validation and restrictions:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 router.post('/upload', async (req) => {
   // Parse the multipart form data

@@ -1,7 +1,7 @@
 export * from './config'
 export * from './middleware'
 export { route } from './router'
-export { BunRouter } from './router'
+export { Router } from './router'
 export type {
   ActionHandler,
   ActionHandlerClass,

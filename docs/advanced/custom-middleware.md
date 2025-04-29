@@ -25,9 +25,9 @@ function myMiddleware(req, next) {
 Here's an example of a simple logging middleware:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 function loggerMiddleware(req, next) {
   console.log(`${req.method} ${req.url}`)
@@ -59,9 +59,9 @@ router.get('/', (req) => {
 For middleware that needs to perform asynchronous operations:
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 async function authMiddleware(req, next) {
   // Get the authorization header

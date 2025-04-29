@@ -33,10 +33,10 @@ bun add bun-router
 ## Basic Usage
 
 ```typescript
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 // Create a router
-const router = new BunRouter()
+const router = new Router()
 
 // Define routes
 router.get('/', () => new Response('Hello, World!'))
@@ -70,9 +70,9 @@ const url = router.route('users.show', { id: '123' })
 ## Middleware
 
 ```typescript
-import { BunRouter, cors, jsonBody } from 'bun-router'
+import { Router, cors, jsonBody } from 'bun-router'
 
-const router = new BunRouter()
+const router = new Router()
 
 // Use middleware globally
 router.use(jsonBody())
@@ -118,7 +118,7 @@ bun-router provides seamless integration with Bun's high-performance WebSocket c
 
 ```typescript
 import type { ServerWebSocket } from 'bun'
-import { BunRouter } from 'bun-router'
+import { Router } from 'bun-router'
 
 // Define data type for WebSocket clients
 interface ClientData {
@@ -127,7 +127,7 @@ interface ClientData {
 }
 
 // Create a router
-const router = new BunRouter<ClientData>() // Type-safe WebSockets
+const router = new Router<ClientData>() // Type-safe WebSockets
 
 // Add a regular HTTP route
 router.get('/', () => new Response('WebSocket Server'))
@@ -403,7 +403,7 @@ Update routes without restarting the server:
 
 ```typescript
 // Initial setup
-const router = new BunRouter()
+const router = new Router()
 router.get('/api/version', () => Response.json({ version: '1.0.0' }))
 const server = await router.serve({ port: 3000 })
 
@@ -566,7 +566,7 @@ router.domain('{account}.example.com', () => {
 ## Configuration
 
 ```typescript
-const router = new BunRouter({
+const router = new Router({
   verbose: true,
   apiPrefix: '/api/v1',
   defaultMiddleware: {
