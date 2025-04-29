@@ -105,9 +105,15 @@ const getMethodClass = (method: string) => {
   <div class="requests-view">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">HTTP Requests</h1>
-      <button class="btn-primary px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-        Capture New
-      </button>
+      <div class="flex space-x-3">
+        <router-link to="/requests/compare" class="btn-secondary px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+          <span class="i-carbon-compare mr-2"></span>
+          Compare Requests
+        </router-link>
+        <button class="btn-primary px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+          Capture New
+        </button>
+      </div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 mb-6">

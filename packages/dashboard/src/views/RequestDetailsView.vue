@@ -371,6 +371,11 @@ const goBack = () => {
           Replay Request
         </button>
 
+        <router-link :to="`/requests/compare?id=${request.id}`" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 flex items-center">
+          <span class="i-carbon-compare mr-2"></span>
+          Add to Comparison
+        </router-link>
+
         <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
           <span class="i-carbon-export mr-2"></span>
           Export as cURL

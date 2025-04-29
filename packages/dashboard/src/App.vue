@@ -15,6 +15,7 @@ const navItems = [
   { name: 'Live Capture', path: '/capture', icon: 'i-carbon-recording-filled' },
   { name: 'WebSocket Monitor', path: '/websocket', icon: 'i-carbon-network-4' },
   { name: 'Headers Analyzer', path: '/headers', icon: 'i-carbon-list-checked' },
+  { name: 'Performance Metrics', path: '/performance', icon: 'i-carbon-chart-line' },
   { name: 'Response Tester', path: '/tester', icon: 'i-carbon-test' },
   { name: 'Settings', path: '/settings', icon: 'i-carbon-settings' },
 ]
