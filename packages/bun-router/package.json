@@ -66,15 +66,7 @@
     "dev:docs": "bun --bun vitepress dev docs",
     "build:docs": "bun --bun vitepress build docs",
     "preview:docs": "bun --bun vitepress preview docs",
-    "typecheck": "bun --bun tsc --noEmit",
-    "example:basic": "bun examples/basic.ts",
-    "example:advanced": "bun examples/advanced.ts",
-    "example:advanced-features": "bun examples/advanced-features.ts",
-    "example:priority-queue": "bun examples/priority-queue.ts",
-    "example:key-rate-limiting": "bun examples/key-rate-limiting.ts",
-    "example:distributed-locks": "bun examples/distributed-locks.ts",
-    "example:cron-jobs": "bun examples/cron-jobs.ts",
-    "example:dead-letter-queue": "bun examples/dead-letter-queue.ts"
+    "typecheck": "bun --bun tsc --noEmit"
   },
   "dependencies": {
     "bunfig": "^0.8.3",

@@ -19,8 +19,12 @@
     "packages/bun-router": {
       "name": "bun-router",
       "version": "0.0.0",
+      "bin": {
+        "bun-router": "./dist/cli.js",
+      },
       "dependencies": {
         "bunfig": "^0.8.3",
+        "ts-rate-limiter": "^0.4.0",
       },
     },
     "packages/dashboard": {
@@ -1881,6 +1885,8 @@
     "trim-lines": ["trim-lines@3.0.1", "", {}, "sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg=="],
 
     "ts-api-utils": ["ts-api-utils@2.1.0", "", { "peerDependencies": { "typescript": ">=4.8.4" } }, "sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ=="],
+
+    "ts-rate-limiter": ["ts-rate-limiter@0.4.0", "", { "bin": { "ts-rate-limiter": "dist/bin/init-config.js" } }, "sha512-BlH2LPlj5he22HopctNL/F/jfFCowoqLRMcVx1VMcgZzxNSim4aSBYMM/ffH+EB5bviCxave0w9BV+OKtwqwfw=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
