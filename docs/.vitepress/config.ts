@@ -2,7 +2,6 @@ import type { HeadConfig } from 'vitepress'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
 import { withPwa } from '@vite-pwa/vitepress'
 import { defineConfig } from 'vitepress'
-
 import viteConfig from './vite.config'
 
 // https://vitepress.dev/reference/site-config
@@ -12,7 +11,7 @@ const analyticsHead: HeadConfig[] = [
     'script',
     {
       'src': 'https://cdn.usefathom.com/script.js',
-      'data-site': 'DCOEHMGA',
+      'data-site': 'PNPZXDQL',
       'defer': '',
     },
   ],
@@ -68,6 +67,8 @@ const sidebar = [
       { text: 'Route Groups', link: '/features/route-groups' },
       { text: 'Named Routes', link: '/features/named-routes' },
       { text: 'Resource Routes', link: '/features/resource-routes' },
+      { text: 'Action Handlers', link: '/features/action-handlers' },
+      { text: 'View Rendering', link: '/features/view-rendering' },
       { text: 'Middleware', link: '/features/middleware' },
       { text: 'WebSockets', link: '/features/websockets' },
       { text: 'Cookie Handling', link: '/features/cookie-handling' },

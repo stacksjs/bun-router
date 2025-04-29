@@ -230,7 +230,7 @@ export class Router {
    * Register a fallback handler for 404 routes
    * @param handler The handler to use for unmatched routes
    */
-  async fallback(handler: ActionHandler): Promise<Router> {
+  fallback(handler: ActionHandler): Router {
     this.fallbackHandler = handler
     return this
   }
