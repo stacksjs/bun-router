@@ -32,13 +32,13 @@ const router = new Router({
 #### HTTP Methods
 
 ```typescript
-router.get(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.post(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.put(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.patch(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.delete(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.options(path: string, handler: RouteHandler, name?: string, domain?: string): Route
-router.head(path: string, handler: RouteHandler, name?: string, domain?: string): Route
+router.get(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.post(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.put(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.patch(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.delete(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.options(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
+router.head(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
 ```
 
 Defines a route that responds to the specified HTTP method.
@@ -47,25 +47,34 @@ Defines a route that responds to the specified HTTP method.
 
 - `path`: The URL path pattern
 - `handler`: Function that handles the request
+- `type` (optional): Route type, either 'api' or 'web'
 - `name` (optional): Name for the route, used for URL generation
-- `domain` (optional): Domain constraint for the route
+- `middleware` (optional): Array of middleware to be executed before the handler
 
 **Returns:**
 
-- `Route`: A route instance with constraint methods
+- `Router`: The router instance for method chaining
 
 **Example:**
 
 ```typescript
-router.get('/users/{id}', (req) => {
-  return Response.json({ id: req.params.id })
-}, 'users.show')
+// Basic route
+router.get('/users', getUsersHandler)
+
+// Named route with type
+router.get('/users/{id}', getUserHandler, 'api', 'users.show')
+
+// Route with middleware
+router.post('/users', createUserHandler, 'api', 'users.create', [
+  validateUserMiddleware,
+  logRequestMiddleware
+])
 ```
 
 #### Multiple Methods
 
 ```typescript
-router.match(methods: string[], path: string, handler: RouteHandler, name?: string, domain?: string): Route
+router.match(methods: string[], path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
 ```
 
 Defines a route that responds to multiple HTTP methods.
@@ -75,22 +84,43 @@ Defines a route that responds to multiple HTTP methods.
 - `methods`: Array of HTTP methods
 - `path`: The URL path pattern
 - `handler`: Function that handles the request
+- `type` (optional): Route type, either 'api' or 'web'
 - `name` (optional): Name for the route
-- `domain` (optional): Domain constraint
+- `middleware` (optional): Array of middleware to be executed before the handler
 
 **Example:**
 
 ```typescript
 router.match(['GET', 'HEAD'], '/api/health', healthCheckHandler)
+
+// With middleware
+router.match(['GET', 'POST'], '/data', dataHandler, 'api', 'data', [authMiddleware])
 ```
 
 #### Any Method
 
 ```typescript
-router.any(path: string, handler: RouteHandler, name?: string, domain?: string): Route
+router.any(path: string, handler: RouteHandler, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
 ```
 
 Defines a route that responds to any HTTP method.
+
+**Parameters:**
+
+- `path`: The URL path pattern
+- `handler`: Function that handles the request
+- `type` (optional): Route type, either 'api' or 'web'
+- `name` (optional): Name for the route
+- `middleware` (optional): Array of middleware to be executed before the handler
+
+**Example:**
+
+```typescript
+router.any('/users', getUsersHandler, 'api', 'users.list', [
+  validateUserMiddleware,
+  logRequestMiddleware
+])
+```
 
 ### Redirects
 

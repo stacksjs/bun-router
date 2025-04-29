@@ -182,6 +182,39 @@ router.group({ prefix: '/auth' }, () => {
 })
 ```
 
+### Route-Specific Rate Limiting
+
+You can also apply rate limiting directly to specific routes using the middleware parameter:
+
+```ts
+// Create specialized rate limiters for different routes
+const userLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  maxRequests: 50, // 50 requests per 10 minutes
+})
+
+const adminLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  maxRequests: 200, // 200 requests per 5 minutes
+})
+
+// Apply rate limiting to specific routes
+router.get('/api/users', getUsersHandler, 'api', 'users.list', [userLimiter])
+router.post('/api/users', createUserHandler, 'api', 'users.create', [
+  jsonBody(),
+  validateUserMiddleware(),
+  userLimiter
+])
+
+// Admin routes with different rate limit
+router.get('/api/admin/dashboard', adminDashboardHandler, 'api', 'admin.dashboard', [
+  authMiddleware(),
+  adminLimiter
+])
+```
+
+This Laravel-style approach allows you to apply different rate limits to different routes without having to use route groups.
+
 ## Custom Rate Limit Responses
 
 You can customize the response sent when a rate limit is exceeded:

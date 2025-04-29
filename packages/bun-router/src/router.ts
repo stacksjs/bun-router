@@ -41,8 +41,16 @@ export class Router {
    * @param handler The route handler
    * @param type The route type (api or web)
    * @param name Optional name for the route
+   * @param middleware Optional middleware for this specific route
    */
-  private async addRoute(method: string, path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
+  private async addRoute(
+    method: string,
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
     // Apply current group settings if in a group
     let routePath = path
     let routeMiddleware: MiddlewareHandler[] = []
@@ -57,6 +65,16 @@ export class Router {
       // Apply middleware if it exists
       if (this.currentGroup.middleware && this.currentGroup.middleware.length > 0) {
         routeMiddleware = [...this.currentGroup.middleware] as MiddlewareHandler[]
+      }
+    }
+
+    // Apply route-specific middleware if provided
+    if (middleware && middleware.length > 0) {
+      for (const middlewareItem of middleware) {
+        const resolved = await this.resolveMiddleware(middlewareItem)
+        if (resolved) {
+          routeMiddleware.push(resolved)
+        }
       }
     }
 
@@ -152,36 +170,79 @@ export class Router {
     return this
   }
 
-  async get(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('GET', path, handler, type, name)
+  async get(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('GET', path, handler, type, name, middleware)
   }
 
-  async post(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('POST', path, handler, type, name)
+  async post(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('POST', path, handler, type, name, middleware)
   }
 
-  async put(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('PUT', path, handler, type, name)
+  async put(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('PUT', path, handler, type, name, middleware)
   }
 
-  async patch(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('PATCH', path, handler, type, name)
+  async patch(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('PATCH', path, handler, type, name, middleware)
   }
 
-  async delete(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('DELETE', path, handler, type, name)
+  async delete(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('DELETE', path, handler, type, name, middleware)
   }
 
-  async options(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.addRoute('OPTIONS', path, handler, type, name)
+  async options(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.addRoute('OPTIONS', path, handler, type, name, middleware)
   }
 
   /**
    * Register a route that responds to multiple HTTP methods
    */
-  async match(methods: string[], path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
+  async match(
+    methods: string[],
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
     for (const method of methods) {
-      await this.addRoute(method, path, handler, type, name)
+      await this.addRoute(method, path, handler, type, name, middleware)
     }
     return this
   }
@@ -189,8 +250,14 @@ export class Router {
   /**
    * Register a route that responds to any HTTP method
    */
-  async any(path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    return this.match(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], path, handler, type, name)
+  async any(
+    path: string,
+    handler: ActionHandler,
+    type?: 'api' | 'web',
+    name?: string,
+    middleware?: (string | MiddlewareHandler)[],
+  ): Promise<Router> {
+    return this.match(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], path, handler, type, name, middleware)
   }
 
   /**

@@ -41,14 +41,35 @@ router.group({
 
 ### Route-Specific Middleware
 
-You can also apply middleware to specific routes:
+You can also apply middleware to specific routes by passing it as the last parameter:
 
 ```typescript
 // Apply middleware to a single route
-router.get('/admin/dashboard', dashboardHandler, {
-  middleware: [adminAuthMiddleware()],
-})
+router.get('/admin/dashboard', dashboardHandler, 'web', 'dashboard', [adminAuthMiddleware()])
+
+// Multiple middleware for a specific route
+router.post('/users', createUserHandler, 'api', 'users.create', [
+  validateUserMiddleware(),
+  logRequestMiddleware()
+])
+
+// With named routes
+router.get('/profile', profileHandler, 'web', 'profile', [authMiddleware()])
 ```
+
+This Laravel-style approach allows you to directly attach middleware to routes when you define them. The order of parameters is:
+
+```typescript
+router.method(
+  path,           // The route path
+  handler,        // The route handler function
+  type?,          // Optional: 'api' or 'web'
+  name?,          // Optional: Route name for named routes
+  middleware?     // Optional: Array of middleware
+)
+```
+
+The middleware will be executed in the order they are defined in the array.
 
 ## Built-in Middleware
 

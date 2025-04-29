@@ -175,3 +175,123 @@ describe('Middleware', () => {
     })
   })
 })
+
+describe('Route-specific middleware', () => {
+  it('should apply middleware directly to routes', async () => {
+    const router = new Router()
+
+    // Test middleware that adds a header
+    const testMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Test-Middleware', 'applied')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Create a route with direct middleware
+    await router.get('/test', () => new Response('Test route'), 'web', 'test.route', [testMiddleware])
+
+    // Test the route
+    const response = await router.handleRequest(new Request('http://localhost/test'))
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Test route')
+    expect(response.headers.get('X-Test-Middleware')).toBe('applied')
+  })
+
+  it('should apply multiple middleware in order', async () => {
+    const router = new Router()
+
+    // First middleware that adds a header
+    const firstMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-First-Middleware', '1')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Second middleware that adds another header
+    const secondMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Second-Middleware', '2')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Create a route with multiple middleware
+    await router.get(
+      '/multiple',
+      () => new Response('Multiple middleware'),
+      'web',
+      'multiple.middleware',
+      [firstMiddleware, secondMiddleware],
+    )
+
+    // Test the route
+    const response = await router.handleRequest(new Request('http://localhost/multiple'))
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Multiple middleware')
+    expect(response.headers.get('X-First-Middleware')).toBe('1')
+    expect(response.headers.get('X-Second-Middleware')).toBe('2')
+  })
+
+  it('should combine group middleware with route-specific middleware', async () => {
+    const router = new Router({
+      apiPrefix: '', // Disable API prefix for this test
+    })
+
+    // Group middleware
+    const groupMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Group-Middleware', 'group')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Route middleware
+    const routeMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Route-Middleware', 'route')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Create a group with middleware
+    await router.group({
+      prefix: '/api',
+      middleware: [groupMiddleware],
+    }, async () => {
+      // Add a route with its own middleware in the group
+      await router.get('/combined', () => new Response('Combined middleware'), 'web', 'combined', [routeMiddleware])
+    })
+
+    // Test the route
+    const response = await router.handleRequest(new Request('http://localhost/api/combined'))
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Combined middleware')
+    expect(response.headers.get('X-Group-Middleware')).toBe('group')
+    expect(response.headers.get('X-Route-Middleware')).toBe('route')
+  })
+})
