@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 interface HttpRequest {
   id: string
@@ -46,13 +46,13 @@ onMounted(() => {
         requestHeaders: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0',
-          'Authorization': 'Bearer token123'
+          'Authorization': 'Bearer token123',
         },
         responseHeaders: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'max-age=3600'
+          'Cache-Control': 'max-age=3600',
         },
-        responseBody: JSON.stringify({ users: [{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }] }, null, 2)
+        responseBody: JSON.stringify({ users: [{ id: 1, name: 'John' }, { id: 2, name: 'Jane' }] }, null, 2),
       },
       {
         id: '2',
@@ -67,14 +67,14 @@ onMounted(() => {
         requestHeaders: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0'
+          'User-Agent': 'Mozilla/5.0',
         },
         responseHeaders: {
           'Content-Type': 'application/json',
-          'Set-Cookie': 'session=abc123; Path=/; HttpOnly'
+          'Set-Cookie': 'session=abc123; Path=/; HttpOnly',
         },
         requestBody: JSON.stringify({ email: 'user@example.com', password: '********' }, null, 2),
-        responseBody: JSON.stringify({ token: 'eyJhbGciOiJ9...' }, null, 2)
+        responseBody: JSON.stringify({ token: 'eyJhbGciOiJ9...' }, null, 2),
       },
       {
         id: '3',
@@ -88,12 +88,12 @@ onMounted(() => {
         protocol: 'HTTP/1.1',
         requestHeaders: {
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0'
+          'User-Agent': 'Mozilla/5.0',
         },
         responseHeaders: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        responseBody: JSON.stringify({ error: 'Not found' }, null, 2)
+        responseBody: JSON.stringify({ error: 'Not found' }, null, 2),
       },
       {
         id: '4',
@@ -109,13 +109,13 @@ onMounted(() => {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': 'Bearer token123',
-          'User-Agent': 'Mozilla/5.0'
+          'User-Agent': 'Mozilla/5.0',
         },
         responseHeaders: {
-          'Content-Length': '0'
+          'Content-Length': '0',
         },
-        requestBody: JSON.stringify({ name: 'Updated Name', email: 'updated@example.com' }, null, 2)
-      }
+        requestBody: JSON.stringify({ name: 'Updated Name', email: 'updated@example.com' }, null, 2),
+      },
     ]
 
     // Check if there are request IDs in the query parameters
@@ -123,13 +123,14 @@ onMounted(() => {
     if (requestId) {
       if (Array.isArray(requestId)) {
         // Multiple IDs
-        requestId.forEach(id => {
+        requestId.forEach((id) => {
           const request = allRequests.value.find(r => r.id === id)
           if (request) {
             addToComparison(request)
           }
         })
-      } else {
+      }
+      else {
         // Single ID
         const request = allRequests.value.find(r => r.id === requestId)
         if (request) {
@@ -157,21 +158,24 @@ function clearComparison() {
 }
 
 function formatJson(json: string | undefined) {
-  if (!json) return ''
+  if (!json)
+    return ''
   try {
     const obj = JSON.parse(json)
     return JSON.stringify(obj, null, 2)
-  } catch (e) {
+  }
+  catch (e) {
     return json
   }
 }
 
 // Helper function to determine if property is different across requests
 function hasDifferences(property: string) {
-  if (selectedRequests.value.length < 2) return false
+  if (selectedRequests.value.length < 2)
+    return false
 
   const firstValue = (selectedRequests.value[0] as any)[property]
-  return selectedRequests.value.some(request => {
+  return selectedRequests.value.some((request) => {
     const value = (request as any)[property]
 
     if (typeof firstValue === 'object' && typeof value === 'object') {
@@ -183,10 +187,14 @@ function hasDifferences(property: string) {
 }
 
 function getStatusClass(status: number) {
-  if (status >= 200 && status < 300) return 'text-green-600'
-  if (status >= 300 && status < 400) return 'text-blue-600'
-  if (status >= 400 && status < 500) return 'text-orange-600'
-  if (status >= 500) return 'text-red-600'
+  if (status >= 200 && status < 300)
+    return 'text-green-600'
+  if (status >= 300 && status < 400)
+    return 'text-blue-600'
+  if (status >= 400 && status < 500)
+    return 'text-orange-600'
+  if (status >= 500)
+    return 'text-red-600'
   return 'text-gray-600'
 }
 
@@ -213,13 +221,13 @@ function getHeaderDiffs(requestIndex: number, headerType: 'requestHeaders' | 're
   const allHeaders = new Set<string>()
 
   // Collect all header keys
-  selectedRequests.value.forEach(req => {
+  selectedRequests.value.forEach((req) => {
     const headers = req[headerType] || {}
     Object.keys(headers).forEach(key => allHeaders.add(key))
   })
 
   // Check each header
-  allHeaders.forEach(header => {
+  allHeaders.forEach((header) => {
     const currentValue = selectedRequests.value[requestIndex][headerType]?.[header]
 
     if (currentValue === undefined) {
@@ -229,13 +237,14 @@ function getHeaderDiffs(requestIndex: number, headerType: 'requestHeaders' | 're
 
     // Check if any other request has a different value for this header
     const isDifferent = selectedRequests.value.some((req, idx) => {
-      if (idx === requestIndex) return false
+      if (idx === requestIndex)
+        return false
       return req[headerType]?.[header] !== currentValue
     })
 
     result[header] = {
       value: currentValue,
-      status: isDifferent ? 'different' : 'same'
+      status: isDifferent ? 'different' : 'same',
     }
   })
 
@@ -251,32 +260,50 @@ function goBack() {
 <template>
   <div class="request-comparison-view">
     <div class="flex items-center mb-6">
-      <button @click="goBack" class="mr-4 text-gray-600 hover:text-gray-900">
-        <span class="i-carbon-arrow-left text-xl"></span>
+      <button class="mr-4 text-gray-600 hover:text-gray-900" @click="goBack">
+        <span class="i-carbon-arrow-left text-xl" />
       </button>
-      <h1 class="text-2xl font-bold">Request Comparison</h1>
+      <h1 class="text-2xl font-bold">
+        Request Comparison
+      </h1>
     </div>
 
     <div v-if="isLoading" class="p-8 text-center bg-white rounded-lg shadow">
-      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-      <p class="mt-2 text-gray-600">Loading requests...</p>
+      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent" />
+      <p class="mt-2 text-gray-600">
+        Loading requests...
+      </p>
     </div>
 
     <template v-else>
       <!-- Selection Area -->
       <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-lg font-medium mb-4">Select Requests to Compare</h2>
+        <h2 class="text-lg font-medium mb-4">
+          Select Requests to Compare
+        </h2>
 
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Method
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Path
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Time
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Timestamp
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -284,15 +311,15 @@ function goBack() {
                 <td class="px-6 py-4 whitespace-nowrap">
                   <button
                     v-if="!selectedRequests.some(r => r.id === request.id)"
-                    @click="addToComparison(request)"
                     class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
+                    @click="addToComparison(request)"
                   >
                     Add
                   </button>
                   <button
                     v-else
-                    @click="removeFromComparison(request.id)"
                     class="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300"
+                    @click="removeFromComparison(request.id)"
                   >
                     Remove
                   </button>
@@ -326,22 +353,26 @@ function goBack() {
       <div v-if="selectedRequests.length > 0" class="bg-white rounded-lg shadow overflow-hidden mb-6">
         <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-medium">Comparing {{ selectedRequests.length }} Requests</h2>
-            <p class="text-sm text-gray-600">Select which section to compare</p>
+            <h2 class="text-lg font-medium">
+              Comparing {{ selectedRequests.length }} Requests
+            </h2>
+            <p class="text-sm text-gray-600">
+              Select which section to compare
+            </p>
           </div>
           <div class="flex items-center space-x-4">
             <div class="flex items-center">
               <input
                 id="diff-mode"
-                type="checkbox"
                 v-model="diffMode"
+                type="checkbox"
                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
+              >
               <label for="diff-mode" class="ml-2 text-sm text-gray-700">Highlight Differences</label>
             </div>
             <button
-              @click="clearComparison"
               class="px-3 py-1 bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-200"
+              @click="clearComparison"
             >
               Clear
             </button>
@@ -352,46 +383,42 @@ function goBack() {
         <div class="p-4 bg-gray-100">
           <div class="flex space-x-2 mb-4">
             <button
-              @click="compareSection = 'overview'"
-              :class="[
-                'px-4 py-2 rounded-md text-sm font-medium',
+              class="px-4 py-2 rounded-md text-sm font-medium" :class="[
                 compareSection === 'overview'
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50',
               ]"
+              @click="compareSection = 'overview'"
             >
               Overview
             </button>
             <button
-              @click="compareSection = 'headers'"
-              :class="[
-                'px-4 py-2 rounded-md text-sm font-medium',
+              class="px-4 py-2 rounded-md text-sm font-medium" :class="[
                 compareSection === 'headers'
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50',
               ]"
+              @click="compareSection = 'headers'"
             >
               Headers
             </button>
             <button
-              @click="compareSection = 'requestBody'"
-              :class="[
-                'px-4 py-2 rounded-md text-sm font-medium',
+              class="px-4 py-2 rounded-md text-sm font-medium" :class="[
                 compareSection === 'requestBody'
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50',
               ]"
+              @click="compareSection = 'requestBody'"
             >
               Request Body
             </button>
             <button
-              @click="compareSection = 'responseBody'"
-              :class="[
-                'px-4 py-2 rounded-md text-sm font-medium',
+              class="px-4 py-2 rounded-md text-sm font-medium" :class="[
                 compareSection === 'responseBody'
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50',
               ]"
+              @click="compareSection = 'responseBody'"
             >
               Response Body
             </button>
@@ -402,7 +429,9 @@ function goBack() {
             <table class="min-w-full divide-y divide-gray-200 bg-white">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Property
+                  </th>
                   <th v-for="(request, index) in selectedRequests" :key="`header-${request.id}`" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Request #{{ index + 1 }}
                   </th>
@@ -411,7 +440,9 @@ function goBack() {
               <tbody class="divide-y divide-gray-200">
                 <!-- Method row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('method') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Method</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Method
+                  </td>
                   <td v-for="request in selectedRequests" :key="`method-${request.id}`" class="px-4 py-3 text-sm">
                     <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${getMethodClass(request.method)}`">
                       {{ request.method }}
@@ -421,7 +452,9 @@ function goBack() {
 
                 <!-- Path row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('path') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Path</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Path
+                  </td>
                   <td v-for="request in selectedRequests" :key="`path-${request.id}`" class="px-4 py-3 text-sm">
                     {{ request.path }}
                   </td>
@@ -429,7 +462,9 @@ function goBack() {
 
                 <!-- Status row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('status') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Status</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Status
+                  </td>
                   <td v-for="request in selectedRequests" :key="`status-${request.id}`" class="px-4 py-3 text-sm">
                     <span :class="`font-medium ${getStatusClass(request.status)}`">
                       {{ request.status }}
@@ -439,7 +474,9 @@ function goBack() {
 
                 <!-- Host row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('host') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Host</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Host
+                  </td>
                   <td v-for="request in selectedRequests" :key="`host-${request.id}`" class="px-4 py-3 text-sm">
                     {{ request.host }}
                   </td>
@@ -447,7 +484,9 @@ function goBack() {
 
                 <!-- Protocol row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('protocol') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Protocol</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Protocol
+                  </td>
                   <td v-for="request in selectedRequests" :key="`protocol-${request.id}`" class="px-4 py-3 text-sm">
                     {{ request.protocol }}
                   </td>
@@ -455,7 +494,9 @@ function goBack() {
 
                 <!-- Time row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('time') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Time</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Time
+                  </td>
                   <td v-for="request in selectedRequests" :key="`time-${request.id}`" class="px-4 py-3 text-sm">
                     {{ request.time }}
                   </td>
@@ -463,7 +504,9 @@ function goBack() {
 
                 <!-- Size row -->
                 <tr :class="{ 'bg-yellow-50': diffMode && hasDifferences('size') }">
-                  <td class="px-4 py-3 text-sm font-medium text-gray-900">Size</td>
+                  <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    Size
+                  </td>
                   <td v-for="request in selectedRequests" :key="`size-${request.id}`" class="px-4 py-3 text-sm">
                     {{ request.size }}
                   </td>
@@ -477,32 +520,48 @@ function goBack() {
             <!-- Request Headers -->
             <div class="bg-white rounded-lg shadow">
               <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-sm font-medium text-gray-700">Request Headers</h3>
+                <h3 class="text-sm font-medium text-gray-700">
+                  Request Headers
+                </h3>
               </div>
               <div class="p-4 space-y-6">
                 <div v-for="(request, index) in selectedRequests" :key="`req-headers-${request.id}`">
-                  <h4 class="text-sm font-medium text-gray-700 mb-2">Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}</h4>
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">
+                    Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}
+                  </h4>
                   <div class="bg-gray-50 p-3 rounded">
                     <table class="min-w-full divide-y divide-gray-200">
                       <thead>
                         <tr>
-                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Value
+                          </th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-200">
                         <template v-if="Object.keys(getHeaderDiffs(index, 'requestHeaders')).length > 0">
-                          <tr v-for="(header, name) in getHeaderDiffs(index, 'requestHeaders')" :key="`req-header-${name}-${index}`"
-                              :class="{
-                                'bg-red-50': diffMode && header.status === 'missing',
-                                'bg-yellow-50': diffMode && header.status === 'different'
-                              }">
-                            <td class="px-3 py-2 text-sm font-medium text-gray-900">{{ name }}</td>
-                            <td class="px-3 py-2 text-sm text-gray-500 break-all">{{ header.value }}</td>
+                          <tr
+                            v-for="(header, name) in getHeaderDiffs(index, 'requestHeaders')" :key="`req-header-${name}-${index}`"
+                            :class="{
+                              'bg-red-50': diffMode && header.status === 'missing',
+                              'bg-yellow-50': diffMode && header.status === 'different',
+                            }"
+                          >
+                            <td class="px-3 py-2 text-sm font-medium text-gray-900">
+                              {{ name }}
+                            </td>
+                            <td class="px-3 py-2 text-sm text-gray-500 break-all">
+                              {{ header.value }}
+                            </td>
                           </tr>
                         </template>
                         <tr v-else>
-                          <td colspan="2" class="px-3 py-2 text-sm text-gray-500 text-center">No request headers</td>
+                          <td colspan="2" class="px-3 py-2 text-sm text-gray-500 text-center">
+                            No request headers
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -514,32 +573,48 @@ function goBack() {
             <!-- Response Headers -->
             <div class="bg-white rounded-lg shadow">
               <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-sm font-medium text-gray-700">Response Headers</h3>
+                <h3 class="text-sm font-medium text-gray-700">
+                  Response Headers
+                </h3>
               </div>
               <div class="p-4 space-y-6">
                 <div v-for="(request, index) in selectedRequests" :key="`resp-headers-${request.id}`">
-                  <h4 class="text-sm font-medium text-gray-700 mb-2">Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}</h4>
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">
+                    Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}
+                  </h4>
                   <div class="bg-gray-50 p-3 rounded">
                     <table class="min-w-full divide-y divide-gray-200">
                       <thead>
                         <tr>
-                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Value
+                          </th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-200">
                         <template v-if="Object.keys(getHeaderDiffs(index, 'responseHeaders')).length > 0">
-                          <tr v-for="(header, name) in getHeaderDiffs(index, 'responseHeaders')" :key="`resp-header-${name}-${index}`"
-                              :class="{
-                                'bg-red-50': diffMode && header.status === 'missing',
-                                'bg-yellow-50': diffMode && header.status === 'different'
-                              }">
-                            <td class="px-3 py-2 text-sm font-medium text-gray-900">{{ name }}</td>
-                            <td class="px-3 py-2 text-sm text-gray-500 break-all">{{ header.value }}</td>
+                          <tr
+                            v-for="(header, name) in getHeaderDiffs(index, 'responseHeaders')" :key="`resp-header-${name}-${index}`"
+                            :class="{
+                              'bg-red-50': diffMode && header.status === 'missing',
+                              'bg-yellow-50': diffMode && header.status === 'different',
+                            }"
+                          >
+                            <td class="px-3 py-2 text-sm font-medium text-gray-900">
+                              {{ name }}
+                            </td>
+                            <td class="px-3 py-2 text-sm text-gray-500 break-all">
+                              {{ header.value }}
+                            </td>
                           </tr>
                         </template>
                         <tr v-else>
-                          <td colspan="2" class="px-3 py-2 text-sm text-gray-500 text-center">No response headers</td>
+                          <td colspan="2" class="px-3 py-2 text-sm text-gray-500 text-center">
+                            No response headers
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -553,11 +628,15 @@ function goBack() {
           <div v-if="compareSection === 'requestBody'" class="space-y-6">
             <div v-for="(request, index) in selectedRequests" :key="`req-body-${request.id}`" class="bg-white rounded-lg shadow">
               <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-sm font-medium text-gray-700">Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}</h3>
+                <h3 class="text-sm font-medium text-gray-700">
+                  Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}
+                </h3>
               </div>
               <div class="p-4">
                 <pre v-if="request.requestBody" class="bg-gray-50 p-4 rounded-md overflow-x-auto text-sm font-mono">{{ formatJson(request.requestBody) }}</pre>
-                <div v-else class="bg-gray-50 p-4 rounded-md text-center text-gray-500">No request body</div>
+                <div v-else class="bg-gray-50 p-4 rounded-md text-center text-gray-500">
+                  No request body
+                </div>
               </div>
             </div>
           </div>
@@ -566,11 +645,15 @@ function goBack() {
           <div v-if="compareSection === 'responseBody'" class="space-y-6">
             <div v-for="(request, index) in selectedRequests" :key="`resp-body-${request.id}`" class="bg-white rounded-lg shadow">
               <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-sm font-medium text-gray-700">Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}</h3>
+                <h3 class="text-sm font-medium text-gray-700">
+                  Request #{{ index + 1 }} - {{ request.method }} {{ request.path }}
+                </h3>
               </div>
               <div class="p-4">
                 <pre v-if="request.responseBody" class="bg-gray-50 p-4 rounded-md overflow-x-auto text-sm font-mono">{{ formatJson(request.responseBody) }}</pre>
-                <div v-else class="bg-gray-50 p-4 rounded-md text-center text-gray-500">No response body</div>
+                <div v-else class="bg-gray-50 p-4 rounded-md text-center text-gray-500">
+                  No response body
+                </div>
               </div>
             </div>
           </div>
@@ -580,9 +663,11 @@ function goBack() {
       <!-- No Selections Message -->
       <div v-else class="bg-white rounded-lg shadow p-8 text-center">
         <div class="flex justify-center mb-4">
-          <span class="i-carbon-compare text-6xl text-gray-300"></span>
+          <span class="i-carbon-compare text-6xl text-gray-300" />
         </div>
-        <p class="text-gray-600 mb-2">Select two or more requests to compare</p>
+        <p class="text-gray-600 mb-2">
+          Select two or more requests to compare
+        </p>
         <p class="text-gray-500 text-sm">
           You can compare headers, request bodies, response bodies, and other request properties.
         </p>

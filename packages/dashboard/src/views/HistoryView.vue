@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useHistoryStore, type HistoryItem } from '../store/historyStore'
+import type { HistoryItem } from '../store/historyStore'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useHistoryStore } from '../store/historyStore'
 
 const router = useRouter()
 const historyStore = useHistoryStore()
@@ -19,7 +20,7 @@ const statusOptions = [
   { label: '2xx Success', value: 200 },
   { label: '3xx Redirect', value: 300 },
   { label: '4xx Client Error', value: 400 },
-  { label: '5xx Server Error', value: 500 }
+  { label: '5xx Server Error', value: 500 },
 ]
 
 // Method filter options
@@ -29,20 +30,21 @@ const methodOptions = [
   { label: 'POST', value: 'POST' },
   { label: 'PUT', value: 'PUT' },
   { label: 'PATCH', value: 'PATCH' },
-  { label: 'DELETE', value: 'DELETE' }
+  { label: 'DELETE', value: 'DELETE' },
 ]
 
 // Date range filter
-const dateRange = ref<{from: Date | null, to: Date | null}>({
+const dateRange = ref<{ from: Date | null, to: Date | null }>({
   from: null,
-  to: null
+  to: null,
 })
 
 // Load history data
 onMounted(async () => {
   try {
     await historyStore.fetchHistory()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load history:', error)
   }
 })
@@ -73,8 +75,8 @@ const filteredHistory = computed(() => {
   // Apply status filter
   if (statusFilter.value) {
     results = results.filter(item =>
-      item.status >= statusFilter.value &&
-      item.status < statusFilter.value + 100
+      item.status >= statusFilter.value
+      && item.status < statusFilter.value + 100,
     )
   }
 
@@ -86,13 +88,13 @@ const filteredHistory = computed(() => {
   // Apply date range filter
   if (dateRange.value.from) {
     results = results.filter(item =>
-      new Date(item.timestamp) >= dateRange.value.from!
+      new Date(item.timestamp) >= dateRange.value.from!,
     )
   }
 
   if (dateRange.value.to) {
     results = results.filter(item =>
-      new Date(item.timestamp) <= dateRange.value.to!
+      new Date(item.timestamp) <= dateRange.value.to!,
     )
   }
 
@@ -101,10 +103,14 @@ const filteredHistory = computed(() => {
 
 // Get status class for styling
 function getStatusClass(status: number) {
-  if (status >= 200 && status < 300) return 'text-green-600'
-  if (status >= 300 && status < 400) return 'text-blue-600'
-  if (status >= 400 && status < 500) return 'text-orange-600'
-  if (status >= 500) return 'text-red-600'
+  if (status >= 200 && status < 300)
+    return 'text-green-600'
+  if (status >= 300 && status < 400)
+    return 'text-blue-600'
+  if (status >= 400 && status < 500)
+    return 'text-orange-600'
+  if (status >= 500)
+    return 'text-red-600'
   return 'text-gray-600'
 }
 
@@ -135,7 +141,8 @@ function clearSelection() {
 // Delete history item
 function deleteHistoryItem(id: string) {
   const confirmed = confirm('Are you sure you want to delete this request from history?')
-  if (!confirmed) return
+  if (!confirmed)
+    return
 
   historyStore.deleteHistoryItem(id)
   if (selectedItem.value?.id === id) {
@@ -146,7 +153,8 @@ function deleteHistoryItem(id: string) {
 // Clear all history
 function clearAllHistory() {
   const confirmed = confirm('Are you sure you want to clear all request history?')
-  if (!confirmed) return
+  if (!confirmed)
+    return
 
   historyStore.clearHistory()
   clearSelection()
@@ -174,13 +182,15 @@ function formatDuration(duration: number) {
 
 // Highlight search terms in text
 function highlightSearchTerms(text: string) {
-  if (!searchQuery.value.trim()) return text
+  if (!searchQuery.value.trim())
+    return text
 
   const terms = searchQuery.value.toLowerCase().split(' ').filter(t => t.length > 0)
-  if (terms.length === 0) return text
+  if (terms.length === 0)
+    return text
 
   let result = text
-  terms.forEach(term => {
+  terms.forEach((term) => {
     const regex = new RegExp(term, 'gi')
     result = result.replace(regex, match => `<mark class="bg-yellow-200">${match}</mark>`)
   })
@@ -192,12 +202,14 @@ function highlightSearchTerms(text: string) {
 <template>
   <div class="history-view">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Request History</h1>
+      <h1 class="text-2xl font-bold">
+        Request History
+      </h1>
       <button
-        @click="clearAllHistory"
         class="btn-secondary px-4 py-2 bg-white border border-red-300 text-red-700 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+        @click="clearAllHistory"
       >
-        <span class="i-carbon-trash-can mr-2"></span>
+        <span class="i-carbon-trash-can mr-2" />
         Clear History
       </button>
     </div>
@@ -209,17 +221,17 @@ function highlightSearchTerms(text: string) {
           <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Full-text Search</label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-              <span class="i-carbon-search"></span>
+              <span class="i-carbon-search" />
             </span>
             <input
-              type="text"
               id="search"
               v-model="searchQuery"
+              type="text"
               placeholder="Search in URLs, headers, request/response bodies, status codes..."
               class="block w-full rounded-md border-gray-300 pl-10 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+            >
             <div v-if="isSearching" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-indigo-600 border-r-transparent"></div>
+              <div class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-indigo-600 border-r-transparent" />
             </div>
           </div>
         </div>
@@ -257,23 +269,39 @@ function highlightSearchTerms(text: string) {
       <!-- Results List -->
       <div class="bg-white rounded-lg shadow overflow-hidden lg:col-span-3" :class="{ 'lg:col-span-2': showDetailPanel }">
         <div v-if="historyStore.isLoading" class="p-8 text-center">
-          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-          <p class="mt-2 text-gray-600">Loading request history...</p>
+          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent" />
+          <p class="mt-2 text-gray-600">
+            Loading request history...
+          </p>
         </div>
 
         <div v-else-if="filteredHistory.length === 0" class="p-8 text-center">
-          <p class="text-gray-600">No request history found matching your filters.</p>
+          <p class="text-gray-600">
+            No request history found matching your filters.
+          </p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Method
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                URL
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Time
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Duration
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -290,7 +318,7 @@ function highlightSearchTerms(text: string) {
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">
-                <span v-html="highlightSearchTerms(item.path)"></span>
+                <span v-html="highlightSearchTerms(item.path)" />
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <span :class="`font-medium ${getStatusClass(item.status)}`">
@@ -305,11 +333,11 @@ function highlightSearchTerms(text: string) {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
-                  @click.stop="deleteHistoryItem(item.id)"
                   class="text-red-600 hover:text-red-900 mr-2"
                   title="Delete from history"
+                  @click.stop="deleteHistoryItem(item.id)"
                 >
-                  <span class="i-carbon-trash-can"></span>
+                  <span class="i-carbon-trash-can" />
                 </button>
               </td>
             </tr>
@@ -325,18 +353,20 @@ function highlightSearchTerms(text: string) {
         <div class="p-4 border-b border-gray-200 flex justify-between items-center">
           <div class="flex items-center">
             <button
-              @click="clearSelection"
               class="mr-2 p-1 text-gray-500 hover:text-gray-700 lg:hidden"
+              @click="clearSelection"
             >
-              <span class="i-carbon-arrow-left"></span>
+              <span class="i-carbon-arrow-left" />
             </button>
-            <h2 class="text-lg font-medium text-gray-900">Request Details</h2>
+            <h2 class="text-lg font-medium text-gray-900">
+              Request Details
+            </h2>
           </div>
           <button
-            @click="clearSelection"
             class="p-1 text-gray-500 hover:text-gray-700 hidden lg:block"
+            @click="clearSelection"
           >
-            <span class="i-carbon-close"></span>
+            <span class="i-carbon-close" />
           </button>
         </div>
 
@@ -346,8 +376,12 @@ function highlightSearchTerms(text: string) {
               <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${getMethodClass(selectedItem.method)} mb-2`">
                 {{ selectedItem.method }}
               </span>
-              <h3 class="text-sm font-medium text-gray-900">{{ selectedItem.path }}</h3>
-              <p class="text-xs text-gray-500 mt-1">{{ selectedItem.url }}</p>
+              <h3 class="text-sm font-medium text-gray-900">
+                {{ selectedItem.path }}
+              </h3>
+              <p class="text-xs text-gray-500 mt-1">
+                {{ selectedItem.url }}
+              </p>
             </div>
             <span :class="`font-medium text-lg ${getStatusClass(selectedItem.status)}`">
               {{ selectedItem.status }}
@@ -356,18 +390,24 @@ function highlightSearchTerms(text: string) {
 
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p class="text-gray-500">Time</p>
+              <p class="text-gray-500">
+                Time
+              </p>
               <p>{{ formatDate(selectedItem.timestamp) }}</p>
             </div>
             <div>
-              <p class="text-gray-500">Duration</p>
+              <p class="text-gray-500">
+                Duration
+              </p>
               <p>{{ formatDuration(selectedItem.duration) }}</p>
             </div>
           </div>
 
           <!-- Tags -->
           <div class="mt-4">
-            <p class="text-sm text-gray-500 mb-2">Tags</p>
+            <p class="text-sm text-gray-500 mb-2">
+              Tags
+            </p>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="tag in selectedItem.tags"
@@ -376,17 +416,17 @@ function highlightSearchTerms(text: string) {
               >
                 {{ tag }}
                 <button
-                  @click="removeTag(selectedItem, tag)"
                   class="ml-1 text-gray-500 hover:text-gray-700"
+                  @click="removeTag(selectedItem, tag)"
                 >
-                  <span class="i-carbon-close"></span>
+                  <span class="i-carbon-close" />
                 </button>
               </span>
               <button
                 class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border border-dashed border-gray-300 text-gray-500 hover:text-gray-700"
                 @click="addTag(selectedItem, prompt('Enter tag name:') || '')"
               >
-                <span class="i-carbon-add mr-1"></span>
+                <span class="i-carbon-add mr-1" />
                 Add Tag
               </button>
             </div>
@@ -395,11 +435,15 @@ function highlightSearchTerms(text: string) {
 
         <!-- Request Details -->
         <div class="p-4 border-b border-gray-200">
-          <h3 class="text-sm font-medium text-gray-900 mb-2">Request</h3>
+          <h3 class="text-sm font-medium text-gray-900 mb-2">
+            Request
+          </h3>
 
           <!-- Query Params -->
           <div v-if="Object.keys(selectedItem.queryParams).length > 0" class="mb-4">
-            <p class="text-xs text-gray-500 mb-1">Query Parameters</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Query Parameters
+            </p>
             <div class="bg-gray-50 p-2 rounded-md">
               <div v-for="(value, key) in selectedItem.queryParams" :key="key" class="text-xs font-mono">
                 <span class="text-indigo-700">{{ key }}</span>: <span class="text-gray-800">{{ value }}</span>
@@ -409,7 +453,9 @@ function highlightSearchTerms(text: string) {
 
           <!-- Request Headers -->
           <div class="mb-4">
-            <p class="text-xs text-gray-500 mb-1">Headers</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Headers
+            </p>
             <div class="bg-gray-50 p-2 rounded-md">
               <div v-for="(value, key) in selectedItem.requestHeaders" :key="key" class="text-xs font-mono">
                 <span class="text-indigo-700">{{ key }}</span>: <span class="text-gray-800">{{ value }}</span>
@@ -419,7 +465,9 @@ function highlightSearchTerms(text: string) {
 
           <!-- Request Body -->
           <div v-if="selectedItem.requestBody" class="mb-2">
-            <p class="text-xs text-gray-500 mb-1">Body</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Body
+            </p>
             <div class="bg-gray-50 p-2 rounded-md">
               <pre class="text-xs font-mono whitespace-pre-wrap overflow-x-auto max-h-40">{{ selectedItem.requestBody }}</pre>
             </div>
@@ -428,11 +476,15 @@ function highlightSearchTerms(text: string) {
 
         <!-- Response Details -->
         <div class="p-4">
-          <h3 class="text-sm font-medium text-gray-900 mb-2">Response</h3>
+          <h3 class="text-sm font-medium text-gray-900 mb-2">
+            Response
+          </h3>
 
           <!-- Response Headers -->
           <div class="mb-4">
-            <p class="text-xs text-gray-500 mb-1">Headers</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Headers
+            </p>
             <div class="bg-gray-50 p-2 rounded-md">
               <div v-for="(value, key) in selectedItem.responseHeaders" :key="key" class="text-xs font-mono">
                 <span class="text-indigo-700">{{ key }}</span>: <span class="text-gray-800">{{ value }}</span>
@@ -442,7 +494,9 @@ function highlightSearchTerms(text: string) {
 
           <!-- Response Body -->
           <div v-if="selectedItem.responseBody" class="mb-2">
-            <p class="text-xs text-gray-500 mb-1">Body</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Body
+            </p>
             <div class="bg-gray-50 p-2 rounded-md">
               <pre class="text-xs font-mono whitespace-pre-wrap overflow-x-auto max-h-40">{{ selectedItem.responseBody }}</pre>
             </div>
@@ -450,7 +504,9 @@ function highlightSearchTerms(text: string) {
 
           <!-- Error -->
           <div v-if="selectedItem.error" class="mt-4">
-            <p class="text-xs text-gray-500 mb-1">Error</p>
+            <p class="text-xs text-gray-500 mb-1">
+              Error
+            </p>
             <div class="bg-red-50 p-2 rounded-md text-xs text-red-800 font-medium">
               {{ selectedItem.error }}
             </div>

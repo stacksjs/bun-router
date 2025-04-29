@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 const props = defineProps<{
   onMessage: (message: any) => void
@@ -46,7 +46,8 @@ function connect() {
     ws.onmessage = (event) => {
       props.onMessage(event.data)
     }
-  } catch (error) {
+  }
+  catch (error) {
     connectionError.value = error instanceof Error ? error.message : 'Failed to connect'
     isConnecting.value = false
     isConnected.value = false
@@ -73,7 +74,7 @@ function sendMessage(message: string) {
 defineExpose({
   connect,
   disconnect,
-  sendMessage
+  sendMessage,
 })
 
 // Clean up on unmount
@@ -97,7 +98,7 @@ onUnmounted(() => {
           :disabled="isConnected"
           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           placeholder="ws://echo.websocket.org"
-        />
+        >
       </div>
 
       <div>
@@ -109,25 +110,25 @@ onUnmounted(() => {
           :disabled="isConnected"
           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           placeholder="e.g. graphql-ws"
-        />
+        >
       </div>
     </div>
 
     <div class="flex space-x-3">
       <button
         v-if="!isConnected"
-        @click="connect"
         :disabled="isConnecting || !wsUrl"
         class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300"
+        @click="connect"
       >
-        <span v-if="isConnecting" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2"></span>
+        <span v-if="isConnecting" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2" />
         {{ isConnecting ? 'Connecting...' : 'Connect' }}
       </button>
 
       <button
         v-else
-        @click="disconnect"
         class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+        @click="disconnect"
       >
         Disconnect
       </button>

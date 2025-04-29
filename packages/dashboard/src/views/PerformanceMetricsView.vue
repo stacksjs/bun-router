@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 interface PerformanceMetric {
   id: string
@@ -37,15 +37,15 @@ const route = useRoute()
 // Get the metric ID from the route if it exists
 const metricId = computed(() => route.params.id as string)
 const selectedMetric = computed(() =>
-  metrics.value.find(m => m.id === metricId.value) || null
+  metrics.value.find(m => m.id === metricId.value) || null,
 )
 
 // Filtered and sorted metrics
 const filteredMetrics = computed(() => {
   return metrics.value
     .filter(m =>
-      m.url.toLowerCase().includes(filterText.value.toLowerCase()) ||
-      m.id.toLowerCase().includes(filterText.value.toLowerCase())
+      m.url.toLowerCase().includes(filterText.value.toLowerCase())
+      || m.id.toLowerCase().includes(filterText.value.toLowerCase()),
     )
     .sort((a, b) => {
       const aValue = a[sortBy.value as keyof PerformanceMetric]
@@ -55,7 +55,8 @@ const filteredMetrics = computed(() => {
         return sortDirection.value === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue)
-      } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      }
+      else if (typeof aValue === 'number' && typeof bValue === 'number') {
         return sortDirection.value === 'asc'
           ? aValue - bValue
           : bValue - aValue
@@ -77,7 +78,8 @@ onMounted(() => {
 function toggleSort(field: string) {
   if (sortBy.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
+  }
+  else {
     sortBy.value = field
     sortDirection.value = 'desc'
   }
@@ -88,8 +90,10 @@ function formatMs(ms: number): string {
 }
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
+  if (bytes < 1024)
+    return `${bytes} B`
+  if (bytes < 1024 * 1024)
+    return `${(bytes / 1024).toFixed(2)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
@@ -129,7 +133,8 @@ function toggleComparisonMode() {
 function toggleMetric(metric: string) {
   if (selectedMetrics.value.includes(metric)) {
     selectedMetrics.value = selectedMetrics.value.filter(m => m !== metric)
-  } else {
+  }
+  else {
     selectedMetrics.value.push(metric)
   }
   updateChartData()
@@ -142,8 +147,8 @@ function updateChartData() {
     labels: metrics.value.slice(0, 10).map(m => new Date(m.timestamp).toLocaleDateString()),
     datasets: selectedMetrics.value.map(metric => ({
       label: metric,
-      data: metrics.value.slice(0, 10).map(m => m[metric as keyof PerformanceMetric])
-    }))
+      data: metrics.value.slice(0, 10).map(m => m[metric as keyof PerformanceMetric]),
+    })),
   }
 }
 
@@ -162,7 +167,7 @@ function generateMockPerformanceData(count: number): PerformanceMetric[] {
     'https://example.com/blog',
     'https://example.com/contact',
     'https://api.example.com/v1/users',
-    'https://api.example.com/v1/products'
+    'https://api.example.com/v1/products',
   ]
 
   for (let i = 0; i < count; i++) {
@@ -198,7 +203,7 @@ function generateMockPerformanceData(count: number): PerformanceMetric[] {
       cssTime,
       imageTime,
       otherTime,
-      cacheHitRatio: Math.random()
+      cacheHitRatio: Math.random(),
     })
   }
 
@@ -207,7 +212,7 @@ function generateMockPerformanceData(count: number): PerformanceMetric[] {
 
 // Classes for coloring performance indicators
 function getPerformanceClass(value: number, metric: string): string {
-  let threshold: { good: number; medium: number } = { good: 0, medium: 0 }
+  let threshold: { good: number, medium: number } = { good: 0, medium: 0 }
 
   switch (metric) {
     case 'loadTime':
@@ -226,8 +231,10 @@ function getPerformanceClass(value: number, metric: string): string {
       return 'text-gray-700 dark:text-gray-300'
   }
 
-  if (value <= threshold.good) return 'text-green-600 dark:text-green-400'
-  if (value <= threshold.medium) return 'text-yellow-600 dark:text-yellow-400'
+  if (value <= threshold.good)
+    return 'text-green-600 dark:text-green-400'
+  if (value <= threshold.medium)
+    return 'text-yellow-600 dark:text-yellow-400'
   return 'text-red-600 dark:text-red-400'
 }
 </script>
@@ -236,44 +243,60 @@ function getPerformanceClass(value: number, metric: string): string {
   <div class="performance-metrics-view">
     <div v-if="selectedMetric" class="metric-detail-view">
       <div class="flex justify-between items-center mb-4">
-        <h1 class="text-xl font-bold">Performance Metric Details</h1>
-        <button @click="closeMetricDetails" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded">
+        <h1 class="text-xl font-bold">
+          Performance Metric Details
+        </h1>
+        <button class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded" @click="closeMetricDetails">
           Back to List
         </button>
       </div>
 
       <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">URL</h3>
-          <p class="font-mono text-sm truncate">{{ selectedMetric.url }}</p>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            URL
+          </h3>
+          <p class="font-mono text-sm truncate">
+            {{ selectedMetric.url }}
+          </p>
         </div>
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">Timestamp</h3>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Timestamp
+          </h3>
           <p>{{ formatTimestamp(selectedMetric.timestamp) }}</p>
         </div>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">Load Time</h3>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Load Time
+          </h3>
           <p class="text-xl font-bold" :class="getPerformanceClass(selectedMetric.loadTime, 'loadTime')">
             {{ formatMs(selectedMetric.loadTime) }}
           </p>
         </div>
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">First Contentful Paint</h3>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            First Contentful Paint
+          </h3>
           <p class="text-xl font-bold" :class="getPerformanceClass(selectedMetric.firstContentfulPaint, 'firstContentfulPaint')">
             {{ formatMs(selectedMetric.firstContentfulPaint) }}
           </p>
         </div>
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">Time to First Byte</h3>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Time to First Byte
+          </h3>
           <p class="text-xl font-bold" :class="getPerformanceClass(selectedMetric.timeToFirstByte, 'timeToFirstByte')">
             {{ formatMs(selectedMetric.timeToFirstByte) }}
           </p>
         </div>
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">DOM Complete</h3>
+          <h3 class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            DOM Complete
+          </h3>
           <p class="text-xl font-bold" :class="getPerformanceClass(selectedMetric.domComplete, 'domComplete')">
             {{ formatMs(selectedMetric.domComplete) }}
           </p>
@@ -282,40 +305,58 @@ function getPerformanceClass(value: number, metric: string): string {
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="font-bold mb-2">Resource Breakdown</h3>
+          <h3 class="font-bold mb-2">
+            Resource Breakdown
+          </h3>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">JavaScript</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                JavaScript
+              </h4>
               <p>{{ formatMs(selectedMetric.jsTime) }}</p>
             </div>
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">CSS</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                CSS
+              </h4>
               <p>{{ formatMs(selectedMetric.cssTime) }}</p>
             </div>
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">Images</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                Images
+              </h4>
               <p>{{ formatMs(selectedMetric.imageTime) }}</p>
             </div>
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">Other</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                Other
+              </h4>
               <p>{{ formatMs(selectedMetric.otherTime) }}</p>
             </div>
           </div>
         </div>
 
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <h3 class="font-bold mb-2">Resource Stats</h3>
+          <h3 class="font-bold mb-2">
+            Resource Stats
+          </h3>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">Resources Count</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                Resources Count
+              </h4>
               <p>{{ selectedMetric.resourcesCount }}</p>
             </div>
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">Resources Size</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                Resources Size
+              </h4>
               <p>{{ formatSize(selectedMetric.resourcesSize) }}</p>
             </div>
             <div>
-              <h4 class="text-sm text-gray-500 dark:text-gray-400">Cache Hit Ratio</h4>
+              <h4 class="text-sm text-gray-500 dark:text-gray-400">
+                Cache Hit Ratio
+              </h4>
               <p>{{ formatPercentage(selectedMetric.cacheHitRatio) }}</p>
             </div>
           </div>
@@ -323,25 +364,35 @@ function getPerformanceClass(value: number, metric: string): string {
       </div>
 
       <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-        <h3 class="font-bold mb-2">Performance Timeline</h3>
+        <h3 class="font-bold mb-2">
+          Performance Timeline
+        </h3>
         <div class="h-10 relative w-full bg-gray-200 dark:bg-gray-700 rounded">
-          <div class="absolute h-full bg-blue-200 dark:bg-blue-900"
-               :style="{ width: `${(selectedMetric.timeToFirstByte / selectedMetric.loadTime) * 100}%` }">
+          <div
+            class="absolute h-full bg-blue-200 dark:bg-blue-900"
+            :style="{ width: `${(selectedMetric.timeToFirstByte / selectedMetric.loadTime) * 100}%` }"
+          >
             <span class="absolute top-10 text-xs">TTFB</span>
           </div>
-          <div class="absolute h-full bg-green-200 dark:bg-green-900"
-               :style="{ left: `${(selectedMetric.timeToFirstByte / selectedMetric.loadTime) * 100}%`,
-                        width: `${((selectedMetric.firstContentfulPaint - selectedMetric.timeToFirstByte) / selectedMetric.loadTime) * 100}%` }">
+          <div
+            class="absolute h-full bg-green-200 dark:bg-green-900"
+            :style="{ left: `${(selectedMetric.timeToFirstByte / selectedMetric.loadTime) * 100}%`,
+                      width: `${((selectedMetric.firstContentfulPaint - selectedMetric.timeToFirstByte) / selectedMetric.loadTime) * 100}%` }"
+          >
             <span class="absolute top-10 text-xs">FCP</span>
           </div>
-          <div class="absolute h-full bg-yellow-200 dark:bg-yellow-900"
-               :style="{ left: `${(selectedMetric.firstContentfulPaint / selectedMetric.loadTime) * 100}%`,
-                        width: `${((selectedMetric.domInteractive - selectedMetric.firstContentfulPaint) / selectedMetric.loadTime) * 100}%` }">
+          <div
+            class="absolute h-full bg-yellow-200 dark:bg-yellow-900"
+            :style="{ left: `${(selectedMetric.firstContentfulPaint / selectedMetric.loadTime) * 100}%`,
+                      width: `${((selectedMetric.domInteractive - selectedMetric.firstContentfulPaint) / selectedMetric.loadTime) * 100}%` }"
+          >
             <span class="absolute top-10 text-xs">Interactive</span>
           </div>
-          <div class="absolute h-full bg-red-200 dark:bg-red-900"
-               :style="{ left: `${(selectedMetric.domInteractive / selectedMetric.loadTime) * 100}%`,
-                        width: `${((selectedMetric.domComplete - selectedMetric.domInteractive) / selectedMetric.loadTime) * 100}%` }">
+          <div
+            class="absolute h-full bg-red-200 dark:bg-red-900"
+            :style="{ left: `${(selectedMetric.domInteractive / selectedMetric.loadTime) * 100}%`,
+                      width: `${((selectedMetric.domComplete - selectedMetric.domInteractive) / selectedMetric.loadTime) * 100}%` }"
+          >
             <span class="absolute top-10 text-xs">Complete</span>
           </div>
         </div>
@@ -354,27 +405,29 @@ function getPerformanceClass(value: number, metric: string): string {
 
     <div v-else class="metrics-list-view">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
-        <h1 class="text-xl font-bold">Performance Metrics</h1>
+        <h1 class="text-xl font-bold">
+          Performance Metrics
+        </h1>
 
         <div class="flex flex-wrap gap-2">
           <button
             v-for="period in ['24h', '7d', '30d']"
             :key="period"
-            @click="selectPeriod(period)"
             class="px-3 py-1 text-sm rounded"
             :class="selectedPeriod === period
               ? 'bg-blue-500 text-white'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+            @click="selectPeriod(period)"
           >
             {{ period }}
           </button>
 
           <button
-            @click="toggleComparisonMode"
             class="px-3 py-1 text-sm rounded"
             :class="showComparisonMode
               ? 'bg-purple-500 text-white'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+            @click="toggleComparisonMode"
           >
             {{ showComparisonMode ? 'Hide Chart' : 'Show Chart' }}
           </button>
@@ -388,11 +441,11 @@ function getPerformanceClass(value: number, metric: string): string {
               <button
                 v-for="type in ['bar', 'line']"
                 :key="type"
-                @click="changeChartType(type)"
                 class="px-2 py-1 text-xs rounded"
                 :class="chartType === type
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700'"
+                @click="changeChartType(type)"
               >
                 {{ type.charAt(0).toUpperCase() + type.slice(1) }}
               </button>
@@ -402,15 +455,15 @@ function getPerformanceClass(value: number, metric: string): string {
               <button
                 v-for="metric in ['loadTime', 'firstContentfulPaint', 'timeToFirstByte', 'domComplete']"
                 :key="metric"
-                @click="toggleMetric(metric)"
                 class="px-2 py-1 text-xs rounded"
                 :class="selectedMetrics.includes(metric)
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700'"
+                @click="toggleMetric(metric)"
               >
-                {{ metric === 'loadTime' ? 'Load Time' :
-                   metric === 'firstContentfulPaint' ? 'FCP' :
-                   metric === 'timeToFirstByte' ? 'TTFB' : 'DOM Complete' }}
+                {{ metric === 'loadTime' ? 'Load Time'
+                  : metric === 'firstContentfulPaint' ? 'FCP'
+                    : metric === 'timeToFirstByte' ? 'TTFB' : 'DOM Complete' }}
               </button>
             </div>
           </div>
@@ -429,15 +482,17 @@ function getPerformanceClass(value: number, metric: string): string {
           type="text"
           placeholder="Filter by URL..."
           class="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800"
-        />
+        >
       </div>
 
       <div v-if="isLoading" class="flex items-center justify-center h-40">
-        <div class="loader"></div>
+        <div class="loader" />
       </div>
 
       <div v-else-if="filteredMetrics.length === 0" class="bg-gray-100 dark:bg-gray-800 p-8 rounded text-center">
-        <p class="text-gray-500 dark:text-gray-400">No metrics found matching your criteria</p>
+        <p class="text-gray-500 dark:text-gray-400">
+          No metrics found matching your criteria
+        </p>
       </div>
 
       <div v-else class="bg-white dark:bg-gray-800 rounded shadow overflow-hidden">
@@ -446,48 +501,48 @@ function getPerformanceClass(value: number, metric: string): string {
             <thead class="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th
-                  @click="toggleSort('timestamp')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('timestamp')"
                 >
                   Timestamp
                   <span v-if="sortBy === 'timestamp'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th
-                  @click="toggleSort('url')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('url')"
                 >
                   URL
                   <span v-if="sortBy === 'url'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th
-                  @click="toggleSort('loadTime')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('loadTime')"
                 >
                   Load Time
                   <span v-if="sortBy === 'loadTime'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th
-                  @click="toggleSort('firstContentfulPaint')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('firstContentfulPaint')"
                 >
                   FCP
                   <span v-if="sortBy === 'firstContentfulPaint'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th
-                  @click="toggleSort('timeToFirstByte')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('timeToFirstByte')"
                 >
                   TTFB
                   <span v-if="sortBy === 'timeToFirstByte'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th
-                  @click="toggleSort('resourcesCount')"
                   class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                  @click="toggleSort('resourcesCount')"
                 >
                   Resources
                   <span v-if="sortBy === 'resourcesCount'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                 </th>
-                <th class="px-4 py-3"></th>
+                <th class="px-4 py-3" />
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -516,8 +571,8 @@ function getPerformanceClass(value: number, metric: string): string {
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-right">
                   <button
-                    @click="viewMetricDetails(metric)"
                     class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    @click="viewMetricDetails(metric)"
                   >
                     Details
                   </button>

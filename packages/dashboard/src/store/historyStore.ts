@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export interface HistoryItem {
   id: string
@@ -24,8 +24,8 @@ export const useHistoryStore = defineStore('history', () => {
   const hasHistory = computed(() => history.value.length > 0)
   const sortedHistory = computed(() =>
     [...history.value].sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    )
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    ),
   )
 
   // Actions
@@ -33,7 +33,7 @@ export const useHistoryStore = defineStore('history', () => {
     const historyItem: HistoryItem = {
       id: `hist_${Date.now()}`,
       ...item,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
 
     // Add to the beginning of the array
@@ -77,7 +77,7 @@ export const useHistoryStore = defineStore('history', () => {
     statusText: 'OK',
     responseTime: 120,
     responseBody: '{"users": [{"id": 1, "name": "John"}]}',
-    responseHeaders: {'content-type': 'application/json'}
+    responseHeaders: { 'content-type': 'application/json' },
   })
 
   addToHistory({
@@ -85,14 +85,14 @@ export const useHistoryStore = defineStore('history', () => {
     url: 'https://api.example.com/users',
     headers: [
       { key: 'Authorization', value: 'Bearer token123' },
-      { key: 'Content-Type', value: 'application/json' }
+      { key: 'Content-Type', value: 'application/json' },
     ],
     body: '{"name": "Alice", "email": "alice@example.com"}',
     status: 201,
     statusText: 'Created',
     responseTime: 150,
     responseBody: '{"id": 2, "name": "Alice"}',
-    responseHeaders: {'content-type': 'application/json'}
+    responseHeaders: { 'content-type': 'application/json' },
   })
 
   return {
@@ -103,6 +103,6 @@ export const useHistoryStore = defineStore('history', () => {
     addToHistory,
     clearHistory,
     removeHistoryItem,
-    setMaxHistoryItems
+    setMaxHistoryItems,
   }
 })

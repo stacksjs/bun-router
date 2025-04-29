@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export interface EnvironmentVariable {
   id: string
@@ -28,10 +28,11 @@ export const useEnvironmentStore = defineStore('environment', () => {
   // Computed
   const hasEnvironments = computed(() => environments.value.length > 0)
   const activeEnvironment = computed(() =>
-    environments.value.find(env => env.isActive) || null
+    environments.value.find(env => env.isActive) || null,
   )
   const variableMap = computed(() => {
-    if (!activeEnvironment.value) return {}
+    if (!activeEnvironment.value)
+      return {}
 
     return activeEnvironment.value.variables.reduce((map, variable) => {
       map[variable.name] = variable.value
@@ -41,7 +42,8 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   // Check if data needs refresh (older than 5 minutes)
   const needsRefresh = (lastFetchTime: Date | null) => {
-    if (!lastFetchTime) return true
+    if (!lastFetchTime)
+      return true
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
     return lastFetchTime < fiveMinutesAgo
   }
@@ -73,23 +75,23 @@ export const useEnvironmentStore = defineStore('environment', () => {
               id: 'var_1',
               name: 'API_URL',
               value: 'http://localhost:3000/api',
-              description: 'Base URL for API calls'
+              description: 'Base URL for API calls',
             },
             {
               id: 'var_2',
               name: 'API_KEY',
               value: 'dev_api_key_123',
-              description: 'API key for authentication'
+              description: 'API key for authentication',
             },
             {
               id: 'var_3',
               name: 'DEBUG',
               value: 'true',
-              description: 'Enable debug mode'
-            }
+              description: 'Enable debug mode',
+            },
           ],
           createdAt: '2023-05-10T11:45:00Z',
-          updatedAt: '2023-05-11T09:30:00Z'
+          updatedAt: '2023-05-11T09:30:00Z',
         },
         {
           id: 'env_2',
@@ -101,23 +103,23 @@ export const useEnvironmentStore = defineStore('environment', () => {
               id: 'var_4',
               name: 'API_URL',
               value: 'https://staging-api.example.com',
-              description: 'Base URL for API calls'
+              description: 'Base URL for API calls',
             },
             {
               id: 'var_5',
               name: 'API_KEY',
               value: 'staging_api_key_456',
-              description: 'API key for authentication'
+              description: 'API key for authentication',
             },
             {
               id: 'var_6',
               name: 'DEBUG',
               value: 'false',
-              description: 'Enable debug mode'
-            }
+              description: 'Enable debug mode',
+            },
           ],
           createdAt: '2023-05-12T09:45:00Z',
-          updatedAt: '2023-05-12T10:45:00Z'
+          updatedAt: '2023-05-12T10:45:00Z',
         },
         {
           id: 'env_3',
@@ -129,33 +131,35 @@ export const useEnvironmentStore = defineStore('environment', () => {
               id: 'var_7',
               name: 'API_URL',
               value: 'https://api.example.com',
-              description: 'Base URL for API calls'
+              description: 'Base URL for API calls',
             },
             {
               id: 'var_8',
               name: 'API_KEY',
               value: 'prod_api_key_789',
-              description: 'API key for authentication'
+              description: 'API key for authentication',
             },
             {
               id: 'var_9',
               name: 'DEBUG',
               value: 'false',
-              description: 'Enable debug mode'
-            }
+              description: 'Enable debug mode',
+            },
           ],
           createdAt: '2023-05-15T09:45:00Z',
-          updatedAt: '2023-05-15T10:45:00Z'
-        }
+          updatedAt: '2023-05-15T10:45:00Z',
+        },
       ]
 
       lastFetchedAt.value = new Date()
       return environments.value
-    } catch (err) {
+    }
+    catch (err) {
       error.value = 'Failed to load environments'
       console.error('Error fetching environments:', err)
       throw err
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
@@ -168,7 +172,7 @@ export const useEnvironmentStore = defineStore('environment', () => {
       variables: [],
       isActive: environments.value.length === 0, // Make active if it's the first environment
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     environments.value.push(newEnvironment)
@@ -177,12 +181,13 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function updateEnvironment(id: string, updates: Partial<Omit<Environment, 'id' | 'createdAt' | 'variables'>>) {
     const index = environments.value.findIndex(e => e.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     environments.value[index] = {
       ...environments.value[index],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     return true
@@ -190,7 +195,8 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function deleteEnvironment(id: string) {
     const index = environments.value.findIndex(e => e.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     // If deleting the active environment, activate another one if available
     if (environments.value[index].isActive && environments.value.length > 1) {
@@ -204,7 +210,8 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function setActiveEnvironment(id: string) {
     const environment = environments.value.find(e => e.id === id)
-    if (!environment) return false
+    if (!environment)
+      return false
 
     // Deactivate current active environment
     const currentActive = environments.value.find(e => e.isActive)
@@ -219,11 +226,12 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function addVariable(environmentId: string, variable: Omit<EnvironmentVariable, 'id'>) {
     const environment = environments.value.find(e => e.id === environmentId)
-    if (!environment) return null
+    if (!environment)
+      return null
 
     const newVariable: EnvironmentVariable = {
       id: `var_${Date.now()}`,
-      ...variable
+      ...variable,
     }
 
     environment.variables.push(newVariable)
@@ -233,14 +241,16 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function updateVariable(environmentId: string, variableId: string, updates: Partial<Omit<EnvironmentVariable, 'id'>>) {
     const environment = environments.value.find(e => e.id === environmentId)
-    if (!environment) return false
+    if (!environment)
+      return false
 
     const variableIndex = environment.variables.findIndex(v => v.id === variableId)
-    if (variableIndex === -1) return false
+    if (variableIndex === -1)
+      return false
 
     environment.variables[variableIndex] = {
       ...environment.variables[variableIndex],
-      ...updates
+      ...updates,
     }
 
     environment.updatedAt = new Date().toISOString()
@@ -249,10 +259,12 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   function deleteVariable(environmentId: string, variableId: string) {
     const environment = environments.value.find(e => e.id === environmentId)
-    if (!environment) return false
+    if (!environment)
+      return false
 
     const variableIndex = environment.variables.findIndex(v => v.id === variableId)
-    if (variableIndex === -1) return false
+    if (variableIndex === -1)
+      return false
 
     environment.variables.splice(variableIndex, 1)
     environment.updatedAt = new Date().toISOString()
@@ -261,7 +273,8 @@ export const useEnvironmentStore = defineStore('environment', () => {
 
   // Used to resolve variable references like {{VAR_NAME}} in strings
   function resolveVariables(text: string): string {
-    if (!activeEnvironment.value) return text
+    if (!activeEnvironment.value)
+      return text
 
     return text.replace(/\{\{([^}]+)\}\}/g, (match, variableName) => {
       const trimmedName = variableName.trim()
@@ -288,6 +301,6 @@ export const useEnvironmentStore = defineStore('environment', () => {
     addVariable,
     updateVariable,
     deleteVariable,
-    resolveVariables
+    resolveVariables,
   }
 })

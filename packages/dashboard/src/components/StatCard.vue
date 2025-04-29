@@ -8,7 +8,7 @@ const props = defineProps<{
   trendNegative?: boolean
 }>()
 
-const getTrendClass = () => {
+function getTrendClass() {
   if (!props.trendDirection || props.trendDirection === 'neutral')
     return 'text-gray-500'
 
@@ -23,7 +23,7 @@ const getTrendClass = () => {
     : 'text-red-500'
 }
 
-const getTrendIcon = () => {
+function getTrendIcon() {
   if (!props.trendDirection || props.trendDirection === 'neutral')
     return 'i-carbon-circle-dash'
 
@@ -36,7 +36,7 @@ const getTrendIcon = () => {
 <template>
   <div class="bg-white rounded-lg shadow p-5">
     <div class="flex items-center mb-3">
-      <span v-if="icon" :class="icon + ' text-indigo-600 text-lg mr-2'" />
+      <span v-if="icon" :class="`${icon} text-indigo-600 text-lg mr-2`" />
       <p class="text-sm font-medium text-gray-500">
         {{ title }}
       </p>
@@ -46,7 +46,7 @@ const getTrendIcon = () => {
         {{ value }}
       </p>
       <div v-if="trend" class="flex items-center text-sm" :class="getTrendClass()">
-        <span :class="getTrendIcon() + ' mr-1'" />
+        <span :class="`${getTrendIcon()} mr-1`" />
         {{ trend }}
       </div>
     </div>

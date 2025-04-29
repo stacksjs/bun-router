@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useEnvironmentStore } from '../store/environmentStore'
 
 // App settings
@@ -17,7 +17,7 @@ const showDeprecationWarnings = ref(true)
 const themes = [
   { id: 'light', name: 'Light' },
   { id: 'dark', name: 'Dark' },
-  { id: 'system', name: 'System Default' }
+  { id: 'system', name: 'System Default' },
 ]
 const selectedTheme = ref('system')
 
@@ -25,7 +25,7 @@ const selectedTheme = ref('system')
 const exportFormats = [
   { id: 'json', name: 'JSON' },
   { id: 'har', name: 'HAR (HTTP Archive)' },
-  { id: 'curl', name: 'cURL Commands' }
+  { id: 'curl', name: 'cURL Commands' },
 ]
 const defaultExportFormat = ref('json')
 
@@ -99,7 +99,7 @@ function createEnvironment() {
   if (newEnvironment.value.name.trim()) {
     environmentStore.createEnvironment(
       newEnvironment.value.name.trim(),
-      newEnvironment.value.description.trim() || undefined
+      newEnvironment.value.description.trim() || undefined,
     )
     toggleNewEnvironmentForm()
   }
@@ -112,8 +112,8 @@ function createVariable() {
       {
         name: newVariable.value.name.trim(),
         value: newVariable.value.value,
-        description: newVariable.value.description.trim() || undefined
-      }
+        description: newVariable.value.description.trim() || undefined,
+      },
     )
     toggleNewVariableForm(editingEnvironmentId.value)
   }
@@ -141,7 +141,9 @@ onMounted(async () => {
 <template>
   <div class="settings-view">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Settings</h1>
+      <h1 class="text-2xl font-bold">
+        Settings
+      </h1>
       <div id="save-message" class="text-green-600 opacity-0 transition-opacity duration-300">
         Settings saved successfully
       </div>
@@ -150,10 +152,12 @@ onMounted(async () => {
     <!-- Environment section -->
     <div id="environments" class="mb-8">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Environment Variables</h2>
+        <h2 class="text-xl font-semibold">
+          Environment Variables
+        </h2>
         <button
-          @click="toggleNewEnvironmentForm"
           class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          @click="toggleNewEnvironmentForm"
         >
           {{ showNewEnvironmentForm ? 'Cancel' : 'New Environment' }}
         </button>
@@ -161,7 +165,9 @@ onMounted(async () => {
 
       <!-- New environment form -->
       <div v-if="showNewEnvironmentForm" class="bg-white rounded-lg shadow p-4 mb-4">
-        <h3 class="text-md font-medium mb-3">Create New Environment</h3>
+        <h3 class="text-md font-medium mb-3">
+          Create New Environment
+        </h3>
         <div class="space-y-3">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -170,7 +176,7 @@ onMounted(async () => {
               type="text"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder="e.g. Development, Staging, Production"
-            />
+            >
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
@@ -179,13 +185,13 @@ onMounted(async () => {
               type="text"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder="e.g. Local development environment"
-            />
+            >
           </div>
           <div class="flex justify-end">
             <button
-              @click="createEnvironment"
               class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
               :disabled="!newEnvironment.name.trim()"
+              @click="createEnvironment"
             >
               Create Environment
             </button>
@@ -206,30 +212,34 @@ onMounted(async () => {
                 v-if="env.isActive"
                 class="w-2 h-2 bg-green-500 rounded-full mr-2"
                 title="Active Environment"
-              ></span>
+              />
               <div>
-                <h3 class="font-medium">{{ env.name }}</h3>
-                <p v-if="env.description" class="text-sm text-gray-500">{{ env.description }}</p>
+                <h3 class="font-medium">
+                  {{ env.name }}
+                </h3>
+                <p v-if="env.description" class="text-sm text-gray-500">
+                  {{ env.description }}
+                </p>
               </div>
             </div>
             <div class="flex space-x-2">
               <button
                 v-if="!env.isActive"
-                @click="setActiveEnv(env.id)"
                 class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
                 title="Set as active environment"
+                @click="setActiveEnv(env.id)"
               >
                 Activate
               </button>
               <button
-                @click="toggleNewVariableForm(env.id)"
                 class="px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
+                @click="toggleNewVariableForm(env.id)"
               >
                 Add Variable
               </button>
               <button
-                @click="deleteEnv(env.id)"
                 class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+                @click="deleteEnv(env.id)"
               >
                 Delete
               </button>
@@ -238,7 +248,9 @@ onMounted(async () => {
 
           <!-- New variable form -->
           <div v-if="showNewVariableForm && editingEnvironmentId === env.id" class="p-4 bg-indigo-50 border-b">
-            <h4 class="text-sm font-medium mb-2">Add New Variable</h4>
+            <h4 class="text-sm font-medium mb-2">
+              Add New Variable
+            </h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Name</label>
@@ -247,7 +259,7 @@ onMounted(async () => {
                   type="text"
                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="e.g. API_URL"
-                />
+                >
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Value</label>
@@ -256,7 +268,7 @@ onMounted(async () => {
                   type="text"
                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="e.g. https://api.example.com"
-                />
+                >
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Description (optional)</label>
@@ -265,20 +277,20 @@ onMounted(async () => {
                   type="text"
                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="e.g. API endpoint URL"
-                />
+                >
               </div>
             </div>
             <div class="flex justify-end">
               <button
-                @click="toggleNewVariableForm(env.id)"
                 class="px-2 py-1 text-xs mr-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                @click="toggleNewVariableForm(env.id)"
               >
                 Cancel
               </button>
               <button
-                @click="createVariable"
                 class="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 :disabled="!newVariable.name.trim()"
+                @click="createVariable"
               >
                 Add Variable
               </button>
@@ -293,21 +305,35 @@ onMounted(async () => {
             <table v-else class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th scope="col" class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th scope="col" class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="variable in env.variables" :key="variable.id">
-                  <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{ variable.name }}</td>
-                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600 font-mono">{{ variable.value }}</td>
-                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{{ variable.description || '-' }}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {{ variable.name }}
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600 font-mono">
+                    {{ variable.value }}
+                  </td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                    {{ variable.description || '-' }}
+                  </td>
                   <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      @click="deleteVar(env.id, variable.id)"
                       class="text-red-600 hover:text-red-900"
+                      @click="deleteVar(env.id, variable.id)"
                     >
                       Delete
                     </button>
@@ -323,26 +349,26 @@ onMounted(async () => {
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- General Settings -->
       <div class="bg-white rounded-lg shadow p-4 md:col-span-2">
-        <h2 class="text-lg font-medium mb-4">General Settings</h2>
+        <h2 class="text-lg font-medium mb-4">
+          General Settings
+        </h2>
 
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <label for="dark-mode" class="block text-sm font-medium text-gray-700">Dark Mode</label>
             <button
               type="button"
-              :class="[
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="[
                 darkMode ? 'bg-indigo-600' : 'bg-gray-200',
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
               ]"
               @click="darkMode = !darkMode"
             >
               <span
                 aria-hidden="true"
-                :class="[
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[
                   darkMode ? 'translate-x-5' : 'translate-x-0',
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                 ]"
-              ></span>
+              />
             </button>
           </div>
 
@@ -350,19 +376,17 @@ onMounted(async () => {
             <label for="auto-save" class="block text-sm font-medium text-gray-700">Auto-save Requests</label>
             <button
               type="button"
-              :class="[
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="[
                 autoSave ? 'bg-indigo-600' : 'bg-gray-200',
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
               ]"
               @click="autoSave = !autoSave"
             >
               <span
                 aria-hidden="true"
-                :class="[
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[
                   autoSave ? 'translate-x-5' : 'translate-x-0',
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                 ]"
-              ></span>
+              />
             </button>
           </div>
 
@@ -370,19 +394,17 @@ onMounted(async () => {
             <label for="notifications" class="block text-sm font-medium text-gray-700">Notifications</label>
             <button
               type="button"
-              :class="[
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="[
                 notificationsEnabled ? 'bg-indigo-600' : 'bg-gray-200',
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
               ]"
               @click="notificationsEnabled = !notificationsEnabled"
             >
               <span
                 aria-hidden="true"
-                :class="[
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[
                   notificationsEnabled ? 'translate-x-5' : 'translate-x-0',
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                 ]"
-              ></span>
+              />
             </button>
           </div>
 
@@ -422,7 +444,7 @@ onMounted(async () => {
               max="1000"
               step="10"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+            >
           </div>
 
           <div>
@@ -432,7 +454,7 @@ onMounted(async () => {
               v-model="defaultContentType"
               type="text"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+            >
           </div>
 
           <div>
@@ -444,33 +466,33 @@ onMounted(async () => {
               min="1"
               max="300"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
+            >
           </div>
         </div>
       </div>
 
       <!-- Proxy Settings -->
       <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-medium mb-4">Proxy Settings</h2>
+        <h2 class="text-lg font-medium mb-4">
+          Proxy Settings
+        </h2>
 
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <label for="proxy-enabled" class="block text-sm font-medium text-gray-700">Enable Proxy</label>
             <button
               type="button"
-              :class="[
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="[
                 proxyEnabled ? 'bg-indigo-600' : 'bg-gray-200',
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
               ]"
               @click="proxyEnabled = !proxyEnabled"
             >
               <span
                 aria-hidden="true"
-                :class="[
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[
                   proxyEnabled ? 'translate-x-5' : 'translate-x-0',
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                 ]"
-              ></span>
+              />
             </button>
           </div>
 
@@ -483,26 +505,24 @@ onMounted(async () => {
               :disabled="!proxyEnabled"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               placeholder="http://localhost:8080"
-            />
+            >
           </div>
 
           <div class="flex items-center justify-between">
             <label for="deprecation-warnings" class="block text-sm font-medium text-gray-700">Show Deprecation Warnings</label>
             <button
               type="button"
-              :class="[
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="[
                 showDeprecationWarnings ? 'bg-indigo-600' : 'bg-gray-200',
-                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
               ]"
               @click="showDeprecationWarnings = !showDeprecationWarnings"
             >
               <span
                 aria-hidden="true"
-                :class="[
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="[
                   showDeprecationWarnings ? 'translate-x-5' : 'translate-x-0',
-                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                 ]"
-              ></span>
+              />
             </button>
           </div>
         </div>
@@ -510,7 +530,9 @@ onMounted(async () => {
 
       <!-- API Key -->
       <div class="bg-white rounded-lg shadow p-4 md:col-span-2">
-        <h2 class="text-lg font-medium mb-4">API Key</h2>
+        <h2 class="text-lg font-medium mb-4">
+          API Key
+        </h2>
 
         <p class="text-sm text-gray-600 mb-4">
           Your API key is used to synchronize your requests and collections across devices.
@@ -519,31 +541,33 @@ onMounted(async () => {
 
         <div class="flex items-center space-x-2 mb-4">
           <input
-            :type="showApiKey ? 'text' : 'password'"
             v-model="apiKey"
+            :type="showApiKey ? 'text' : 'password'"
             readonly
             class="block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
+          >
           <button
-            @click="toggleApiKeyVisibility"
             class="p-2 text-gray-600 hover:text-gray-900"
             :title="showApiKey ? 'Hide API Key' : 'Show API Key'"
+            @click="toggleApiKeyVisibility"
           >
-            <span :class="showApiKey ? 'i-carbon-view-off' : 'i-carbon-view'"></span>
+            <span :class="showApiKey ? 'i-carbon-view-off' : 'i-carbon-view'" />
           </button>
           <button
-            @click="regenerateApiKey"
             class="p-2 text-gray-600 hover:text-gray-900"
             title="Regenerate API Key"
+            @click="regenerateApiKey"
           >
-            <span class="i-carbon-renew"></span>
+            <span class="i-carbon-renew" />
           </button>
         </div>
       </div>
 
       <!-- Data Management -->
       <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-medium mb-4">Data Management</h2>
+        <h2 class="text-lg font-medium mb-4">
+          Data Management
+        </h2>
 
         <div class="space-y-4">
           <button
@@ -575,15 +599,15 @@ onMounted(async () => {
 
     <div class="mt-6 flex justify-end space-x-3">
       <button
-        @click="resetSettings"
         class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+        @click="resetSettings"
       >
         Reset
       </button>
 
       <button
-        @click="saveSettings"
         class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+        @click="saveSettings"
       >
         Save Settings
       </button>

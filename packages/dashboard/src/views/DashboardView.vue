@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import StatCard from '../components/StatCard.vue'
 
 const error = ref<string | null>(null)
 const isLoading = ref(false)
@@ -44,7 +43,7 @@ const methodDistribution = ref({
   POST: 18,
   PUT: 10,
   DELETE: 6,
-  PATCH: 2
+  PATCH: 2,
 })
 
 // Status code distribution
@@ -52,7 +51,7 @@ const statusDistribution = ref({
   '2xx': 72,
   '3xx': 8,
   '4xx': 15,
-  '5xx': 5
+  '5xx': 5,
 })
 
 onMounted(async () => {
@@ -93,15 +92,19 @@ async function refreshData() {
   await fetchDashboardData(true)
 }
 
-const getStatusClass = (status: number) => {
-  if (status >= 200 && status < 300) return 'text-green-600'
-  if (status >= 300 && status < 400) return 'text-blue-600'
-  if (status >= 400 && status < 500) return 'text-orange-600'
-  if (status >= 500) return 'text-red-600'
+function getStatusClass(status: number) {
+  if (status >= 200 && status < 300)
+    return 'text-green-600'
+  if (status >= 300 && status < 400)
+    return 'text-blue-600'
+  if (status >= 400 && status < 500)
+    return 'text-orange-600'
+  if (status >= 500)
+    return 'text-red-600'
   return 'text-gray-600'
 }
 
-const getMethodClass = (method: string) => {
+function getMethodClass(method: string) {
   switch (method) {
     case 'GET': return 'bg-blue-100 text-blue-800'
     case 'POST': return 'bg-green-100 text-green-800'
@@ -317,13 +320,17 @@ const getMethodClass = (method: string) => {
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-4">
-          <h2 class="text-lg font-semibold mb-4">HTTP Method Distribution</h2>
+          <h2 class="text-lg font-semibold mb-4">
+            HTTP Method Distribution
+          </h2>
           <div class="h-64">
             <div class="h-full flex flex-col justify-center">
               <!-- Method bars -->
               <div v-for="(value, method) in methodDistribution" :key="method" class="mb-3">
                 <div class="flex items-center">
-                  <div class="w-16 text-sm font-medium">{{ method }}</div>
+                  <div class="w-16 text-sm font-medium">
+                    {{ method }}
+                  </div>
                   <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
                     <div
                       class="h-full rounded"
@@ -332,12 +339,14 @@ const getMethodClass = (method: string) => {
                         'bg-green-500': method === 'POST',
                         'bg-yellow-500': method === 'PUT',
                         'bg-red-500': method === 'DELETE',
-                        'bg-indigo-500': method === 'PATCH'
+                        'bg-indigo-500': method === 'PATCH',
                       }"
                       :style="{ width: `${value}%` }"
-                    ></div>
+                    />
                   </div>
-                  <div class="w-12 text-right text-sm ml-2">{{ value }}%</div>
+                  <div class="w-12 text-right text-sm ml-2">
+                    {{ value }}%
+                  </div>
                 </div>
               </div>
             </div>
@@ -345,13 +354,17 @@ const getMethodClass = (method: string) => {
         </div>
 
         <div class="bg-white rounded-lg shadow p-4">
-          <h2 class="text-lg font-semibold mb-4">Response Status Distribution</h2>
+          <h2 class="text-lg font-semibold mb-4">
+            Response Status Distribution
+          </h2>
           <div class="h-64">
             <div class="h-full flex flex-col justify-center">
               <!-- Status code bars -->
               <div v-for="(value, status) in statusDistribution" :key="status" class="mb-3">
                 <div class="flex items-center">
-                  <div class="w-16 text-sm font-medium">{{ status }}</div>
+                  <div class="w-16 text-sm font-medium">
+                    {{ status }}
+                  </div>
                   <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
                     <div
                       class="h-full rounded"
@@ -359,12 +372,14 @@ const getMethodClass = (method: string) => {
                         'bg-green-500': status === '2xx',
                         'bg-blue-500': status === '3xx',
                         'bg-orange-500': status === '4xx',
-                        'bg-red-500': status === '5xx'
+                        'bg-red-500': status === '5xx',
                       }"
                       :style="{ width: `${value}%` }"
-                    ></div>
+                    />
                   </div>
-                  <div class="w-12 text-right text-sm ml-2">{{ value }}%</div>
+                  <div class="w-12 text-right text-sm ml-2">
+                    {{ value }}%
+                  </div>
                 </div>
               </div>
             </div>
@@ -416,7 +431,9 @@ const getMethodClass = (method: string) => {
 
       <div class="bg-white rounded-lg shadow mb-8">
         <div class="flex justify-between items-center p-4 border-b">
-          <h2 class="text-lg font-semibold">Recent Requests</h2>
+          <h2 class="text-lg font-semibold">
+            Recent Requests
+          </h2>
           <router-link to="/requests" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
             View All
           </router-link>
@@ -426,12 +443,24 @@ const getMethodClass = (method: string) => {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Method
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Path
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Time
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Timestamp
+                </th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">

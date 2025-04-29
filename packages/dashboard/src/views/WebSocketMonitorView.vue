@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import WebSocketConnector from '../components/WebSocketConnector.vue'
 
 interface WebSocketMessage {
@@ -35,7 +35,7 @@ const showConnectionForm = ref(false)
 const messageDraft = ref('')
 
 // Demo WebSocket connection (for UI demonstration)
-let demoWs: WebSocket | null = null
+const demoWs: WebSocket | null = null
 let demoConnectionId = ''
 let demoMessageInterval: number | null = null
 
@@ -46,18 +46,20 @@ const wsConnectorRef = ref<InstanceType<typeof WebSocketConnector> | null>(null)
 
 // Format bytes to human-readable format
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
+  if (bytes === 0)
+    return '0 B'
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 // Get URL host safely
 function getHostFromUrl(urlString: string): string {
   try {
     return new URL(urlString).host
-  } catch (e) {
+  }
+  catch (e) {
     return urlString
   }
 }
@@ -69,9 +71,10 @@ const activeConnection = computed(() => {
 
 // Filtered messages for active connection
 const filteredMessages = computed(() => {
-  if (!activeConnection.value) return []
+  if (!activeConnection.value)
+    return []
 
-  return activeConnection.value.messages.filter(msg => {
+  return activeConnection.value.messages.filter((msg) => {
     const matchesDirection = filterDirection.value === 'all' || msg.direction === filterDirection.value
     const matchesType = filterType.value === 'all' || msg.type === filterType.value
     const matchesText = !filterText.value || msg.content.toLowerCase().includes(filterText.value.toLowerCase())
@@ -104,7 +107,7 @@ function createConnection() {
       status: 'connecting',
       protocol: protocol || '-',
       createdAt: new Date().toISOString(),
-      messages: []
+      messages: [],
     }
 
     connections.value.push(newConnection)
@@ -122,7 +125,8 @@ function createConnection() {
       isConnecting.value = false
       showConnectionForm.value = false
     }, 1500)
-  } catch (error) {
+  }
+  catch (error) {
     connectionError.value = error instanceof Error ? error.message : 'Failed to connect'
     isConnecting.value = false
   }
@@ -137,7 +141,7 @@ function startDemoMessages(connectionId: string) {
     type: 'text',
     content: JSON.stringify({ type: 'welcome', message: 'Connection established' }),
     timestamp: new Date().toISOString(),
-    size: 58
+    size: 58,
   })
 
   // Simulate periodic messages from server
@@ -149,7 +153,7 @@ function startDemoMessages(connectionId: string) {
       update: { type: 'update', id: Math.floor(Math.random() * 1000), status: 'active' },
       notification: { type: 'notification', title: 'New message', body: 'You have received a new message' },
       heartbeat: { type: 'heartbeat', timestamp: Date.now() },
-      data: { type: 'data', values: [Math.random(), Math.random(), Math.random()] }
+      data: { type: 'data', values: [Math.random(), Math.random(), Math.random()] },
     }
 
     const message = demoMessages[type as keyof typeof demoMessages]
@@ -161,7 +165,7 @@ function startDemoMessages(connectionId: string) {
       type: 'text',
       content,
       timestamp: new Date().toISOString(),
-      size: content.length
+      size: content.length,
     })
   }, 5000)
 }
@@ -197,7 +201,7 @@ function closeConnection(connectionId: string) {
       type: 'text',
       content: JSON.stringify({ type: 'disconnect', reason: 'Connection closed by client' }),
       timestamp: new Date().toISOString(),
-      size: 65
+      size: 65,
     })
   }
 }
@@ -233,7 +237,7 @@ function sendMessage() {
     type: 'text',
     content,
     timestamp: new Date().toISOString(),
-    size: content.length
+    size: content.length,
   })
 
   // Simulate response after a delay
@@ -248,7 +252,7 @@ function sendMessage() {
         type: 'text',
         content,
         timestamp: new Date().toISOString(),
-        size: content.length
+        size: content.length,
       })
     }
   }, 1000)
@@ -290,7 +294,8 @@ onUnmounted(() => {
 
 // Handle real WebSocket connection messages
 function handleRealWebsocketMessage(message: any) {
-  if (!activeConnection.value || activeConnection.value.status !== 'open') return
+  if (!activeConnection.value || activeConnection.value.status !== 'open')
+    return
 
   const messageContent = typeof message === 'string' ? message : JSON.stringify(message)
 
@@ -300,12 +305,13 @@ function handleRealWebsocketMessage(message: any) {
     type: 'text',
     content: messageContent,
     timestamp: new Date().toISOString(),
-    size: messageContent.length
+    size: messageContent.length,
   })
 }
 
 function handleRealWebsocketOpen() {
-  if (!activeConnection.value) return
+  if (!activeConnection.value)
+    return
 
   // Update connection status
   activeConnection.value.status = 'open'
@@ -317,12 +323,13 @@ function handleRealWebsocketOpen() {
     type: 'text',
     content: JSON.stringify({ type: 'welcome', message: 'Connection established' }),
     timestamp: new Date().toISOString(),
-    size: 58
+    size: 58,
   })
 }
 
 function handleRealWebsocketClose() {
-  if (!activeConnection.value) return
+  if (!activeConnection.value)
+    return
 
   // Update connection status
   activeConnection.value.status = 'closed'
@@ -335,12 +342,13 @@ function handleRealWebsocketClose() {
     type: 'text',
     content: JSON.stringify({ type: 'disconnect', reason: 'Connection closed' }),
     timestamp: new Date().toISOString(),
-    size: 46
+    size: 46,
   })
 }
 
 function handleRealWebsocketError(error: any) {
-  if (!activeConnection.value) return
+  if (!activeConnection.value)
+    return
 
   // Update connection status
   activeConnection.value.status = 'error'
@@ -352,7 +360,7 @@ function handleRealWebsocketError(error: any) {
     type: 'text',
     content: JSON.stringify({ type: 'error', message: 'Connection error' }),
     timestamp: new Date().toISOString(),
-    size: 44
+    size: 44,
   })
 }
 
@@ -373,7 +381,7 @@ function sendRealMessage() {
       type: 'text',
       content,
       timestamp: new Date().toISOString(),
-      size: content.length
+      size: content.length,
     })
 
     messageDraft.value = ''
@@ -394,29 +402,29 @@ function toggleRealConnectionPanel() {
 <template>
   <div class="websocket-monitor-view">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">WebSocket Monitor</h1>
+      <h1 class="text-2xl font-bold">
+        WebSocket Monitor
+      </h1>
 
       <div class="flex space-x-3">
         <div class="inline-flex rounded-md shadow-sm">
           <button
-            @click="toggleConnectionMode('demo')"
-            :class="[
-              'px-4 py-2 rounded-l-md font-medium text-sm',
+            class="px-4 py-2 rounded-l-md font-medium text-sm" :class="[
               activeTab === 'demo'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
             ]"
+            @click="toggleConnectionMode('demo')"
           >
             Demo Mode
           </button>
           <button
-            @click="toggleConnectionMode('real')"
-            :class="[
-              'px-4 py-2 rounded-r-md font-medium text-sm',
+            class="px-4 py-2 rounded-r-md font-medium text-sm" :class="[
               activeTab === 'real'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50',
             ]"
+            @click="toggleConnectionMode('real')"
           >
             Real WebSockets
           </button>
@@ -424,19 +432,19 @@ function toggleRealConnectionPanel() {
 
         <button
           v-if="activeTab === 'demo'"
-          @click="toggleConnectionForm"
           class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+          @click="toggleConnectionForm"
         >
-          <span class="i-carbon-add mr-2"></span>
+          <span class="i-carbon-add mr-2" />
           New Connection
         </button>
 
         <button
           v-if="activeTab === 'real'"
-          @click="toggleRealConnectionPanel"
           class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+          @click="toggleRealConnectionPanel"
         >
-          <span class="i-carbon-add mr-2"></span>
+          <span class="i-carbon-add mr-2" />
           Real Connection
         </button>
       </div>
@@ -444,7 +452,9 @@ function toggleRealConnectionPanel() {
 
     <!-- Demo Connection Form -->
     <div v-if="showConnectionForm && activeTab === 'demo'" class="bg-white rounded-lg shadow p-4 mb-6">
-      <h2 class="text-lg font-medium mb-4">New WebSocket Connection</h2>
+      <h2 class="text-lg font-medium mb-4">
+        New WebSocket Connection
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="md:col-span-2">
           <label for="ws-url" class="block text-sm font-medium text-gray-700 mb-1">WebSocket URL</label>
@@ -454,7 +464,7 @@ function toggleRealConnectionPanel() {
             type="text"
             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             placeholder="ws://localhost:8080"
-          />
+          >
         </div>
 
         <div>
@@ -465,16 +475,16 @@ function toggleRealConnectionPanel() {
             type="text"
             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             placeholder="e.g. graphql-ws"
-          />
+          >
         </div>
 
         <div class="flex items-end">
           <button
-            @click="createConnection"
             :disabled="isConnecting || !newConnectionUrl"
             class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300"
+            @click="createConnection"
           >
-            <span v-if="isConnecting" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2"></span>
+            <span v-if="isConnecting" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2" />
             {{ isConnecting ? 'Connecting...' : 'Connect' }}
           </button>
         </div>
@@ -486,29 +496,33 @@ function toggleRealConnectionPanel() {
 
     <!-- Real WebSocket Connection Form -->
     <div v-if="showRealConnectionPanel && activeTab === 'real'" class="bg-white rounded-lg shadow p-4 mb-6">
-      <h2 class="text-lg font-medium mb-4">Real WebSocket Connection</h2>
+      <h2 class="text-lg font-medium mb-4">
+        Real WebSocket Connection
+      </h2>
       <WebSocketConnector
         ref="wsConnectorRef"
-        :onMessage="handleRealWebsocketMessage"
-        :onOpen="handleRealWebsocketOpen"
-        :onClose="handleRealWebsocketClose"
-        :onError="handleRealWebsocketError"
+        :on-message="handleRealWebsocketMessage"
+        :on-open="handleRealWebsocketOpen"
+        :on-close="handleRealWebsocketClose"
+        :on-error="handleRealWebsocketError"
       />
     </div>
 
     <div v-if="connections.length === 0" class="bg-white rounded-lg shadow p-8 text-center">
       <div class="flex justify-center mb-4">
-        <span class="i-carbon-chat-off text-6xl text-gray-300"></span>
+        <span class="i-carbon-chat-off text-6xl text-gray-300" />
       </div>
-      <p class="text-gray-600 mb-2">No WebSocket connections yet.</p>
+      <p class="text-gray-600 mb-2">
+        No WebSocket connections yet.
+      </p>
       <p class="text-gray-500 text-sm mb-4">
         Click "New Connection" to start monitoring a WebSocket connection.
       </p>
       <button
-        @click="toggleConnectionForm"
         class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+        @click="toggleConnectionForm"
       >
-        <span class="i-carbon-add mr-2"></span>
+        <span class="i-carbon-add mr-2" />
         New Connection
       </button>
     </div>
@@ -518,7 +532,9 @@ function toggleRealConnectionPanel() {
       <div class="lg:col-span-1">
         <div class="bg-white rounded-lg shadow overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-            <h2 class="text-sm font-medium text-gray-700">Connections</h2>
+            <h2 class="text-sm font-medium text-gray-700">
+              Connections
+            </h2>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-indigo-100 text-indigo-800">
               {{ connections.length }}
             </span>
@@ -527,9 +543,8 @@ function toggleRealConnectionPanel() {
           <ul class="max-h-96 overflow-y-auto">
             <li v-for="connection in connections" :key="connection.id" class="border-b border-gray-200 last:border-b-0">
               <div
-                :class="[
-                  'px-4 py-3 hover:bg-gray-50 cursor-pointer',
-                  activeConnectionId === connection.id ? 'bg-indigo-50' : ''
+                class="px-4 py-3 hover:bg-gray-50 cursor-pointer" :class="[
+                  activeConnectionId === connection.id ? 'bg-indigo-50' : '',
                 ]"
                 @click="selectConnection(connection.id)"
               >
@@ -538,7 +553,7 @@ function toggleRealConnectionPanel() {
                     {{ getHostFromUrl(connection.url) }}
                   </div>
                   <div class="flex items-center">
-                    <div :class="`inline-block w-2 h-2 rounded-full mr-1 ${getStatusClass(connection.status)}`"></div>
+                    <div :class="`inline-block w-2 h-2 rounded-full mr-1 ${getStatusClass(connection.status)}`" />
                     <span class="text-xs text-gray-500 capitalize">{{ connection.status }}</span>
                   </div>
                 </div>
@@ -559,7 +574,9 @@ function toggleRealConnectionPanel() {
       <div class="lg:col-span-3">
         <div v-if="!activeConnection" class="bg-white rounded-lg shadow p-8 text-center h-full flex items-center justify-center">
           <div>
-            <p class="text-gray-600 mb-2">Select a connection to view details.</p>
+            <p class="text-gray-600 mb-2">
+              Select a connection to view details.
+            </p>
           </div>
         </div>
 
@@ -568,9 +585,11 @@ function toggleRealConnectionPanel() {
           <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex justify-between">
               <div>
-                <h2 class="text-lg font-medium text-gray-900 mb-1">{{ activeConnection.url }}</h2>
+                <h2 class="text-lg font-medium text-gray-900 mb-1">
+                  {{ activeConnection.url }}
+                </h2>
                 <div class="flex items-center text-sm text-gray-500">
-                  <div :class="`inline-block w-2 h-2 rounded-full mr-1 ${getStatusClass(activeConnection.status)}`"></div>
+                  <div :class="`inline-block w-2 h-2 rounded-full mr-1 ${getStatusClass(activeConnection.status)}`" />
                   <span class="capitalize mr-4">{{ activeConnection.status }}</span>
                   <span v-if="activeConnection.protocol !== '-'" class="mr-4">Protocol: {{ activeConnection.protocol }}</span>
                   <span>Connected: {{ new Date(activeConnection.createdAt).toLocaleString() }}</span>
@@ -582,21 +601,21 @@ function toggleRealConnectionPanel() {
               <div class="flex space-x-2">
                 <button
                   v-if="activeConnection.status === 'open'"
-                  @click="closeConnection(activeConnection.id)"
                   class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-sm"
+                  @click="closeConnection(activeConnection.id)"
                 >
                   Close
                 </button>
                 <button
                   v-if="activeConnection.messages.length > 0"
-                  @click="clearMessages(activeConnection.id)"
                   class="px-3 py-1 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 text-sm"
+                  @click="clearMessages(activeConnection.id)"
                 >
                   Clear
                 </button>
                 <button
-                  @click="removeConnection(activeConnection.id)"
                   class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-sm"
+                  @click="removeConnection(activeConnection.id)"
                 >
                   Remove
                 </button>
@@ -615,7 +634,7 @@ function toggleRealConnectionPanel() {
                   type="text"
                   class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="Filter messages..."
-                />
+                >
               </div>
 
               <div class="flex items-center">
@@ -625,9 +644,15 @@ function toggleRealConnectionPanel() {
                   v-model="filterDirection"
                   class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
-                  <option value="all">All</option>
-                  <option value="in">Incoming</option>
-                  <option value="out">Outgoing</option>
+                  <option value="all">
+                    All
+                  </option>
+                  <option value="in">
+                    Incoming
+                  </option>
+                  <option value="out">
+                    Outgoing
+                  </option>
                 </select>
               </div>
 
@@ -638,9 +663,15 @@ function toggleRealConnectionPanel() {
                   v-model="filterType"
                   class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 >
-                  <option value="all">All</option>
-                  <option value="text">Text</option>
-                  <option value="binary">Binary</option>
+                  <option value="all">
+                    All
+                  </option>
+                  <option value="text">
+                    Text
+                  </option>
+                  <option value="binary">
+                    Binary
+                  </option>
                 </select>
               </div>
 
@@ -659,11 +690,11 @@ function toggleRealConnectionPanel() {
                 placeholder="Type a message to send..."
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 @keyup.enter="activeTab === 'real' ? sendRealMessage() : sendMessage()"
-              />
+              >
               <button
-                @click="activeTab === 'real' ? sendRealMessage() : sendMessage()"
                 :disabled="!messageDraft"
                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:bg-indigo-300"
+                @click="activeTab === 'real' ? sendRealMessage() : sendMessage()"
               >
                 Send
               </button>
@@ -680,9 +711,8 @@ function toggleRealConnectionPanel() {
               <div
                 v-for="message in filteredMessages"
                 :key="message.id"
-                :class="[
-                  'border rounded-md p-3',
-                  getDirectionClass(message.direction)
+                class="border rounded-md p-3" :class="[
+                  getDirectionClass(message.direction),
                 ]"
               >
                 <div class="flex justify-between items-start mb-2">
@@ -709,7 +739,9 @@ function toggleRealConnectionPanel() {
 
     <!-- Connection Instructions -->
     <div class="mt-6 bg-indigo-50 rounded-lg p-4 border border-indigo-100">
-      <h3 class="text-lg font-medium text-indigo-800 mb-2">Working with WebSockets</h3>
+      <h3 class="text-lg font-medium text-indigo-800 mb-2">
+        Working with WebSockets
+      </h3>
       <p class="text-indigo-700 mb-3">
         To monitor WebSocket connections from your application, you can use the WebSocket Interceptor:
       </p>
@@ -717,18 +749,20 @@ function toggleRealConnectionPanel() {
         <code>npm install @websocket-analyzer/interceptor</code>
       </div>
       <div class="mt-3">
-        <p class="text-indigo-700 mb-2">Then initialize it in your application:</p>
+        <p class="text-indigo-700 mb-2">
+          Then initialize it in your application:
+        </p>
         <div class="bg-indigo-800 text-indigo-100 p-3 rounded-md font-mono text-sm overflow-x-auto">
           <code>import { WebSocketInterceptor } from '@websocket-analyzer/interceptor';<br>
-          <br>
-          // Connect to this dashboard<br>
-          const interceptor = new WebSocketInterceptor({<br>
-          &nbsp;&nbsp;dashboardUrl: 'http://localhost:5173',<br>
-          &nbsp;&nbsp;appName: 'My Application'<br>
-          });<br>
-          <br>
-          // Start intercepting<br>
-          interceptor.start();</code>
+            <br>
+            // Connect to this dashboard<br>
+            const interceptor = new WebSocketInterceptor({<br>
+            &nbsp;&nbsp;dashboardUrl: 'http://localhost:5173',<br>
+            &nbsp;&nbsp;appName: 'My Application'<br>
+            });<br>
+            <br>
+            // Start intercepting<br>
+            interceptor.start();</code>
         </div>
       </div>
     </div>

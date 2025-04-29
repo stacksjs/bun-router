@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import type { RequestItem } from './collectionsStore'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
 export interface BatchRequestItem extends RequestItem {
   enabled: boolean
@@ -47,7 +47,7 @@ export const useBatchStore = defineStore('batch', () => {
     name: string,
     description: string = '',
     mode: 'sequential' | 'parallel' = 'sequential',
-    delay: number = 0
+    delay: number = 0,
   ): BatchOperation {
     const newBatch: BatchOperation = {
       id: `batch_${Date.now()}`,
@@ -57,7 +57,7 @@ export const useBatchStore = defineStore('batch', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       executionMode: mode,
-      delay: mode === 'sequential' ? delay : undefined
+      delay: mode === 'sequential' ? delay : undefined,
     }
 
     batchOperations.value.push(newBatch)
@@ -67,12 +67,13 @@ export const useBatchStore = defineStore('batch', () => {
   // Update batch operation
   function updateBatchOperation(id: string, updates: Partial<Omit<BatchOperation, 'id' | 'createdAt' | 'requests'>>) {
     const index = batchOperations.value.findIndex(batch => batch.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     batchOperations.value[index] = {
       ...batchOperations.value[index],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     return true
@@ -81,7 +82,8 @@ export const useBatchStore = defineStore('batch', () => {
   // Delete batch operation
   function deleteBatchOperation(id: string) {
     const index = batchOperations.value.findIndex(batch => batch.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     batchOperations.value.splice(index, 1)
     return true
@@ -90,7 +92,8 @@ export const useBatchStore = defineStore('batch', () => {
   // Add request to batch
   function addRequestToBatch(batchId: string, request: RequestItem) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return null
+    if (!batch)
+      return null
 
     const batchRequest: BatchRequestItem = {
       ...request,
@@ -107,10 +110,12 @@ export const useBatchStore = defineStore('batch', () => {
   // Remove request from batch
   function removeRequestFromBatch(batchId: string, requestId: string) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return false
+    if (!batch)
+      return false
 
     const index = batch.requests.findIndex(r => r.id === requestId)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     batch.requests.splice(index, 1)
 
@@ -126,10 +131,12 @@ export const useBatchStore = defineStore('batch', () => {
   // Toggle request enabled status
   function toggleRequestEnabled(batchId: string, requestId: string) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return false
+    if (!batch)
+      return false
 
     const request = batch.requests.find(r => r.id === requestId)
-    if (!request) return false
+    if (!request)
+      return false
 
     request.enabled = !request.enabled
     batch.updatedAt = new Date().toISOString()
@@ -139,10 +146,12 @@ export const useBatchStore = defineStore('batch', () => {
   // Reorder request in batch
   function reorderRequest(batchId: string, requestId: string, newOrder: number) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return false
+    if (!batch)
+      return false
 
     const request = batch.requests.find(r => r.id === requestId)
-    if (!request) return false
+    if (!request)
+      return false
 
     const oldOrder = request.order
 
@@ -151,13 +160,14 @@ export const useBatchStore = defineStore('batch', () => {
 
     // Update orders of affected requests
     if (newOrder > oldOrder) {
-      batch.requests.forEach(req => {
+      batch.requests.forEach((req) => {
         if (req.order > oldOrder && req.order <= newOrder) {
           req.order--
         }
       })
-    } else if (newOrder < oldOrder) {
-      batch.requests.forEach(req => {
+    }
+    else if (newOrder < oldOrder) {
+      batch.requests.forEach((req) => {
         if (req.order >= newOrder && req.order < oldOrder) {
           req.order++
         }
@@ -176,9 +186,10 @@ export const useBatchStore = defineStore('batch', () => {
   // Clear responses from a batch
   function clearBatchResponses(batchId: string) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return false
+    if (!batch)
+      return false
 
-    batch.requests.forEach(req => {
+    batch.requests.forEach((req) => {
       req.response = undefined
       req.isLoading = false
     })
@@ -190,7 +201,8 @@ export const useBatchStore = defineStore('batch', () => {
   // Execute a batch operation
   async function executeBatch(batchId: string) {
     const batch = batchOperations.value.find(b => b.id === batchId)
-    if (!batch) return { success: false, message: 'Batch not found' }
+    if (!batch)
+      return { success: false, message: 'Batch not found' }
 
     // Only execute enabled requests
     const enabledRequests = batch.requests.filter(r => r.enabled)
@@ -217,7 +229,8 @@ export const useBatchStore = defineStore('batch', () => {
         // Execute all requests in parallel
         const promises = enabledRequests.map(request => executeRequest(batch, request))
         await Promise.all(promises)
-      } else {
+      }
+      else {
         // Execute requests sequentially with delay
         for (const request of enabledRequests) {
           await executeRequest(batch, request)
@@ -237,11 +250,12 @@ export const useBatchStore = defineStore('batch', () => {
           timestamp: new Date().toISOString(),
           success: true,
           totalTime,
-        }
+        },
       })
 
       return { success: true, totalTime }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Failed to execute batch operation'
 
       // Update batch with execution failure
@@ -250,12 +264,13 @@ export const useBatchStore = defineStore('batch', () => {
           timestamp: new Date().toISOString(),
           success: false,
           totalTime: Date.now() - (new Date(batch.updatedAt)).getTime(),
-          message: error.value || 'Unknown error'
-        }
+          message: error.value || 'Unknown error',
+        },
       })
 
       return { success: false, message: error.value }
-    } finally {
+    }
+    finally {
       isLoading.value = false
       currentBatchExecution.value = null
     }
@@ -292,7 +307,7 @@ export const useBatchStore = defineStore('batch', () => {
       const responseHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Request-ID': `req-${Math.random().toString(36).substring(2, 10)}`,
-        'Date': new Date().toUTCString()
+        'Date': new Date().toUTCString(),
       }
 
       // Generate response body based on status
@@ -306,47 +321,52 @@ export const useBatchStore = defineStore('batch', () => {
             responseBody = JSON.stringify({
               id: Math.floor(Math.random() * 1000),
               name: 'User Name',
-              email: 'user@example.com'
+              email: 'user@example.com',
             }, null, 2)
-          } else if (request.url.includes('products')) {
+          }
+          else if (request.url.includes('products')) {
             responseBody = JSON.stringify({
               id: Math.floor(Math.random() * 1000),
               name: 'Product Name',
-              price: Math.floor(Math.random() * 100) + 0.99
-            }, null, 2)
-          } else {
-            responseBody = JSON.stringify({
-              success: true,
-              message: 'Operation completed successfully'
+              price: Math.floor(Math.random() * 100) + 0.99,
             }, null, 2)
           }
-        } else if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+          else {
+            responseBody = JSON.stringify({
+              success: true,
+              message: 'Operation completed successfully',
+            }, null, 2)
+          }
+        }
+        else if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
           responseBody = JSON.stringify({
             success: true,
             id: Math.floor(Math.random() * 1000),
-            message: 'Resource updated successfully'
-          }, null, 2)
-        } else if (request.method === 'DELETE') {
-          responseBody = JSON.stringify({
-            success: true,
-            message: 'Resource deleted successfully'
+            message: 'Resource updated successfully',
           }, null, 2)
         }
-      } else {
+        else if (request.method === 'DELETE') {
+          responseBody = JSON.stringify({
+            success: true,
+            message: 'Resource deleted successfully',
+          }, null, 2)
+        }
+      }
+      else {
         // Error response
         const errorMessages = [
           'Invalid request parameters',
           'Authentication required',
           'Permission denied',
           'Resource not found',
-          'Internal server error'
+          'Internal server error',
         ]
 
         error = errorMessages[Math.floor(Math.random() * errorMessages.length)]
         responseBody = JSON.stringify({
           success: false,
           error,
-          code: status
+          code: status,
         }, null, 2)
       }
 
@@ -356,17 +376,19 @@ export const useBatchStore = defineStore('batch', () => {
         time: responseTime,
         headers: responseHeaders,
         body: responseBody,
-        error
+        error,
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       // Set error response
       request.response = {
         status: 0,
         time: 0,
         headers: {},
-        error: err.message || 'Failed to execute request'
+        error: err.message || 'Failed to execute request',
       }
-    } finally {
+    }
+    finally {
       // Mark request as not loading
       request.isLoading = false
     }
@@ -374,14 +396,15 @@ export const useBatchStore = defineStore('batch', () => {
 
   // Create some sample batch operations for demo
   function createSampleBatches() {
-    if (batchOperations.value.length > 0) return
+    if (batchOperations.value.length > 0)
+      return
 
     // Sample batch 1: Authentication flow
     const authBatch = createBatchOperation(
       'Authentication Flow',
       'Register, login, and fetch user profile in sequence',
       'sequential',
-      500
+      500,
     )
 
     addRequestToBatch(authBatch.id, {
@@ -390,15 +413,15 @@ export const useBatchStore = defineStore('batch', () => {
       method: 'POST',
       url: 'https://api.example.com/auth/register',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'John Doe',
         email: 'john@example.com',
-        password: 'password123'
+        password: 'password123',
       }),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(authBatch.id, {
@@ -407,14 +430,14 @@ export const useBatchStore = defineStore('batch', () => {
       method: 'POST',
       url: 'https://api.example.com/auth/login',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         email: 'john@example.com',
-        password: 'password123'
+        password: 'password123',
       }),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(authBatch.id, {
@@ -423,17 +446,17 @@ export const useBatchStore = defineStore('batch', () => {
       method: 'GET',
       url: 'https://api.example.com/users/profile',
       headers: {
-        'Authorization': 'Bearer {{token}}'
+        Authorization: 'Bearer {{token}}',
       },
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     // Sample batch 2: Product API in parallel
     const productBatch = createBatchOperation(
       'Product API Tests',
       'Test different product API endpoints in parallel',
-      'parallel'
+      'parallel',
     )
 
     addRequestToBatch(productBatch.id, {
@@ -443,7 +466,7 @@ export const useBatchStore = defineStore('batch', () => {
       url: 'https://api.example.com/products?limit=10',
       headers: {},
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(productBatch.id, {
@@ -453,7 +476,7 @@ export const useBatchStore = defineStore('batch', () => {
       url: 'https://api.example.com/products/42',
       headers: {},
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(productBatch.id, {
@@ -463,15 +486,15 @@ export const useBatchStore = defineStore('batch', () => {
       url: 'https://api.example.com/products',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer {{token}}'
+        'Authorization': 'Bearer {{token}}',
       },
       body: JSON.stringify({
         name: 'New Product',
         price: 29.99,
-        description: 'A brand new product'
+        description: 'A brand new product',
       }),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(productBatch.id, {
@@ -481,15 +504,15 @@ export const useBatchStore = defineStore('batch', () => {
       url: 'https://api.example.com/products/42',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer {{token}}'
+        'Authorization': 'Bearer {{token}}',
       },
       body: JSON.stringify({
         name: 'Updated Product',
         price: 39.99,
-        description: 'An updated product'
+        description: 'An updated product',
       }),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
 
     addRequestToBatch(productBatch.id, {
@@ -498,10 +521,10 @@ export const useBatchStore = defineStore('batch', () => {
       method: 'DELETE',
       url: 'https://api.example.com/products/42',
       headers: {
-        'Authorization': 'Bearer {{token}}'
+        Authorization: 'Bearer {{token}}',
       },
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     })
   }
 
@@ -522,6 +545,6 @@ export const useBatchStore = defineStore('batch', () => {
     toggleRequestEnabled,
     reorderRequest,
     clearBatchResponses,
-    executeBatch
+    executeBatch,
   }
 })

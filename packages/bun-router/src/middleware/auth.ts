@@ -56,7 +56,8 @@ export function extractBasicAuth(authHeader: string): { username: string, passwo
     const [username, password] = credentials.split(':')
 
     return { username, password }
-  } catch (error) {
+  }
+  catch (error) {
     return null
   }
 }
@@ -96,7 +97,7 @@ export default class AuthMiddleware implements Middleware {
       source: 'header',
       key: 'Authorization',
       attachUser: true,
-      ...options
+      ...options,
     }
   }
 
@@ -106,7 +107,8 @@ export default class AuthMiddleware implements Middleware {
     // Extract credentials based on auth type
     if (this.options.credentialsExtractor) {
       credentials = await this.options.credentialsExtractor(req)
-    } else {
+    }
+    else {
       switch (this.options.type) {
         case 'basic': {
           const authHeader = req.headers.get(this.options.key || 'Authorization')
@@ -144,7 +146,7 @@ export default class AuthMiddleware implements Middleware {
 
       return new Response('Unauthorized', {
         status: 401,
-        headers
+        headers,
       })
     }
 
@@ -171,7 +173,7 @@ export function basicAuth(validator: (credentials: { username: string, password:
   return new AuthMiddleware({
     type: 'basic',
     validator,
-    ...options
+    ...options,
   })
 }
 
@@ -179,7 +181,7 @@ export function bearerAuth(validator: (token: string, req: EnhancedRequest) => P
   return new AuthMiddleware({
     type: 'bearer',
     validator,
-    ...options
+    ...options,
   })
 }
 
@@ -187,7 +189,7 @@ export function jwtAuth(validator: (token: string, req: EnhancedRequest) => Prom
   return new AuthMiddleware({
     type: 'jwt',
     validator,
-    ...options
+    ...options,
   })
 }
 
@@ -195,7 +197,7 @@ export function apiKeyAuth(validator: (apiKey: string, req: EnhancedRequest) => 
   return new AuthMiddleware({
     type: 'api-key',
     validator,
-    ...options
+    ...options,
   })
 }
 
@@ -203,6 +205,6 @@ export function oauth2Auth(validator: (token: string, req: EnhancedRequest) => P
   return new AuthMiddleware({
     type: 'oauth2',
     validator,
-    ...options
+    ...options,
   })
 }

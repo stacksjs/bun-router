@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export interface RequestItem {
   id: string
@@ -37,7 +37,8 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   // Check if data needs refresh (older than 5 minutes)
   const needsRefresh = (lastFetchTime: Date | null) => {
-    if (!lastFetchTime) return true
+    if (!lastFetchTime)
+      return true
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
     return lastFetchTime < fiveMinutesAgo
   }
@@ -70,14 +71,14 @@ export const useCollectionsStore = defineStore('collections', () => {
               method: 'POST',
               url: '/api/auth/login',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
               },
               body: JSON.stringify({
                 email: 'user@example.com',
-                password: 'password'
+                password: 'password',
               }),
               createdAt: '2023-05-10T12:00:00Z',
-              updatedAt: '2023-05-10T12:00:00Z'
+              updatedAt: '2023-05-10T12:00:00Z',
             },
             {
               id: 'req_2',
@@ -85,15 +86,15 @@ export const useCollectionsStore = defineStore('collections', () => {
               method: 'POST',
               url: '/api/auth/register',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
               },
               body: JSON.stringify({
                 name: 'New User',
                 email: 'newuser@example.com',
-                password: 'password'
+                password: 'password',
               }),
               createdAt: '2023-05-10T12:15:00Z',
-              updatedAt: '2023-05-10T12:15:00Z'
+              updatedAt: '2023-05-10T12:15:00Z',
             },
             {
               id: 'req_3',
@@ -101,14 +102,14 @@ export const useCollectionsStore = defineStore('collections', () => {
               method: 'POST',
               url: '/api/auth/logout',
               headers: {
-                'Authorization': 'Bearer {{token}}'
+                Authorization: 'Bearer {{token}}',
               },
               createdAt: '2023-05-10T12:30:00Z',
-              updatedAt: '2023-05-10T12:30:00Z'
-            }
+              updatedAt: '2023-05-10T12:30:00Z',
+            },
           ],
           createdAt: '2023-05-10T11:45:00Z',
-          updatedAt: '2023-05-11T09:30:00Z'
+          updatedAt: '2023-05-11T09:30:00Z',
         },
         {
           id: 'col_2',
@@ -121,10 +122,10 @@ export const useCollectionsStore = defineStore('collections', () => {
               method: 'GET',
               url: '/api/users/profile',
               headers: {
-                'Authorization': 'Bearer {{token}}'
+                Authorization: 'Bearer {{token}}',
               },
               createdAt: '2023-05-11T14:00:00Z',
-              updatedAt: '2023-05-11T14:00:00Z'
+              updatedAt: '2023-05-11T14:00:00Z',
             },
             {
               id: 'req_5',
@@ -133,18 +134,18 @@ export const useCollectionsStore = defineStore('collections', () => {
               url: '/api/users/profile',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer {{token}}'
+                'Authorization': 'Bearer {{token}}',
               },
               body: JSON.stringify({
                 name: 'Updated Name',
-                bio: 'Updated bio information'
+                bio: 'Updated bio information',
               }),
               createdAt: '2023-05-11T14:30:00Z',
-              updatedAt: '2023-05-11T14:30:00Z'
-            }
+              updatedAt: '2023-05-11T14:30:00Z',
+            },
           ],
           createdAt: '2023-05-11T13:45:00Z',
-          updatedAt: '2023-05-11T14:45:00Z'
+          updatedAt: '2023-05-11T14:45:00Z',
         },
         {
           id: 'col_3',
@@ -158,7 +159,7 @@ export const useCollectionsStore = defineStore('collections', () => {
               url: '/api/products',
               headers: {},
               createdAt: '2023-05-12T10:00:00Z',
-              updatedAt: '2023-05-12T10:00:00Z'
+              updatedAt: '2023-05-12T10:00:00Z',
             },
             {
               id: 'req_7',
@@ -167,7 +168,7 @@ export const useCollectionsStore = defineStore('collections', () => {
               url: '/api/products/1',
               headers: {},
               createdAt: '2023-05-12T10:15:00Z',
-              updatedAt: '2023-05-12T10:15:00Z'
+              updatedAt: '2023-05-12T10:15:00Z',
             },
             {
               id: 'req_8',
@@ -176,29 +177,31 @@ export const useCollectionsStore = defineStore('collections', () => {
               url: '/api/products',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer {{token}}'
+                'Authorization': 'Bearer {{token}}',
               },
               body: JSON.stringify({
                 name: 'New Product',
                 price: 29.99,
-                description: 'A brand new product'
+                description: 'A brand new product',
               }),
               createdAt: '2023-05-12T10:30:00Z',
-              updatedAt: '2023-05-12T10:30:00Z'
-            }
+              updatedAt: '2023-05-12T10:30:00Z',
+            },
           ],
           createdAt: '2023-05-12T09:45:00Z',
-          updatedAt: '2023-05-12T10:45:00Z'
-        }
+          updatedAt: '2023-05-12T10:45:00Z',
+        },
       ]
 
       lastFetchedAt.value = new Date()
       return collections.value
-    } catch (err) {
+    }
+    catch (err) {
       error.value = 'Failed to load collections'
       console.error('Error fetching collections:', err)
       throw err
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
@@ -210,7 +213,7 @@ export const useCollectionsStore = defineStore('collections', () => {
       description,
       requests: [],
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     collections.value.push(newCollection)
@@ -219,12 +222,13 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   function updateCollection(id: string, updates: Partial<Omit<Collection, 'id' | 'createdAt'>>) {
     const index = collections.value.findIndex(c => c.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     collections.value[index] = {
       ...collections.value[index],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     return true
@@ -232,7 +236,8 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   function deleteCollection(id: string) {
     const index = collections.value.findIndex(c => c.id === id)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     collections.value.splice(index, 1)
     return true
@@ -240,13 +245,14 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   function addRequestToCollection(collectionId: string, request: Omit<RequestItem, 'id' | 'createdAt' | 'updatedAt'>) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return null
+    if (!collection)
+      return null
 
     const newRequest: RequestItem = {
       id: `req_${Date.now()}`,
       ...request,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     collection.requests.push(newRequest)
@@ -257,15 +263,17 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   function updateRequest(collectionId: string, requestId: string, updates: Partial<Omit<RequestItem, 'id' | 'createdAt'>>) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return false
+    if (!collection)
+      return false
 
     const requestIndex = collection.requests.findIndex(r => r.id === requestId)
-    if (requestIndex === -1) return false
+    if (requestIndex === -1)
+      return false
 
     collection.requests[requestIndex] = {
       ...collection.requests[requestIndex],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     collection.updatedAt = new Date().toISOString()
@@ -274,10 +282,12 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   function deleteRequest(collectionId: string, requestId: string) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return false
+    if (!collection)
+      return false
 
     const requestIndex = collection.requests.findIndex(r => r.id === requestId)
-    if (requestIndex === -1) return false
+    if (requestIndex === -1)
+      return false
 
     collection.requests.splice(requestIndex, 1)
     collection.updatedAt = new Date().toISOString()
@@ -297,6 +307,6 @@ export const useCollectionsStore = defineStore('collections', () => {
     deleteCollection,
     addRequestToCollection,
     updateRequest,
-    deleteRequest
+    deleteRequest,
   }
 })

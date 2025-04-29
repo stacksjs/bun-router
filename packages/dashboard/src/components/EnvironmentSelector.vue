@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useEnvironmentStore } from '../store/environmentStore'
 
 const environmentStore = useEnvironmentStore()
@@ -29,8 +29,8 @@ onMounted(async () => {
 <template>
   <div class="environment-selector relative">
     <button
-      @click="toggleDropdown"
       class="flex items-center px-3 py-1.5 rounded-md bg-white border border-gray-300 text-sm hover:bg-gray-50"
+      @click="toggleDropdown"
     >
       <span class="i-carbon-earth text-indigo-600 mr-1.5" />
       <span v-if="currentEnvironment" class="text-gray-700">{{ currentEnvironment.name }}</span>
@@ -46,8 +46,8 @@ onMounted(async () => {
         <span class="text-xs font-medium text-gray-500">ENVIRONMENTS</span>
         <router-link
           to="/settings#environments"
-          @click="closeDropdown"
           class="text-xs text-indigo-600 hover:text-indigo-800"
+          @click="closeDropdown"
         >
           Manage
         </router-link>
@@ -61,21 +61,25 @@ onMounted(async () => {
         <li
           v-for="env in environments"
           :key="env.id"
-          @click="selectEnvironment(env.id)"
           class="px-3 py-2 cursor-pointer hover:bg-gray-50 flex items-center"
           :class="{ 'bg-indigo-50': env.isActive }"
+          @click="selectEnvironment(env.id)"
         >
           <span
             v-if="env.isActive"
             class="w-2 h-2 bg-green-500 rounded-full mr-2"
-          ></span>
+          />
           <span
             v-else
             class="w-2 h-2 bg-transparent mr-2"
-          ></span>
+          />
           <div>
-            <div class="text-sm text-gray-800 font-medium">{{ env.name }}</div>
-            <div v-if="env.description" class="text-xs text-gray-500 truncate">{{ env.description }}</div>
+            <div class="text-sm text-gray-800 font-medium">
+              {{ env.name }}
+            </div>
+            <div v-if="env.description" class="text-xs text-gray-500 truncate">
+              {{ env.description }}
+            </div>
           </div>
         </li>
       </ul>

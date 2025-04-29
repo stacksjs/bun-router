@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export interface RequestItem {
   id: string
@@ -66,8 +66,8 @@ export const useCollectionStore = defineStore('collection', () => {
               method: 'GET',
               url: '{{API_URL}}/users',
               headers: [
-                { key: 'Authorization', value: 'Bearer {{API_KEY}}' }
-              ]
+                { key: 'Authorization', value: 'Bearer {{API_KEY}}' },
+              ],
             },
             {
               id: 'req_2',
@@ -76,13 +76,13 @@ export const useCollectionStore = defineStore('collection', () => {
               url: '{{API_URL}}/users',
               headers: [
                 { key: 'Authorization', value: 'Bearer {{API_KEY}}' },
-                { key: 'Content-Type', value: 'application/json' }
+                { key: 'Content-Type', value: 'application/json' },
               ],
-              body: '{\n  "name": "New User",\n  "email": "{{TEST_EMAIL}}"\n}'
-            }
+              body: '{\n  "name": "New User",\n  "email": "{{TEST_EMAIL}}"\n}',
+            },
           ],
           createdAt: '2023-06-15T10:30:00Z',
-          updatedAt: '2023-06-16T14:20:00Z'
+          updatedAt: '2023-06-16T14:20:00Z',
         },
         {
           id: 'col_2',
@@ -95,9 +95,9 @@ export const useCollectionStore = defineStore('collection', () => {
               method: 'POST',
               url: '{{API_URL}}/auth/login',
               headers: [
-                { key: 'Content-Type', value: 'application/json' }
+                { key: 'Content-Type', value: 'application/json' },
               ],
-              body: '{\n  "email": "{{TEST_EMAIL}}",\n  "password": "{{TEST_PASSWORD}}"\n}'
+              body: '{\n  "email": "{{TEST_EMAIL}}",\n  "password": "{{TEST_PASSWORD}}"\n}',
             },
             {
               id: 'req_4',
@@ -106,21 +106,23 @@ export const useCollectionStore = defineStore('collection', () => {
               url: '{{API_URL}}/auth/refresh',
               headers: [
                 { key: 'Authorization', value: 'Bearer {{REFRESH_TOKEN}}' },
-                { key: 'Content-Type', value: 'application/json' }
-              ]
-            }
+                { key: 'Content-Type', value: 'application/json' },
+              ],
+            },
           ],
           createdAt: '2023-06-17T08:15:00Z',
-          updatedAt: '2023-06-17T09:30:00Z'
-        }
+          updatedAt: '2023-06-17T09:30:00Z',
+        },
       ]
 
       return collections.value
-    } catch (err) {
+    }
+    catch (err) {
       error.value = 'Failed to load collections'
       console.error('Error fetching collections:', err)
       throw err
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
@@ -132,7 +134,7 @@ export const useCollectionStore = defineStore('collection', () => {
       description,
       requests: [],
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     collections.value.push(newCollection)
@@ -141,11 +143,12 @@ export const useCollectionStore = defineStore('collection', () => {
 
   function addRequestToCollection(collectionId: string, request: Omit<RequestItem, 'id'>) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return null
+    if (!collection)
+      return null
 
     const newRequest: RequestItem = {
       id: `req_${Date.now()}`,
-      ...request
+      ...request,
     }
 
     collection.requests.push(newRequest)
@@ -155,14 +158,16 @@ export const useCollectionStore = defineStore('collection', () => {
 
   function updateRequest(collectionId: string, requestId: string, updates: Partial<Omit<RequestItem, 'id'>>) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return false
+    if (!collection)
+      return false
 
     const requestIndex = collection.requests.findIndex(r => r.id === requestId)
-    if (requestIndex === -1) return false
+    if (requestIndex === -1)
+      return false
 
     collection.requests[requestIndex] = {
       ...collection.requests[requestIndex],
-      ...updates
+      ...updates,
     }
 
     collection.updatedAt = new Date().toISOString()
@@ -171,10 +176,12 @@ export const useCollectionStore = defineStore('collection', () => {
 
   function deleteRequest(collectionId: string, requestId: string) {
     const collection = collections.value.find(c => c.id === collectionId)
-    if (!collection) return false
+    if (!collection)
+      return false
 
     const requestIndex = collection.requests.findIndex(r => r.id === requestId)
-    if (requestIndex === -1) return false
+    if (requestIndex === -1)
+      return false
 
     collection.requests.splice(requestIndex, 1)
     collection.updatedAt = new Date().toISOString()
@@ -183,7 +190,8 @@ export const useCollectionStore = defineStore('collection', () => {
 
   function deleteCollection(collectionId: string) {
     const index = collections.value.findIndex(c => c.id === collectionId)
-    if (index === -1) return false
+    if (index === -1)
+      return false
 
     collections.value.splice(index, 1)
     return true
@@ -203,6 +211,6 @@ export const useCollectionStore = defineStore('collection', () => {
     addRequestToCollection,
     updateRequest,
     deleteRequest,
-    deleteCollection
+    deleteCollection,
   }
 })

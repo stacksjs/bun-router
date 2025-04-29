@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import RequestComparisonView from '../views/RequestComparisonView.vue'
 import PerformanceMetricsView from '../views/PerformanceMetricsView.vue'
+import RequestComparisonView from '../views/RequestComparisonView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,7 +23,7 @@ const router = createRouter({
     {
       path: '/requests/compare',
       name: 'RequestComparison',
-      component: RequestComparisonView
+      component: RequestComparisonView,
     },
     {
       path: '/collections',
@@ -58,12 +58,12 @@ const router = createRouter({
     {
       path: '/performance',
       name: 'PerformanceMetrics',
-      component: PerformanceMetricsView
+      component: PerformanceMetricsView,
     },
     {
       path: '/performance/:id',
       name: 'PerformanceMetricsDetail',
-      component: PerformanceMetricsView
+      component: PerformanceMetricsView,
     },
   ],
 })

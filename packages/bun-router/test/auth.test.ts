@@ -1,12 +1,12 @@
-import { expect, test, describe, beforeEach } from 'bun:test'
-import { Auth, basicAuth, bearerAuth, jwtAuth, apiKeyAuth, oauth2Auth, extractBasicAuth, extractBearerToken, extractApiKey } from '../src/middleware'
-import { JWT, ApiKeyManager, OAuth2Helper } from '../src/auth'
+import { beforeEach, describe, expect, test } from 'bun:test'
+import { ApiKeyManager, JWT, OAuth2Helper } from '../src/auth'
+import { apiKeyAuth, basicAuth, bearerAuth, extractApiKey, extractBasicAuth, extractBearerToken } from '../src/middleware'
 
 // Mock Request for testing
 function createMockRequest(options: {
-  url?: string,
-  method?: string,
-  headers?: Record<string, string>,
+  url?: string
+  method?: string
+  headers?: Record<string, string>
   cookies?: Record<string, string>
 } = {}): any {
   const url = options.url || 'http://localhost:3000'
@@ -26,20 +26,20 @@ function createMockRequest(options: {
       get: (name: string) => options.cookies?.[name],
       set: () => {},
       delete: () => {},
-      getAll: () => options.cookies || {}
-    }
+      getAll: () => options.cookies || {},
+    },
   }
 }
 
 describe('Authentication Middleware', () => {
   describe('Basic Auth Middleware', () => {
     test('should extract basic auth credentials', () => {
-      const authHeader = 'Basic ' + btoa('user:password')
+      const authHeader = `Basic ${btoa('user:password')}`
       const credentials = extractBasicAuth(authHeader)
 
       expect(credentials).toEqual({
         username: 'user',
-        password: 'password'
+        password: 'password',
       })
     })
 
@@ -55,8 +55,8 @@ describe('Authentication Middleware', () => {
 
       const req = createMockRequest({
         headers: {
-          'Authorization': 'Basic ' + btoa('user:password')
-        }
+          Authorization: `Basic ${btoa('user:password')}`,
+        },
       })
 
       let nextCalled = false
@@ -76,8 +76,8 @@ describe('Authentication Middleware', () => {
 
       const req = createMockRequest({
         headers: {
-          'Authorization': 'Basic ' + btoa('user:wrongpassword')
-        }
+          Authorization: `Basic ${btoa('user:wrongpassword')}`,
+        },
       })
 
       let nextCalled = false
@@ -119,12 +119,12 @@ describe('Authentication Middleware', () => {
     })
 
     test('should authenticate with valid token', async () => {
-      const middleware = bearerAuth((token) => token === 'valid-token')
+      const middleware = bearerAuth(token => token === 'valid-token')
 
       const req = createMockRequest({
         headers: {
-          'Authorization': 'Bearer valid-token'
-        }
+          Authorization: 'Bearer valid-token',
+        },
       })
 
       let nextCalled = false
@@ -138,12 +138,12 @@ describe('Authentication Middleware', () => {
     })
 
     test('should reject with invalid token', async () => {
-      const middleware = bearerAuth((token) => token === 'valid-token')
+      const middleware = bearerAuth(token => token === 'valid-token')
 
       const req = createMockRequest({
         headers: {
-          'Authorization': 'Bearer invalid-token'
-        }
+          Authorization: 'Bearer invalid-token',
+        },
       })
 
       let nextCalled = false
@@ -162,8 +162,8 @@ describe('Authentication Middleware', () => {
     test('should extract API key from header', () => {
       const req = createMockRequest({
         headers: {
-          'X-API-Key': 'api-key-123'
-        }
+          'X-API-Key': 'api-key-123',
+        },
       })
 
       const apiKey = extractApiKey(req)
@@ -172,7 +172,7 @@ describe('Authentication Middleware', () => {
 
     test('should extract API key from query parameter', () => {
       const req = createMockRequest({
-        url: 'http://localhost:3000?api_key=api-key-123'
+        url: 'http://localhost:3000?api_key=api-key-123',
       })
 
       const apiKey = extractApiKey(req, 'query', 'api_key')
@@ -182,8 +182,8 @@ describe('Authentication Middleware', () => {
     test('should extract API key from cookie', () => {
       const req = createMockRequest({
         cookies: {
-          'api_key': 'api-key-123'
-        }
+          api_key: 'api-key-123',
+        },
       })
 
       const apiKey = extractApiKey(req, 'cookie', 'api_key')
@@ -192,14 +192,14 @@ describe('Authentication Middleware', () => {
 
     test('should authenticate with valid API key', async () => {
       const middleware = apiKeyAuth(
-        (key) => key === 'valid-api-key',
-        { source: 'header', key: 'X-API-Key' }
+        key => key === 'valid-api-key',
+        { source: 'header', key: 'X-API-Key' },
       )
 
       const req = createMockRequest({
         headers: {
-          'X-API-Key': 'valid-api-key'
-        }
+          'X-API-Key': 'valid-api-key',
+        },
       })
 
       let nextCalled = false
@@ -213,12 +213,12 @@ describe('Authentication Middleware', () => {
     })
 
     test('should reject with invalid API key', async () => {
-      const middleware = apiKeyAuth((key) => key === 'valid-api-key', { source: 'header', key: 'X-API-Key' })
+      const middleware = apiKeyAuth(key => key === 'valid-api-key', { source: 'header', key: 'X-API-Key' })
 
       const req = createMockRequest({
         headers: {
-          'X-API-Key': 'invalid-api-key'
-        }
+          'X-API-Key': 'invalid-api-key',
+        },
       })
 
       let nextCalled = false
@@ -340,14 +340,14 @@ describe('Authentication Middleware', () => {
       // From header
       const req1 = createMockRequest({
         headers: {
-          'X-API-Key': 'my-api-key'
-        }
+          'X-API-Key': 'my-api-key',
+        },
       })
       expect(manager.extractFromRequest(req1)).toBe('my-api-key')
 
       // From query
       const req2 = createMockRequest({
-        url: 'http://localhost:3000?api_key=my-api-key'
+        url: 'http://localhost:3000?api_key=my-api-key',
       })
       manager = new ApiKeyManager({ source: 'query', keyName: 'api_key' })
       expect(manager.extractFromRequest(req2)).toBe('my-api-key')
@@ -355,8 +355,8 @@ describe('Authentication Middleware', () => {
       // From cookie
       const req3 = createMockRequest({
         cookies: {
-          'api_key': 'my-api-key'
-        }
+          api_key: 'my-api-key',
+        },
       })
       manager = new ApiKeyManager({ source: 'cookie', keyName: 'api_key' })
       expect(manager.extractFromRequest(req3)).toBe('my-api-key')
@@ -373,7 +373,7 @@ describe('Authentication Middleware', () => {
         authorizeUrl: 'https://auth.example.com/authorize',
         tokenUrl: 'https://auth.example.com/token',
         redirectUri: 'http://myapp.com/callback',
-        scope: 'read write'
+        scope: 'read write',
       })
     })
 

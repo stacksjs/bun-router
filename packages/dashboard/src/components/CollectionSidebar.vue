@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useCollectionStore, type Collection, type RequestItem } from '../store/collectionStore'
+import type { RequestItem } from '../store/collectionStore'
+import { computed, onMounted, ref } from 'vue'
+import { useCollectionStore } from '../store/collectionStore'
 
+const emits = defineEmits(['select-request'])
 const collectionStore = useCollectionStore()
 const isLoading = computed(() => collectionStore.isLoading)
 const collections = computed(() => collectionStore.collections)
@@ -10,12 +12,11 @@ const showNewCollectionForm = ref(false)
 const newCollectionName = ref('')
 const newCollectionDescription = ref('')
 
-const emits = defineEmits(['select-request'])
-
 function toggleCollection(collectionId: string) {
   if (expandedCollections.value.has(collectionId)) {
     expandedCollections.value.delete(collectionId)
-  } else {
+  }
+  else {
     expandedCollections.value.add(collectionId)
   }
 }
@@ -32,7 +33,7 @@ function createCollection() {
   if (newCollectionName.value.trim()) {
     collectionStore.createCollection(
       newCollectionName.value.trim(),
-      newCollectionDescription.value.trim() || undefined
+      newCollectionDescription.value.trim() || undefined,
     )
     toggleNewCollectionForm()
 
@@ -75,24 +76,28 @@ onMounted(async () => {
 <template>
   <div class="collections-sidebar">
     <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-medium">Collections</h3>
+      <h3 class="text-lg font-medium">
+        Collections
+      </h3>
       <button
-        @click="toggleNewCollectionForm"
         class="text-indigo-600 hover:text-indigo-800 text-sm"
+        @click="toggleNewCollectionForm"
       >
         {{ showNewCollectionForm ? 'Cancel' : '+ New' }}
       </button>
     </div>
 
     <div v-if="showNewCollectionForm" class="mb-4 p-3 border border-gray-200 rounded-md bg-gray-50">
-      <h4 class="text-sm font-medium mb-2">New Collection</h4>
+      <h4 class="text-sm font-medium mb-2">
+        New Collection
+      </h4>
       <div class="mb-2">
         <input
           v-model="newCollectionName"
           type="text"
           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           placeholder="Collection Name"
-        />
+        >
       </div>
       <div class="mb-3">
         <input
@@ -100,12 +105,12 @@ onMounted(async () => {
           type="text"
           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           placeholder="Description (optional)"
-        />
+        >
       </div>
       <button
-        @click="createCollection"
         class="w-full px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
         :disabled="!newCollectionName.trim()"
+        @click="createCollection"
       >
         Create Collection
       </button>
@@ -126,23 +131,23 @@ onMounted(async () => {
         class="border border-gray-200 rounded-md overflow-hidden"
       >
         <div
-          @click="toggleCollection(collection.id)"
           class="flex justify-between items-center p-2 bg-gray-50 cursor-pointer hover:bg-gray-100"
+          @click="toggleCollection(collection.id)"
         >
           <div class="flex items-center">
             <span
               class="mr-1 text-xs"
               :class="expandedCollections.has(collection.id) ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right'"
-            ></span>
+            />
             <span class="font-medium text-sm">{{ collection.name }}</span>
             <span class="ml-2 text-xs text-gray-500">{{ collection.requests.length }} requests</span>
           </div>
           <button
-            @click="deleteCollection(collection.id, $event)"
             class="text-gray-500 hover:text-red-600"
             title="Delete Collection"
+            @click="deleteCollection(collection.id, $event)"
           >
-            <span class="i-carbon-trash-can text-sm"></span>
+            <span class="i-carbon-trash-can text-sm" />
           </button>
         </div>
 
@@ -157,8 +162,8 @@ onMounted(async () => {
             <div
               v-for="request in collection.requests"
               :key="request.id"
-              @click="selectRequest(request)"
               class="p-2 border-t border-gray-200 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+              @click="selectRequest(request)"
             >
               <div>
                 <div class="flex items-center">
@@ -169,7 +174,7 @@ onMounted(async () => {
                       'bg-green-100 text-green-800': request.method === 'POST',
                       'bg-yellow-100 text-yellow-800': request.method === 'PUT',
                       'bg-red-100 text-red-800': request.method === 'DELETE',
-                      'bg-purple-100 text-purple-800': request.method === 'PATCH'
+                      'bg-purple-100 text-purple-800': request.method === 'PATCH',
                     }"
                   >
                     {{ request.method }}
@@ -181,11 +186,11 @@ onMounted(async () => {
                 </div>
               </div>
               <button
-                @click="deleteRequest(collection.id, request.id, $event)"
                 class="text-gray-400 hover:text-red-600"
                 title="Delete Request"
+                @click="deleteRequest(collection.id, request.id, $event)"
               >
-                <span class="i-carbon-trash-can text-xs"></span>
+                <span class="i-carbon-trash-can text-xs" />
               </button>
             </div>
           </div>

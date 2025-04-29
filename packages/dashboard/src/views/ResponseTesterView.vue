@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 // Request configuration
 const url = ref('https://api.example.com/users')
@@ -26,9 +26,10 @@ const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 // Headers parsing
 const parsedHeaders = computed(() => {
   const result: Record<string, string> = {}
-  if (!headers.value) return result
+  if (!headers.value)
+    return result
 
-  headers.value.split('\n').forEach(line => {
+  headers.value.split('\n').forEach((line) => {
     const colonPos = line.indexOf(':')
     if (colonPos > 0) {
       const name = line.slice(0, colonPos).trim()
@@ -43,9 +44,10 @@ const parsedHeaders = computed(() => {
 // Parse query params
 const parsedQueryParams = computed(() => {
   const result: Record<string, string> = {}
-  if (!queryParams.value) return result
+  if (!queryParams.value)
+    return result
 
-  queryParams.value.split('&').forEach(pair => {
+  queryParams.value.split('&').forEach((pair) => {
     const equalsPos = pair.indexOf('=')
     if (equalsPos > 0) {
       const name = pair.slice(0, equalsPos).trim()
@@ -59,7 +61,8 @@ const parsedQueryParams = computed(() => {
 
 // Build the URL with query params
 const fullUrl = computed(() => {
-  if (!url.value) return ''
+  if (!url.value)
+    return ''
 
   try {
     const urlObj = new URL(url.value)
@@ -70,7 +73,8 @@ const fullUrl = computed(() => {
     })
 
     return urlObj.toString()
-  } catch (e) {
+  }
+  catch (e) {
     // If URL is invalid, just return it as is
     return url.value
   }
@@ -90,11 +94,11 @@ async function sendRequest() {
 
     // Different responses based on method
     let status = 200
-    let responseHeaders: Record<string, string> = {
+    const responseHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       'Cache-Control': 'max-age=3600, public',
       'Server': 'nginx/1.18.0',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
     }
 
     let responseBody = ''
@@ -103,38 +107,43 @@ async function sendRequest() {
       responseBody = JSON.stringify({
         data: [
           { id: 1, name: 'John Doe', email: 'john@example.com' },
-          { id: 2, name: 'Jane Smith', email: 'jane@example.com' }
+          { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
         ],
         meta: {
           total: 2,
           page: 1,
-          limit: 10
-        }
+          limit: 10,
+        },
       }, null, 2)
-    } else if (method.value === 'POST') {
+    }
+    else if (method.value === 'POST') {
       status = 201
       responseBody = JSON.stringify({
         message: 'Resource created successfully',
         data: {
           id: 3,
-          ...JSON.parse(requestBody.value)
-        }
+          ...JSON.parse(requestBody.value),
+        },
       }, null, 2)
-    } else if (method.value === 'PUT' || method.value === 'PATCH') {
+    }
+    else if (method.value === 'PUT' || method.value === 'PATCH') {
       responseBody = JSON.stringify({
         message: 'Resource updated successfully',
         data: {
           id: 1,
-          ...JSON.parse(requestBody.value)
-        }
+          ...JSON.parse(requestBody.value),
+        },
       }, null, 2)
-    } else if (method.value === 'DELETE') {
+    }
+    else if (method.value === 'DELETE') {
       status = 204
       responseBody = ''
-    } else if (method.value === 'HEAD') {
+    }
+    else if (method.value === 'HEAD') {
       responseBody = ''
-    } else if (method.value === 'OPTIONS') {
-      responseHeaders['Allow'] = 'GET, POST, PUT, PATCH, DELETE'
+    }
+    else if (method.value === 'OPTIONS') {
+      responseHeaders.Allow = 'GET, POST, PUT, PATCH, DELETE'
       responseBody = ''
     }
 
@@ -146,9 +155,10 @@ async function sendRequest() {
       headers: responseHeaders,
       body: responseBody,
       time: Math.round(endTime - startTime),
-      size: formatBytes(responseBody.length)
+      size: formatBytes(responseBody.length),
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error sending request:', error)
     response.value = {
       status: 500,
@@ -156,21 +166,23 @@ async function sendRequest() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Failed to send request' }, null, 2),
       time: 0,
-      size: '0 B'
+      size: '0 B',
     }
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
+  if (bytes === 0)
+    return '0 B'
 
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 function getStatusText(status: number): string {
@@ -185,17 +197,21 @@ function getStatusText(status: number): string {
     405: 'Method Not Allowed',
     409: 'Conflict',
     422: 'Unprocessable Entity',
-    500: 'Internal Server Error'
+    500: 'Internal Server Error',
   }
 
   return statusTexts[status] || 'Unknown'
 }
 
 function getStatusClass(status: number): string {
-  if (status >= 200 && status < 300) return 'text-green-600'
-  if (status >= 300 && status < 400) return 'text-blue-600'
-  if (status >= 400 && status < 500) return 'text-orange-600'
-  if (status >= 500) return 'text-red-600'
+  if (status >= 200 && status < 300)
+    return 'text-green-600'
+  if (status >= 300 && status < 400)
+    return 'text-blue-600'
+  if (status >= 400 && status < 500)
+    return 'text-orange-600'
+  if (status >= 500)
+    return 'text-red-600'
   return 'text-gray-600'
 }
 
@@ -220,13 +236,17 @@ function shouldShowRequestBody(method: string): boolean {
 <template>
   <div class="response-tester-view">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">HTTP Response Tester</h1>
+      <h1 class="text-2xl font-bold">
+        HTTP Response Tester
+      </h1>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Request Panel -->
       <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-medium mb-4">Request</h2>
+        <h2 class="text-lg font-medium mb-4">
+          Request
+        </h2>
 
         <div class="space-y-4">
           <div class="flex flex-col md:flex-row md:space-x-4">
@@ -237,7 +257,9 @@ function shouldShowRequestBody(method: string): boolean {
                 v-model="method"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               >
-                <option v-for="m in methods" :key="m" :value="m">{{ m }}</option>
+                <option v-for="m in methods" :key="m" :value="m">
+                  {{ m }}
+                </option>
               </select>
             </div>
 
@@ -249,16 +271,16 @@ function shouldShowRequestBody(method: string): boolean {
                 type="text"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 placeholder="https://api.example.com/endpoint"
-              />
+              >
             </div>
           </div>
 
           <div>
             <button
-              @click="toggleRequestParams"
               class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
+              @click="toggleRequestParams"
             >
-              <span :class="showRequestParams ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right'" class="mr-1"></span>
+              <span :class="showRequestParams ? 'i-carbon-chevron-down' : 'i-carbon-chevron-right'" class="mr-1" />
               {{ showRequestParams ? 'Hide' : 'Show' }} Query Parameters
             </button>
 
@@ -270,8 +292,10 @@ function shouldShowRequestBody(method: string): boolean {
                 type="text"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 placeholder="param1=value1&param2=value2"
-              />
-              <p class="mt-1 text-xs text-gray-500">Full URL: {{ fullUrl }}</p>
+              >
+              <p class="mt-1 text-xs text-gray-500">
+                Full URL: {{ fullUrl }}
+              </p>
             </div>
           </div>
 
@@ -283,7 +307,7 @@ function shouldShowRequestBody(method: string): boolean {
               rows="4"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"
               placeholder="Content-Type: application/json"
-            ></textarea>
+            />
           </div>
 
           <div v-if="shouldShowRequestBody(method)">
@@ -294,24 +318,24 @@ function shouldShowRequestBody(method: string): boolean {
               rows="6"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono"
               placeholder="{\n  \"key\": \"value\"\n}"
-            ></textarea>
+            />
           </div>
 
           <div class="flex justify-end space-x-3">
             <button
-              @click="clearForm"
               class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+              @click="clearForm"
             >
               Reset
             </button>
 
             <button
-              @click="sendRequest"
               :disabled="isLoading || !url"
               class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 flex items-center"
+              @click="sendRequest"
             >
-              <span v-if="isLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2"></span>
-              <span v-else class="i-carbon-send mr-2"></span>
+              <span v-if="isLoading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent mr-2" />
+              <span v-else class="i-carbon-send mr-2" />
               {{ isLoading ? 'Sending...' : 'Send Request' }}
             </button>
           </div>
@@ -320,19 +344,27 @@ function shouldShowRequestBody(method: string): boolean {
 
       <!-- Response Panel -->
       <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-medium mb-4">Response</h2>
+        <h2 class="text-lg font-medium mb-4">
+          Response
+        </h2>
 
         <div v-if="isLoading" class="p-8 text-center">
-          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-          <p class="mt-2 text-gray-600">Waiting for response...</p>
+          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent" />
+          <p class="mt-2 text-gray-600">
+            Waiting for response...
+          </p>
         </div>
 
         <div v-else-if="!response" class="p-8 text-center">
           <div class="flex justify-center mb-4">
-            <span class="i-carbon-code text-6xl text-gray-300"></span>
+            <span class="i-carbon-code text-6xl text-gray-300" />
           </div>
-          <p class="text-gray-600 mb-2">No response yet.</p>
-          <p class="text-gray-500 text-sm">Configure your request and click "Send Request" to see the response here.</p>
+          <p class="text-gray-600 mb-2">
+            No response yet.
+          </p>
+          <p class="text-gray-500 text-sm">
+            Configure your request and click "Send Request" to see the response here.
+          </p>
         </div>
 
         <div v-else class="space-y-4">
@@ -349,13 +381,19 @@ function shouldShowRequestBody(method: string): boolean {
 
           <!-- Response Headers -->
           <div>
-            <h3 class="text-md font-medium mb-2">Headers</h3>
+            <h3 class="text-md font-medium mb-2">
+              Headers
+            </h3>
             <div class="bg-gray-50 p-3 rounded-md">
               <table class="min-w-full text-sm">
                 <tbody>
                   <tr v-for="(value, name) in response.headers" :key="name" class="border-b border-gray-200 last:border-b-0">
-                    <td class="py-2 pr-4 font-medium text-gray-900">{{ name }}</td>
-                    <td class="py-2 text-gray-600 break-all">{{ value }}</td>
+                    <td class="py-2 pr-4 font-medium text-gray-900">
+                      {{ name }}
+                    </td>
+                    <td class="py-2 text-gray-600 break-all">
+                      {{ value }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -364,7 +402,9 @@ function shouldShowRequestBody(method: string): boolean {
 
           <!-- Response Body -->
           <div v-if="response.body">
-            <h3 class="text-md font-medium mb-2">Body</h3>
+            <h3 class="text-md font-medium mb-2">
+              Body
+            </h3>
             <pre class="bg-gray-50 p-3 rounded-md overflow-x-auto text-sm font-mono">{{ response.body }}</pre>
           </div>
         </div>
@@ -373,11 +413,15 @@ function shouldShowRequestBody(method: string): boolean {
 
     <!-- Documentation -->
     <div class="mt-6 bg-white rounded-lg shadow p-4">
-      <h2 class="text-lg font-medium mb-4">Quick Reference</h2>
+      <h2 class="text-lg font-medium mb-4">
+        Quick Reference
+      </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <h3 class="text-md font-medium mb-2">Common HTTP Methods</h3>
+          <h3 class="text-md font-medium mb-2">
+            Common HTTP Methods
+          </h3>
           <ul class="text-sm text-gray-600 space-y-2">
             <li><span class="font-medium">GET:</span> Retrieve data</li>
             <li><span class="font-medium">POST:</span> Create a new resource</li>
@@ -390,7 +434,9 @@ function shouldShowRequestBody(method: string): boolean {
         </div>
 
         <div>
-          <h3 class="text-md font-medium mb-2">Common Status Codes</h3>
+          <h3 class="text-md font-medium mb-2">
+            Common Status Codes
+          </h3>
           <ul class="text-sm text-gray-600 space-y-2">
             <li><span class="font-medium text-green-600">200:</span> OK</li>
             <li><span class="font-medium text-green-600">201:</span> Created</li>
@@ -404,7 +450,9 @@ function shouldShowRequestBody(method: string): boolean {
         </div>
 
         <div>
-          <h3 class="text-md font-medium mb-2">Common Headers</h3>
+          <h3 class="text-md font-medium mb-2">
+            Common Headers
+          </h3>
           <ul class="text-sm text-gray-600 space-y-2">
             <li><span class="font-medium">Content-Type:</span> application/json</li>
             <li><span class="font-medium">Authorization:</span> Bearer [token]</li>

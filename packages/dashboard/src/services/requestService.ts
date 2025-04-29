@@ -73,7 +73,7 @@ export const requestService = {
       if (!processedOptions.headers?.['Content-Type']) {
         processedOptions.headers = {
           ...processedOptions.headers,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         }
       }
     }
@@ -89,14 +89,16 @@ export const requestService = {
         method: processedOptions.method,
         headers: processedOptions.headers,
         body: processedOptions.body,
-        signal: controller.signal
+        signal: controller.signal,
       })
 
       return response
-    } catch (error) {
+    }
+    catch (error) {
       // Rethrow the error
       throw error
-    } finally {
+    }
+    finally {
       // Clear timeout
       clearTimeout(timeoutId)
     }
@@ -121,5 +123,5 @@ export const requestService = {
 
   async patch(url: string, body: any, options: Omit<RequestOptions, 'method' | 'body'> = {}): Promise<Response> {
     return this.sendRequest(url, { ...options, method: 'PATCH', body })
-  }
+  },
 }

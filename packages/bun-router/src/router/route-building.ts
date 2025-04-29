@@ -1,4 +1,4 @@
-import type { EnhancedRequest, Route, RouteDefinition } from '../types'
+import type { Route, RouteDefinition } from '../types'
 import type { Router } from './core'
 import { matchPath } from '../utils'
 
