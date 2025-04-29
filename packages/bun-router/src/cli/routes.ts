@@ -1,0 +1,265 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import process from 'node:process'
+import chalk from 'chalk'
+
+/**
+ * Options for the route:list command
+ */
+export interface RouteListOptions {
+  verbose?: boolean
+  extraVerbose?: boolean
+  path?: string
+  exceptVendor?: boolean
+  onlyVendor?: boolean
+}
+
+/**
+ * Options for the route:types command
+ */
+export interface GenerateRouteTypesOptions {
+  output?: string
+  watch?: boolean
+}
+
+/**
+ * Display all registered routes in a formatted table
+ */
+export async function displayRoutes(options: RouteListOptions): Promise<void> {
+  try {
+    // Try to load router instance from the application
+    const routesFile = `${process.cwd()}/routes/index.ts`
+    const { router } = await import(routesFile)
+
+    if (!router) {
+      console.error(chalk.red(`Could not find router instance in ${routesFile}.`))
+      process.exit(1)
+    }
+
+    // Get routes from router
+    const routes = (router as any).routes || []
+
+    if (routes.length === 0) {
+      console.log(chalk.yellow('No routes defined.'))
+      return
+    }
+
+    // Filter routes based on options
+    let filteredRoutes = routes
+
+    if (options.path) {
+      filteredRoutes = filteredRoutes.filter((route: any) =>
+        route.path.startsWith(options.path),
+      )
+    }
+
+    // Display route table
+    console.log(chalk.bold('\nRoutes:'))
+    console.log(chalk.dim('+-----------------+-------------------------+------------------+----------------+'))
+    console.log(chalk.dim('| ') + chalk.bold('Method') + chalk.dim('          | ') + chalk.bold('URI') + chalk.dim('                     | ') + chalk.bold('Name') + chalk.dim('             | ') + chalk.bold('Handler') + chalk.dim('         |'))
+    console.log(chalk.dim('+-----------------+-------------------------+------------------+----------------+'))
+
+    filteredRoutes.forEach((route: any) => {
+      const method = padString(route.method, 15)
+      const path = padString(route.path, 23)
+      const name = padString(route.name || '', 16)
+
+      let handler: string
+      if (typeof route.handler === 'string') {
+        handler = route.handler
+      }
+      else if (typeof route.handler === 'function') {
+        handler = route.handler.name ? `${route.handler.name}()` : 'Anonymous Function'
+      }
+      else {
+        handler = 'Class Handler'
+      }
+
+      handler = padString(handler, 14)
+
+      console.log(chalk.dim('| ')
+        + getMethodColor(route.method)(method) + chalk.dim(' | ')
+        + chalk.green(path) + chalk.dim(' | ')
+        + chalk.yellow(name) + chalk.dim(' | ')
+        + chalk.blue(handler) + chalk.dim(' |'))
+
+      // Show middleware if verbose flag is set
+      if (options.verbose && route.middleware && route.middleware.length > 0) {
+        console.log(chalk.dim('|                 | ') + chalk.dim('Middleware: ')
+          + route.middleware.map((m: any) => typeof m === 'string' ? m : m.name || 'Anonymous').join(', ')
+          + chalk.dim('                                           |'))
+      }
+    })
+
+    console.log(chalk.dim('+-----------------+-------------------------+------------------+----------------+'))
+    console.log(`\nShowing ${filteredRoutes.length} routes`)
+  }
+  catch (error: any) {
+    console.error(chalk.red(`Error: ${error.message}`))
+    console.error(chalk.yellow(`Make sure your routes are defined in ${process.cwd()}/routes/index.ts and export a 'router' instance.`))
+    throw error
+  }
+}
+
+/**
+ * Generate TypeScript types for route names
+ */
+export async function generateRouteTypes(outputPath: string): Promise<void> {
+  try {
+    // Try to load router instance from the application
+    const routesFile = `${process.cwd()}/routes/index.ts`
+    const { router } = await import(routesFile)
+
+    if (!router) {
+      console.error(chalk.red(`Could not find router instance in ${routesFile}.`))
+      process.exit(1)
+    }
+
+    // Get routes from router
+    const routes = (router as any).routes || []
+
+    if (routes.length === 0) {
+      console.log(chalk.yellow('No routes defined. Creating empty types file.'))
+    }
+
+    // Collect named routes or generate names for unnamed routes
+    const routeNames = routes.map((route: any) => {
+      // If route has a name, use it
+      if (route.name)
+        return route.name
+
+      // Otherwise generate a name based on method and path
+      const methodLower = route.method.toLowerCase()
+      const pathFormatted = route.path
+        .replace(/^\//, '') // Remove leading slash
+        .replace(/\//g, '.') // Replace other slashes with dots
+        .replace(/\{([^}]+)\}/g, ':$1') // Replace {param} with :param
+
+      return pathFormatted ? `${methodLower}.${pathFormatted}` : methodLower
+    })
+
+    // Remove duplicates
+    const uniqueRouteNames = [...new Set(routeNames)]
+
+    // Generate type definition
+    const typeContent = `/**
+ * This file is auto-generated.
+ * DO NOT EDIT THIS FILE DIRECTLY.
+ * To update, run 'bun router route:types'
+ */
+
+/**
+ * String literal type for all available route names
+ */
+export type RouteName = ${uniqueRouteNames.length > 0
+  ? uniqueRouteNames.map(name => `'${name}'`).join(' | ')
+  : 'string'}
+
+/**
+ * Object type with route names as keys and string (for path generation) as values
+ */
+export interface RouteNameMap {
+${uniqueRouteNames.map(name => `  '${name}': string`).join('\n')}
+}
+
+/**
+ * Type-safe function to generate a URL for a named route
+ */
+export type RouteFunction = <T extends RouteName>(name: T, params?: Record<string, string>) => string
+
+/**
+ * Validate that a string is a valid route name
+ */
+export function isValidRouteName(name: string): name is RouteName {
+  return [${uniqueRouteNames.map(name => `'${name}'`).join(', ')}].includes(name)
+}
+`
+
+    // Write to file
+    await fs.writeFile(outputPath, typeContent)
+    console.log(chalk.green(`✨ Route types generated at ${outputPath}`))
+  }
+  catch (error: any) {
+    if (error.code === 'ERR_MODULE_NOT_FOUND') {
+      console.error(chalk.red(`Routes file not found at ${process.cwd()}/routes/index.ts`))
+      console.error(chalk.yellow('Make sure your routes are defined and exported as "router" in routes/index.ts'))
+    }
+    else {
+      console.error(chalk.red(`Error generating route types: ${error.message}`))
+    }
+    throw error
+  }
+}
+
+/**
+ * Watch for changes in the routes directory and regenerate types
+ */
+export async function watchRoutesDirectory(outputPath: string): Promise<void> {
+  const routesPath = path.join(process.cwd(), 'routes')
+
+  // Check if routes directory exists
+  try {
+    await fs.access(routesPath)
+  }
+  catch {
+    console.error(chalk.red(`Routes directory not found at ${routesPath}`))
+    process.exit(1)
+  }
+
+  // Initial generation
+  await generateRouteTypes(outputPath)
+  console.log(chalk.green(`✨ Route types generated at ${outputPath}`))
+  console.log(chalk.blue(`Watching for changes in ${routesPath}...`))
+
+  // Setup file watcher
+  let timeoutId: NodeJS.Timeout | null = null
+  const watcher = fs.watch(routesPath, { recursive: true })
+
+  for await (const _event of watcher) {
+    // Debounce to avoid multiple regenerations when multiple files change
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+
+    timeoutId = setTimeout(async () => {
+      console.log(chalk.yellow(`Changes detected in routes directory. Regenerating types...`))
+      try {
+        await generateRouteTypes(outputPath)
+        console.log(chalk.green(`✨ Route types regenerated at ${outputPath}`))
+      }
+      catch (error: any) {
+        console.error(chalk.red(`Error regenerating types: ${error.message}`))
+      }
+      timeoutId = null
+    }, 500)
+  }
+}
+
+/**
+ * Pad a string to a specific length
+ */
+function padString(str: string, length: number): string {
+  return (str + ' '.repeat(length)).substring(0, length)
+}
+
+/**
+ * Get the appropriate color for an HTTP method
+ */
+function getMethodColor(method: string) {
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return chalk.cyan
+    case 'POST':
+      return chalk.green
+    case 'PUT':
+      return chalk.yellow
+    case 'PATCH':
+      return chalk.yellow
+    case 'DELETE':
+      return chalk.red
+    case 'OPTIONS':
+      return chalk.gray
+    default:
+      return chalk.white
+  }
+}
