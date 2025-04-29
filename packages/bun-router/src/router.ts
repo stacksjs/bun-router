@@ -1,8 +1,8 @@
 import type { Server } from 'bun'
-import type { ActionHandler, ActionHandlerClass, EnhancedRequest, MiddlewareHandler, Route, RouteDefinition, RouteGroup, RouteHandler, RouterConfig, ServerOptions, WebSocketConfig } from './types'
+import type { ActionHandler, ActionHandlerClass, EnhancedRequest, HTTPMethod, MatchResult, MiddlewareHandler, PatternMatchResult, Route, RouteDefinition, RouteGroup, RouteHandler, RouterConfig, ServerOptions, WebSocketConfig } from './types'
 import { join } from 'node:path'
 import process from 'node:process'
-import { isActionClass, isRouteHandler, matchPath, normalizePath, processHtmlTemplate, resolveViewPath, toActionPath } from './utils'
+import { extractParamNames, isActionClass, isRouteHandler, joinPaths, matchPath, normalizePath, processHtmlTemplate, resolveViewPath, toActionPath } from './utils'
 
 export class Router {
   private routes: Route[] = []
@@ -12,6 +12,7 @@ export class Router {
   private fallbackHandler: ActionHandler | null = null
   private patterns: Map<string, string> = new Map()
   private currentDomain: string | null = null
+  private domains: Record<string, Route[]> = {}
   private serverInstance: Server | null = null
   private wsConfig: WebSocketConfig | null = null
   private errorHandler: ((error: Error) => Response | Promise<Response>) | null = null
@@ -33,74 +34,117 @@ export class Router {
     this.config = { ...this.config, ...config }
   }
 
+  /**
+   * Add a route to the router
+   * @param method The HTTP method
+   * @param path The route path
+   * @param handler The route handler
+   * @param type The route type (api or web)
+   * @param name Optional name for the route
+   */
   private async addRoute(method: string, path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string): Promise<Router> {
-    // Apply prefix from configuration based on route type
-    let prefixedPath = path
-    if (type === 'api' && this.config.apiPrefix) {
-      prefixedPath = `${this.config.apiPrefix}${path}`
-    }
-    else if (type === 'web' && this.config.webPrefix) {
-      prefixedPath = `${this.config.webPrefix}${path}`
-    }
+    // Apply current group settings if in a group
+    let routePath = path
+    let routeMiddleware: MiddlewareHandler[] = []
+    const routeType = type || 'web'
 
-    // Apply prefix from current group if exists
-    if (this.currentGroup && this.currentGroup.prefix) {
-      prefixedPath = `${this.currentGroup.prefix}${prefixedPath}`
-    }
-
-    prefixedPath = normalizePath(prefixedPath)
-
-    // Get middleware
-    const middleware: MiddlewareHandler[] = []
-
-    // Apply default middleware based on route type
-    if (type === 'api' && this.config.defaultMiddleware?.api) {
-      for (const middlewareItem of this.config.defaultMiddleware.api) {
-        const resolved = await this.resolveMiddleware(middlewareItem)
-        if (resolved) {
-          middleware.push(resolved)
-        }
+    if (this.currentGroup) {
+      // Apply prefix if it exists
+      if (this.currentGroup.prefix) {
+        routePath = joinPaths(this.currentGroup.prefix, path)
       }
-    }
-    else if (type === 'web' && this.config.defaultMiddleware?.web) {
-      for (const middlewareItem of this.config.defaultMiddleware.web) {
-        const resolved = await this.resolveMiddleware(middlewareItem)
-        if (resolved) {
-          middleware.push(resolved)
-        }
+
+      // Apply middleware if it exists
+      if (this.currentGroup.middleware && this.currentGroup.middleware.length > 0) {
+        routeMiddleware = [...this.currentGroup.middleware] as MiddlewareHandler[]
       }
     }
 
-    // Apply middleware from current group
-    if (this.currentGroup && this.currentGroup.middleware) {
-      for (const middlewareItem of this.currentGroup.middleware) {
-        const resolved = await this.resolveMiddleware(middlewareItem)
-        if (resolved) {
-          middleware.push(resolved)
-        }
-      }
+    // Apply API/Web path prefixes
+    if (routeType === 'api' && this.config.apiPrefix) {
+      routePath = joinPaths(this.config.apiPrefix, routePath)
+    }
+    else if (routeType === 'web' && this.config.webPrefix) {
+      routePath = joinPaths(this.config.webPrefix, routePath)
+    }
+
+    // Apply domain if in a domain group
+    let domain: string | undefined
+    if (this.currentDomain) {
+      domain = this.currentDomain
     }
 
     // Create the route
     const route: Route = {
-      path: prefixedPath,
+      method: method.toUpperCase(),
+      path: routePath,
       handler,
-      method,
-      middleware,
-      type,
-      name,
-      constraints: {},
+      domain,
+      params: {},
+      middleware: routeMiddleware,
     }
 
-    // Add domain if in a domain group
-    if (this.currentDomain) {
-      route.domain = this.currentDomain
+    // Apply constraints from patterns map
+    const paramNames = extractParamNames(routePath)
+    const constraints: Record<string, string> = {}
+
+    paramNames.forEach((param: string) => {
+      // Remove optional marker for constraint lookup
+      const baseParam = param.replace('?', '')
+      if (this.patterns.has(baseParam)) {
+        constraints[baseParam] = this.patterns.get(baseParam)!
+      }
+    })
+
+    if (Object.keys(constraints).length > 0) {
+      route.constraints = constraints
     }
 
-    // Add to routes collection
+    // Add pattern property for route matching
+    route.pattern = {
+      exec: (url: URL): PatternMatchResult | null => {
+        const params: Record<string, string> = {}
+        const isMatch = matchPath(routePath, url.pathname, params)
+
+        if (!isMatch) {
+          return null
+        }
+
+        // Apply constraints if they exist
+        if (route.constraints) {
+          // Check each constraint against the param value
+          for (const [param, pattern] of Object.entries(route.constraints)) {
+            if (!params[param])
+              continue
+
+            // If the param doesn't match the pattern, return null (no match)
+            const regex = new RegExp(`^${pattern}$`)
+            if (!regex.test(params[param])) {
+              return null
+            }
+          }
+        }
+
+        return {
+          pathname: {
+            groups: params,
+          },
+        }
+      },
+    }
+
+    // Add to the main routes array
     this.routes.push(route)
 
-    // Register named route for reverse routing
+    // Add to domain-specific routes if applicable
+    if (domain) {
+      if (!this.domains[domain]) {
+        this.domains[domain] = []
+      }
+      this.domains[domain].push(route)
+    }
+
+    // If the route has a name, store it in the named routes map
     if (name) {
       this.namedRoutes.set(name, route)
     }
@@ -150,34 +194,48 @@ export class Router {
   }
 
   /**
-   * Group routes with shared attributes
-   * @param options Group configuration options
-   * @param callback Function that registers routes in this group
+   * Define a route group with shared attributes
+   * @param options Group options
+   * @param callback Function that defines routes in this group
    */
   async group(options: RouteGroup, callback: () => void): Promise<Router> {
-    const previousGroup = this.currentGroup
+    // Remember the previous group if we're nesting
+    const parentGroup = this.currentGroup
 
-    // If we already have a group, merge the attributes
-    if (previousGroup) {
+    // Initialize the new group, inheriting from parent if needed
+    if (parentGroup) {
+      // Handle nested groups by combining attributes
       this.currentGroup = {
-        // Combine prefixes if both exist
-        prefix: options.prefix
-          ? (previousGroup.prefix ? previousGroup.prefix + options.prefix : options.prefix)
-          : previousGroup.prefix,
-
-        // Combine middleware if both exist
+        prefix: (parentGroup.prefix || '') + (options.prefix || ''),
         middleware: [
-          ...(previousGroup.middleware || []),
-          ...(options.middleware || [])
-        ]
+          ...(parentGroup.middleware || []),
+          ...(options.middleware || []),
+        ],
       }
-    } else {
-      this.currentGroup = options
+    }
+    else {
+      // Top-level group
+      this.currentGroup = { ...options }
+
+      // Resolve middleware if provided
+      if (options.middleware) {
+        const resolvedMiddleware: MiddlewareHandler[] = []
+        for (const middleware of options.middleware) {
+          const resolved = await this.resolveMiddleware(middleware)
+          if (resolved) {
+            resolvedMiddleware.push(resolved)
+          }
+        }
+        this.currentGroup.middleware = resolvedMiddleware
+      }
     }
 
+    // Execute the callback to register routes in this group
     callback()
 
-    this.currentGroup = previousGroup
+    // Restore the parent group when done
+    this.currentGroup = parentGroup
+
     return this
   }
 
@@ -257,34 +315,59 @@ export class Router {
     return this
   }
 
+  /**
+   * Register RESTful resource routes
+   * @param name The name of the resource (e.g. 'users')
+   * @param handler The controller or handlers
+   * @param type The route type (api or web)
+   */
   async resource(name: string, handler: string | { [key: string]: ActionHandler }, type: 'api' | 'web' = 'api'): Promise<Router> {
-    const basePath = `/${name}`
-    const resourcePath = (subPath: string = '') => `${basePath}${subPath}`
+    console.log(`Registering resource: ${name}, type: ${type}`)
+
+    // Ensure name is correctly formatted - remove leading/trailing slashes
+    const normalizedName = name.replace(/^\/+|\/+$/g, '')
+    const basePath = `/${normalizedName}`
+
+    // Check if API prefix is configured
+    const apiPrefix = type === 'api' ? this.config.apiPrefix || '' : ''
+
+    // For debugging
+    console.log(`Base path: ${basePath}, Handlers:`, typeof handler === 'string' ? handler : Object.keys(handler))
 
     if (typeof handler === 'string') {
       // String handler as base controller path
-      await this.get(resourcePath(), `${handler}/index`, type)
-      await this.get(resourcePath('/{id}'), `${handler}/show`, type)
-      await this.post(resourcePath(), `${handler}/store`, type)
-      await this.put(resourcePath('/{id}'), `${handler}/update`, type)
-      await this.delete(resourcePath('/{id}'), `${handler}/destroy`, type)
+      await this.get(basePath, `${handler}/index`, type)
+      await this.get(`${basePath}/{id}`, `${handler}/show`, type)
+      await this.post(basePath, `${handler}/store`, type)
+      await this.put(`${basePath}/{id}`, `${handler}/update`, type)
+      await this.delete(`${basePath}/{id}`, `${handler}/destroy`, type)
     }
     else {
       // Object with method handlers
-      if (handler.index) {
-        await this.get(resourcePath(), handler.index, type)
+      // Register index route (GET /resource)
+      if ('index' in handler && handler.index) {
+        console.log(`Registering index route for ${basePath}`)
+        await this.get(basePath, handler.index, type)
       }
-      if (handler.show) {
-        await this.get(resourcePath('/{id}'), handler.show, type)
+
+      // Register show route (GET /resource/{id})
+      if ('show' in handler && handler.show) {
+        await this.get(`${basePath}/{id}`, handler.show, type)
       }
-      if (handler.store) {
-        await this.post(resourcePath(), handler.store, type)
+
+      // Register store route (POST /resource)
+      if ('store' in handler && handler.store) {
+        await this.post(basePath, handler.store, type)
       }
-      if (handler.update) {
-        await this.put(resourcePath('/{id}'), handler.update, type)
+
+      // Register update route (PUT /resource/{id})
+      if ('update' in handler && handler.update) {
+        await this.put(`${basePath}/{id}`, handler.update, type)
       }
-      if (handler.destroy) {
-        await this.delete(resourcePath('/{id}'), handler.destroy, type)
+
+      // Register destroy route (DELETE /resource/{id})
+      if ('destroy' in handler && handler.destroy) {
+        await this.delete(`${basePath}/{id}`, handler.destroy, type)
       }
     }
 
@@ -343,6 +426,7 @@ export class Router {
       }
     }
     else {
+      // If it's already a function, return it directly
       return middleware
     }
   }
@@ -358,41 +442,37 @@ export class Router {
       return null
     }
 
-    // We'll use a special symbol to track the middleware chain completion internally
-    let middlewareComplete = false
-
-    // Create a chain of middleware functions where each calls the next
-    const executeMiddleware = async (index: number): Promise<Response> => {
-      // If we've run through all middleware, signal to continue to route handler
+    // Function that will execute middleware at the given index and handle the next() chain
+    const executeMiddleware = async (index: number): Promise<Response | null> => {
+      // If we've run through all middleware, return null to indicate we should continue to route handler
       if (index >= middlewareStack.length) {
-        middlewareComplete = true
-        // Return a valid "empty" response - this will be checked later and never sent to the client
-        return new Response('', { status: 200 })
+        return null
       }
 
       const currentMiddleware = middlewareStack[index]
 
-      // Define the next function for this middleware
+      // Define the next function that this middleware will call
       const next = async (): Promise<Response> => {
-        return await executeMiddleware(index + 1)
+        // Get response from next middleware (or route handler if we're at the end)
+        const nextResponse = await executeMiddleware(index + 1)
+
+        // If we get null back, it means we've reached the end of middleware chain
+        // and need to call the route handler
+        if (nextResponse === null) {
+          // Get response from the route handler
+          return await this.resolveHandler(req.route!.handler, req)
+        }
+
+        return nextResponse
       }
 
-      // Execute the current middleware with the next function
+      // Execute this middleware with the next function
       return await currentMiddleware(req, next)
     }
 
     try {
-      // Start executing the middleware chain
-      const response = await executeMiddleware(0)
-
-      // If we completed the middleware chain without a short-circuit,
-      // continue to the route handler
-      if (middlewareComplete) {
-        return null
-      }
-
-      // Otherwise return the middleware response (short-circuit)
-      return response
+      // Start the middleware chain execution with the first middleware
+      return await executeMiddleware(0)
     }
     catch (error) {
       // Re-throw any errors to be handled by the error handler
@@ -749,7 +829,8 @@ export class Router {
         bunRoutes[path] = async (req: Request) => {
           // Create enhanced request with params
           const url = new URL(req.url)
-          const params = matchPath(path, url.pathname, route.constraints) || {}
+          const params: Record<string, string> = {}
+          matchPath(path, url.pathname, params)
           const enhancedReq = this.enhanceRequest(req, params)
 
           // Run middleware
@@ -776,7 +857,8 @@ export class Router {
           methodHandlers[method] = async (req: Request) => {
             // Create enhanced request with params
             const url = new URL(req.url)
-            const params = matchPath(path, url.pathname, route.constraints) || {}
+            const params: Record<string, string> = {}
+            matchPath(path, url.pathname, params)
             const enhancedReq = this.enhanceRequest(req, params)
 
             // Run middleware
@@ -801,43 +883,60 @@ export class Router {
     return bunRoutes
   }
 
-  private matchRoute(path: string, method: string): Route | null {
-    for (const route of this.routes) {
-      if (route.method !== method && route.method !== 'ANY') {
+  /**
+   * Match a route against a request
+   */
+  private matchRoute(path: string, method: HTTPMethod, domain?: string): MatchResult | undefined {
+    // domain specific routes
+    const matchedDomain = domain && this.domains?.[domain]
+      ? this.domains[domain]
+      : undefined
+
+    const url = new URL(`https://${domain || 'localhost'}${path}`)
+    const routes = [...this.routes]
+
+    if (matchedDomain) {
+      routes.push(...matchedDomain)
+    }
+
+    // find the first route that matches
+    for (const route of routes) {
+      if (route.method !== method) {
         continue
       }
 
-      // Handle domain matching if the route has a domain constraint
-      if (route.domain) {
-        const url = new URL(path)
-        if (!this.matchDomain(route.domain, url.hostname)) {
+      if (!route.pattern) {
+        continue
+      }
+
+      const result = route.pattern.exec(url)
+      if (!result) {
+        continue
+      }
+
+      // check constraints
+      if (route.constraints && Array.isArray(route.constraints) && route.constraints.length > 0) {
+        let constraintsPassed = true
+
+        for (const constraint of route.constraints) {
+          if (typeof constraint === 'function' && !constraint(result.pathname.groups)) {
+            constraintsPassed = false
+            break
+          }
+        }
+
+        if (!constraintsPassed) {
           continue
         }
       }
 
-      const params: Record<string, string> = {}
-      const isMatch = matchPath(route.path, path, params)
-
-      if (isMatch) {
-        // Apply constraints if any
-        if (route.constraints && Object.keys(route.constraints).length > 0) {
-          let constraintsMet = true
-          for (const [param, pattern] of Object.entries(route.constraints)) {
-            if (params[param] && !new RegExp(`^${pattern}$`).test(params[param])) {
-              constraintsMet = false
-              break
-            }
-          }
-          if (!constraintsMet) {
-            continue
-          }
-        }
-
-        return { ...route, params }
+      return {
+        route,
+        params: result.pathname.groups as Record<string, string>,
       }
     }
 
-    return null
+    return undefined
   }
 
   private extractParams(routePath: string, requestPath: string): Record<string, string> {
@@ -897,18 +996,18 @@ export class Router {
     try {
       const url = new URL(req.url)
       const path = normalizePath(url.pathname)
-      const method = req.method
+      const method = req.method as HTTPMethod
 
       // Find a matching route
-      let route = this.matchRoute(path, method)
+      let matchResult = this.matchRoute(path, method)
 
       // If no route found and this is a HEAD request, try to find a GET route
-      if (!route && method === 'HEAD') {
-        route = this.matchRoute(path, 'GET')
+      if (!matchResult && method === 'HEAD') {
+        matchResult = this.matchRoute(path, 'GET')
       }
 
       // If still no route, check for OPTIONS request to support CORS
-      if (!route && method === 'OPTIONS') {
+      if (!matchResult && method === 'OPTIONS') {
         // Create a default OPTIONS response with CORS headers
         const headers = new Headers({
           'Access-Control-Allow-Origin': '*',
@@ -920,7 +1019,7 @@ export class Router {
       }
 
       // If no route found, try the fallback handler or return 404
-      if (!route) {
+      if (!matchResult) {
         if (this.fallbackHandler) {
           const enhancedReq = this.enhanceRequest(req, {})
           return await this.resolveHandler(this.fallbackHandler, enhancedReq)
@@ -928,63 +1027,40 @@ export class Router {
         return new Response('Not Found', { status: 404 })
       }
 
-      // Create enhanced request with route parameters
-      const params = route.params ?? {}
+      // We have a matching route
+      const { route, params } = matchResult
+
+      // Create enhanced request with params and route information
       const enhancedReq = this.enhanceRequest(req, params)
+      enhancedReq.route = route
 
-      // Apply global middleware first
-      if (this.globalMiddleware.length > 0) {
-        try {
-          const middlewareResponse = await this.runMiddleware(enhancedReq, this.globalMiddleware)
-          if (middlewareResponse) {
-            // Middleware provided a response, so return it
-            return this.applyModifiedCookies(middlewareResponse, enhancedReq)
-          }
-        }
-        catch (error) {
-          console.error('Error in global middleware:', error)
-          return new Response('Internal Server Error', { status: 500 })
-        }
+      // Run middleware
+      const middlewareResult = await this.runMiddleware(
+        enhancedReq,
+        [...this.globalMiddleware, ...route.middleware],
+      )
+      if (middlewareResult) {
+        return this.applyModifiedCookies(middlewareResult, enhancedReq)
       }
 
-      // Apply route-specific middleware next
-      if (route.middleware && route.middleware.length > 0) {
-        try {
-          const middlewareResponse = await this.runMiddleware(enhancedReq, route.middleware)
-          if (middlewareResponse) {
-            // Middleware provided a response, so return it
-            return this.applyModifiedCookies(middlewareResponse, enhancedReq)
-          }
-        }
-        catch (error) {
-          console.error('Error in route middleware:', error)
-          return new Response('Internal Server Error', { status: 500 })
-        }
-      }
-
-      // Handle the request with the route handler
-      try {
-        const response = await this.resolveHandler(route.handler, enhancedReq)
-        return this.applyModifiedCookies(response, enhancedReq)
-      }
-      catch (error) {
-        console.error('Error handling request:', error)
-
-        // Use custom error handler if available
-        if (this.errorHandler) {
-          try {
-            return await this.errorHandler(error as Error)
-          }
-          catch (handlerError) {
-            console.error('Error in error handler:', handlerError)
-          }
-        }
-
-        return new Response('Internal Server Error', { status: 500 })
-      }
+      // Run route handler
+      const response = await this.resolveHandler(route.handler, enhancedReq)
+      return this.applyModifiedCookies(response, enhancedReq)
     }
-    catch (error) {
-      console.error('Unhandled error:', error)
+    catch (error: unknown) {
+      console.error('Error handling request:', error)
+
+      // If we have a custom error handler, use it
+      if (this.errorHandler) {
+        try {
+          return await this.errorHandler(error as Error)
+        }
+        catch (handlerError) {
+          console.error('Error in error handler:', handlerError)
+        }
+      }
+
+      // Default error response
       return new Response('Internal Server Error', { status: 500 })
     }
   }
@@ -1028,12 +1104,12 @@ export class Router {
             ...options,
             maxAge: 0,
             // Ensure the path is maintained when deleting
-            path: options.path || '/'
-          }
+            path: options.path || '/',
+          },
         })
       },
 
-      getAll: () => ({ ...cookies })
+      getAll: () => ({ ...cookies }),
     }
 
     // Store the cookies for use when generating the response
@@ -1076,7 +1152,7 @@ export class Router {
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers
+      headers,
     })
   }
 

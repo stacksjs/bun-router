@@ -561,11 +561,44 @@ export interface CookieOptions {
 }
 
 export interface EnhancedRequest extends Request {
-  params: RouteParams
-  session?: any
+  /**
+   * Route parameters extracted from the URL
+   */
+  params: Record<string, string>
+
+  /**
+   * The matched route object (added by the router during request handling)
+   */
+  route?: Route
+
+  /**
+   * Request ID (added by RequestId middleware)
+   */
   requestId?: string
-  jsonBody?: any // Use jsonBody instead of body to avoid conflict
-  cookies: CookieMap
+
+  /**
+   * JSON body payload (added by JsonBody middleware)
+   */
+  jsonBody?: any
+
+  /**
+   * Session data (added by Session middleware)
+   */
+  session?: any
+
+  /**
+   * Cookie utilities
+   */
+  cookies: {
+    get: (name: string) => string | undefined
+    set: (name: string, value: string, options?: CookieOptions) => void
+    delete: (name: string, options?: CookieOptions) => void
+    getAll: () => Record<string, string>
+  }
+
+  /**
+   * Internal cookie tracking
+   */
   _cookiesToSet?: { name: string, value: string, options: any }[]
   _cookiesToDelete?: { name: string, options: any }[]
 }
@@ -606,9 +639,12 @@ export interface Route {
   middleware: MiddlewareHandler[]
   type?: 'api' | 'web'
   name?: string
-  constraints?: Record<string, string>
+  constraints?: Record<string, string> | ((params: Record<string, string>) => boolean)[]
   domain?: string
   params?: Record<string, string>
+  pattern?: {
+    exec: (url: URL) => PatternMatchResult | null
+  }
 }
 
 /**
@@ -683,4 +719,26 @@ export interface RouteDefinition {
    * Optional route metadata for documentation or other purposes
    */
   meta?: Record<string, any>
+}
+
+/**
+ * HTTP Methods type
+ */
+export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD' | 'TRACE' | 'CONNECT'
+
+/**
+ * Route matching result
+ */
+export interface MatchResult {
+  route: Route
+  params: Record<string, string>
+}
+
+/**
+ * URL pattern match result
+ */
+export interface PatternMatchResult {
+  pathname: {
+    groups: Record<string, string>
+  }
 }

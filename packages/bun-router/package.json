@@ -13,9 +13,6 @@
   "bugs": {
     "url": "https://github.com/stacksjs/bun-router/issues"
   },
-  "bin": {
-    "bun-router": "./dist/cli.js"
-  },
   "keywords": [
     "router",
     "route",
@@ -36,6 +33,9 @@
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "bun-router": "./dist/cli.js"
+  },
   "files": [
     "README.md",
     "dist"

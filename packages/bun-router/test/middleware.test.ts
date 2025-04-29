@@ -1,8 +1,8 @@
-import { describe, expect, it, jest, beforeEach } from 'bun:test'
-import { Router } from '../src/router'
-import { Cors, Csrf, JsonBody, RequestId, Session } from '../src/middleware'
-import { type EnhancedRequest, type NextFunction } from '../src/types'
+import type { EnhancedRequest, NextFunction } from '../src/types'
+import { beforeEach, describe, expect, it, jest } from 'bun:test'
 import { config } from '../src/config'
+import { Cors, JsonBody, RequestId, Session } from '../src/middleware'
+import { Router } from '../src/router'
 
 describe('Middleware', () => {
   let router: Router
@@ -66,7 +66,7 @@ describe('Middleware', () => {
       const req = new Request('https://api.example.com/test', {
         method: 'GET',
         headers: {
-          'Origin': 'https://example.com',
+          Origin: 'https://example.com',
         },
       }) as EnhancedRequest
       req.params = {}

@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
-import { Router } from '../src/router'
 import type { EnhancedRequest, NextFunction } from '../src/types'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import { Router } from '../src/router'
 
 // Extend EnhancedRequest for testing
 declare module '../src/types' {
@@ -48,11 +48,12 @@ describe('Bun Router - Middleware Tests', () => {
     router = new Router()
 
     // Make our execution order tracking global
-    let executionOrder: string[] = []
+    const executionOrder: string[] = []
 
     // First middleware that runs first, ends last
     const middleware1 = async (req: EnhancedRequest, next: NextFunction) => {
       executionOrder.push('before_middleware1')
+      // Call next to get the response from downstream
       const response = await next()
       executionOrder.push('after_middleware1')
 
@@ -67,6 +68,7 @@ describe('Bun Router - Middleware Tests', () => {
     // Second middleware that runs second, ends second-to-last
     const middleware2 = async (req: EnhancedRequest, next: NextFunction) => {
       executionOrder.push('before_middleware2')
+      // Call next to get the response from downstream
       const response = await next()
       executionOrder.push('after_middleware2')
 
@@ -78,9 +80,9 @@ describe('Bun Router - Middleware Tests', () => {
       })
     }
 
-    // Register middlewares
-    await router.use(middleware1)
-    await router.use(middleware2)
+    // Register middlewares in the correct order
+    await router.use(middleware1) // This runs first
+    await router.use(middleware2) // This runs second
 
     // Create a simple route
     await router.get('/order-test', () => {
@@ -104,7 +106,7 @@ describe('Bun Router - Middleware Tests', () => {
       'before_middleware2',
       'handler',
       'after_middleware2',
-      'after_middleware1'
+      'after_middleware1',
     ])
   })
 

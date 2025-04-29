@@ -1,17 +1,17 @@
+import type { ActionHandlerClass, EnhancedRequest } from '../src/types'
 import { describe, expect, it } from 'bun:test'
 import {
+  createPathRegex,
+  extractParamNames,
   isActionClass,
   isRouteHandler,
+  joinPaths,
   matchPath,
   normalizePath,
   processHtmlTemplate,
-  createPathRegex,
-  extractParamNames,
-  joinPaths,
+  toActionPath,
   validatePath,
-  toActionPath
 } from '../src/utils'
-import type { ActionHandlerClass, EnhancedRequest } from '../src/types'
 
 describe('Utils', () => {
   describe('normalizePath', () => {

@@ -11,7 +11,7 @@ export function normalizePath(path: string): string {
 
   // Then ensure there's a leading slash and no trailing slash (unless it's just /)
   if (!normalizedPath.startsWith('/')) {
-    normalizedPath = '/' + normalizedPath
+    normalizedPath = `/${normalizedPath}`
   }
 
   if (normalizedPath.length > 1 && normalizedPath.endsWith('/')) {
@@ -108,8 +108,8 @@ export function matchPath(pattern: string, path: string, params: Record<string, 
   // For mandatory parameters, the pattern and path must have same number of segments
   const optionalParamCount = (normalizedPattern.match(/\{[^}]+\?\}/g) || []).length
 
-  if (pathSegments.length < patternSegments.length - optionalParamCount ||
-      pathSegments.length > patternSegments.length) {
+  if (pathSegments.length < patternSegments.length - optionalParamCount
+    || pathSegments.length > patternSegments.length) {
     return false
   }
 
@@ -123,7 +123,8 @@ export function matchPath(pattern: string, path: string, params: Record<string, 
       if (patternSegment.match(/\{[^}]+\?\}/)) {
         // This is an optional parameter and we have no path segment for it
         continue
-      } else {
+      }
+      else {
         // Required parameter or static segment with no matching path segment
         return false
       }
@@ -136,7 +137,8 @@ export function matchPath(pattern: string, path: string, params: Record<string, 
       const paramName = paramMatch[1].replace('?', '')
       // Store the parameter value
       params[paramName] = pathSegment
-    } else if (patternSegment !== pathSegment) {
+    }
+    else if (patternSegment !== pathSegment) {
       // Static segment doesn't match
       return false
     }
@@ -254,7 +256,9 @@ function processConditionals(template: string, data: Record<string, any>): strin
   return template.replace(
     /\{\{#if ([^}]+)\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g,
     (match, condition, content, alternative = '') => {
-      const value = getNestedValue(data, condition.trim())
+      const conditionTrimmed = condition.trim()
+      const value = getNestedValue(data, conditionTrimmed)
+      // Explicitly check for falsy values (false, undefined, null, 0, "")
       return value ? content : alternative
     },
   )
