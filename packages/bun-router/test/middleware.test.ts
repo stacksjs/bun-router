@@ -5,12 +5,12 @@ import { Cors, JsonBody, RequestId, Session } from '../src/middleware'
 import { Router } from '../src/router'
 
 describe('Middleware', () => {
-  let router: Router
+  let _router: Router
   let nextMock: NextFunction
   let responseMock: Response
 
   beforeEach(() => {
-    router = new Router()
+    _router = new Router()
     responseMock = new Response('Test')
     nextMock = jest.fn().mockResolvedValue(responseMock)
   })

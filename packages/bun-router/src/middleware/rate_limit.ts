@@ -1,4 +1,3 @@
-import type { RateLimiterOptions } from 'ts-rate-limiter'
 import type { EnhancedRequest, Middleware, MiddlewareHandler, NextFunction } from '../types'
 import { createRateLimiter } from 'ts-rate-limiter'
 import { config } from '../config'

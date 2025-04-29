@@ -1,5 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest, test } from 'bun:test'
-import { config } from '../src/config'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import { RateLimit } from '../src/middleware'
 import { Router } from '../src/router'
 

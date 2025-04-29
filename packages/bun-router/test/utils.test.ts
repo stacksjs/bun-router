@@ -82,7 +82,7 @@ describe('Utils', () => {
 
   describe('isRouteHandler', () => {
     it('should identify function route handlers', () => {
-      const handler = (req: EnhancedRequest) => new Response()
+      const handler = (_req: EnhancedRequest) => new Response()
       expect(isRouteHandler(handler)).toBe(true)
     })
 
@@ -96,7 +96,7 @@ describe('Utils', () => {
   describe('isActionClass', () => {
     it('should identify action handler classes', () => {
       class TestAction implements ActionHandlerClass {
-        async handle(request: EnhancedRequest): Promise<Response> {
+        async handle(_req: EnhancedRequest): Promise<Response> {
           return new Response()
         }
       }

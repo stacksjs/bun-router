@@ -4,8 +4,8 @@
  * To update, run 'bun router middleware:map'
  */
 
-import { LoggerMiddleware } from 'examples/middleware/LoggerMiddleware'
-import { ExampleMiddleware } from 'examples/middleware/ExampleMiddleware'
+import { ExampleMiddleware } from './examples/middleware/ExampleMiddleware'
+import { LoggerMiddleware } from './examples/middleware/LoggerMiddleware'
 
 /**
  * Map of all available middleware in the project
@@ -29,6 +29,6 @@ export type MiddlewareHandler = (req: any, next: () => Promise<Response>) => Pro
  * Ensure the middleware module exports all the middleware classes used in the project
  */
 export const middlewareMap: MiddlewareMap = {
-  LoggerMiddleware: LoggerMiddleware,
-  ExampleMiddleware: ExampleMiddleware
+  LoggerMiddleware,
+  ExampleMiddleware,
 }
