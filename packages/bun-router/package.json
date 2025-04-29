@@ -77,7 +77,8 @@
     "example:dead-letter-queue": "bun examples/dead-letter-queue.ts"
   },
   "dependencies": {
-    "bunfig": "^0.8.3"
+    "bunfig": "^0.8.3",
+    "ts-rate-limiter": "^0.4.0"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun eslint . --fix"
