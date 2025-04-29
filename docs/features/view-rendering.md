@@ -118,7 +118,9 @@ router.view('/api/docs', 'api-docs', docsData, {}, 'api')
 
 ## Template Processing
 
-By default, bun-router uses a simple template engine that supports:
+By default, `bun-router` makes use of the `bun-plugin-stx` plugin, to allow for...:
+
+wip
 
 - Variable substitution: `&#123;&#123; variable &#125;&#125;`
 - Conditionals: `&#123;&#123;#if condition&#125;&#125; content &#123;&#123;else&#125;&#125; alternative &#123;&#123;/if&#125;&#125;`
