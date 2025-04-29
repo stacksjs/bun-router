@@ -71,6 +71,29 @@ router.method(
 
 The middleware will be executed in the order they are defined in the array.
 
+### Fluid Middleware API
+
+Alternatively, you can use the fluid middleware API which allows you to chain middleware to a route after it has been defined:
+
+```typescript
+// Define a route and chain middleware to it
+router.get('/admin/dashboard', adminDashboardHandler)
+  .middleware(authMiddleware(), loggingMiddleware())
+
+// This is especially useful when applying multiple middleware
+router.post('/api/users', createUserHandler, 'api', 'users.create')
+  .middleware(validateUserMiddleware())
+  .middleware(rateLimit())
+  .middleware(logRequestMiddleware())
+
+// You can also combine with other fluent methods
+router.get('/users/{id}', showUserHandler, 'api', 'users.show')
+  .middleware(authMiddleware())
+  .whereNumber('id')
+```
+
+This fluent API provides a clean and readable way to apply middleware that is similar to Laravel's route definition style.
+
 ## Built-in Middleware
 
 bun-router includes several built-in middleware components:
@@ -268,6 +291,63 @@ Middleware executes in the order it is added:
 4. The route handler itself
 
 If any middleware returns a response, subsequent middleware and the route handler are skipped.
+
+## CLI Commands for Working with Middleware
+
+Bun Router provides helpful CLI commands for working with middleware:
+
+### Generate Built-in Middleware Types
+
+To generate TypeScript types for built-in middleware:
+
+```bash
+bun router middleware:types
+```
+
+Options:
+
+- `--output` - Specify output file path (default: `middleware-types.ts`)
+- `--watch` - Watch for changes in middleware directory
+
+### Generate Project Middleware Map
+
+To scan your project for middleware classes and generate a type map:
+
+```bash
+bun router middleware:map
+```
+
+This command scans your project directories for middleware classes and generates a TypeScript type definition file that includes all your middleware. This is particularly useful for autocompletion and type safety when using the fluid middleware API.
+
+Options:
+
+- `--dir` - Directory to scan (default: `src`)
+- `--output` - Output file path (default: `middleware-map.ts`)
+- `--watch` - Watch for changes in the directory
+
+Example output:
+
+```typescript
+import { AuthMiddleware } from 'app/middleware/AuthMiddleware'
+import { LoggerMiddleware } from 'app/middleware/LoggerMiddleware'
+import { RateLimitMiddleware } from 'app/middleware/RateLimitMiddleware'
+
+export interface MiddlewareMap {
+  AuthMiddleware: typeof AuthMiddleware
+  LoggerMiddleware: typeof LoggerMiddleware
+  RateLimitMiddleware: typeof RateLimitMiddleware
+}
+
+export type MiddlewareType = AuthMiddleware | LoggerMiddleware | RateLimitMiddleware
+
+export type MiddlewareHandler = (req: any, next: () => Promise<Response>) => Promise<Response>
+
+export const middlewareMap: MiddlewareMap = {
+  AuthMiddleware: AuthMiddleware,
+  LoggerMiddleware: LoggerMiddleware,
+  RateLimitMiddleware: RateLimitMiddleware
+}
+```
 
 ## Creating Custom Middleware
 

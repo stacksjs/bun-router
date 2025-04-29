@@ -1,11 +1,11 @@
-import type { GenerateMiddlewareTypesOptions } from './middleware'
+import type { GenerateMiddlewareTypesOptions, MapMiddlewareOptions } from './middleware'
 import type { OpenAPIOptions } from './openapi'
 import type { GenerateRouterTypesOptions } from './router'
 import type { GenerateRouteTypesOptions, RouteListOptions } from './routes'
 import process from 'node:process'
 import { CAC } from 'cac'
 import { version } from '../../package.json'
-import { generateMiddlewareTypes, watchMiddlewareDirectory } from './middleware'
+import { generateMiddlewareMap, generateMiddlewareTypes, watchDirectoryForMiddleware, watchMiddlewareDirectory } from './middleware'
 import { generateOpenAPISpec } from './openapi'
 import { generateRouterTypes, watchRouterFiles } from './router'
 import { displayRoutes, generateRouteTypes, watchRoutesDirectory } from './routes'
@@ -102,6 +102,33 @@ function registerMiddlewareCommands(cli: CAC): void {
       }
       catch (error: any) {
         console.error(`Failed to generate middleware types: ${error.message}`)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('middleware:map', 'Generate TypeScript types for all middleware in the project')
+    .option('--dir <directory>', 'Directory to scan for middleware classes', { default: 'src' })
+    .option('--output <file>', 'Output file path', { default: 'middleware-map.ts' })
+    .option('--watch', 'Watch for changes in the specified directory')
+    .example('router middleware:map')
+    .example('router middleware:map --dir app')
+    .example('router middleware:map --output src/types/project-middleware.ts')
+    .example('router middleware:map --watch')
+    .action(async (options: MapMiddlewareOptions) => {
+      try {
+        const outputPath = options.output || 'middleware-map.ts'
+        const directoryPath = options.dir || 'src'
+
+        if (options.watch) {
+          await watchDirectoryForMiddleware(directoryPath, outputPath)
+        }
+        else {
+          await generateMiddlewareMap(directoryPath, outputPath)
+        }
+      }
+      catch (error: any) {
+        console.error(`Failed to generate middleware map: ${error.message}`)
         process.exit(1)
       }
     })

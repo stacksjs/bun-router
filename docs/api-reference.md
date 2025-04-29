@@ -178,6 +178,19 @@ router.use(corsMiddleware)
 router.use([loggerMiddleware, jsonBodyMiddleware])
 ```
 
+```typescript
+router.middleware(...middleware: (string | MiddlewareHandler)[]): Router
+```
+
+Adds middleware to the most recently added route (fluent API).
+
+**Example:**
+
+```typescript
+router.get('/users', getUsers)
+  .middleware(authMiddleware, logRequestMiddleware)
+```
+
 ### Domain Routing
 
 ```typescript

@@ -623,7 +623,7 @@ export class Router {
   }
 
   /**
-   * Add constraints to the most recently added route
+   * Apply constraints to the most recently added route
    * @param params Object with parameter names and pattern strings
    */
   where(params: Record<string, string>): Router {
@@ -638,6 +638,39 @@ export class Router {
       console.warn('No route to apply constraints to')
     }
     return this
+  }
+
+  /**
+   * Add middleware to the most recently added route
+   * @param middleware Array or individual middleware to apply to the last route
+   */
+  middleware(...middleware: (string | MiddlewareHandler)[]): Router {
+    const lastRoute = this.routes[this.routes.length - 1]
+    if (lastRoute) {
+      // Immediately run the async operation but don't wait for it
+      // This allows method chaining to work properly
+      (async () => {
+        await this.applyMiddlewareToRoute(lastRoute, middleware)
+      })()
+    }
+    else {
+      console.warn('No route to apply middleware to')
+    }
+    return this
+  }
+
+  /**
+   * Apply middleware to a route
+   * @param route The route to apply middleware to
+   * @param middleware The middleware to apply
+   */
+  private async applyMiddlewareToRoute(route: Route, middleware: (string | MiddlewareHandler)[]): Promise<void> {
+    for (const middlewareItem of middleware) {
+      const resolved = await this.resolveMiddleware(middlewareItem)
+      if (resolved) {
+        route.middleware.push(resolved)
+      }
+    }
   }
 
   /**

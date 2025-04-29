@@ -294,4 +294,48 @@ describe('Route-specific middleware', () => {
     expect(response.headers.get('X-Group-Middleware')).toBe('group')
     expect(response.headers.get('X-Route-Middleware')).toBe('route')
   })
+
+  it('should support fluid middleware API', async () => {
+    const router = new Router()
+
+    // First middleware that adds a header
+    const firstMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Fluid-First', 'first')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Second middleware that adds another header
+    const secondMiddleware = async (req: EnhancedRequest, next: NextFunction) => {
+      const response = await next()
+      const headers = new Headers(response.headers)
+      headers.set('X-Fluid-Second', 'second')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      })
+    }
+
+    // Create a route with fluid middleware API
+    const r = await router.get('/fluid', () => new Response('Fluid middleware'))
+    // Add middleware using the fluid API
+    r.middleware(firstMiddleware, secondMiddleware)
+
+    // Small delay to ensure the middleware is applied asynchronously
+    await new Promise(resolve => setTimeout(resolve, 10))
+
+    // Test the route
+    const response = await router.handleRequest(new Request('http://localhost/fluid'))
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Fluid middleware')
+    expect(response.headers.get('X-Fluid-First')).toBe('first')
+    expect(response.headers.get('X-Fluid-Second')).toBe('second')
+  })
 })
