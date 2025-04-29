@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCollectionsStore, type Collection, type RequestItem } from '../store/collectionsStore'
+import CodeExporter from '../components/CodeExporter.vue'
 
 const router = useRouter()
 const collectionsStore = useCollectionsStore()
@@ -12,6 +13,8 @@ const searchQuery = ref('')
 const selectedCollection = ref<Collection | null>(null)
 const editingRequest = ref<RequestItem | null>(null)
 const showRequestForm = ref(false)
+const showCodeExporter = ref(false)
+const selectedRequest = ref<RequestItem | null>(null)
 const newRequestData = ref({
   name: '',
   method: 'GET',
@@ -207,6 +210,16 @@ function getMethodClass(method: string) {
 function clearSelection() {
   selectedCollection.value = null
 }
+
+// Code export functionality
+function openCodeExporter(request: RequestItem) {
+  selectedRequest.value = request
+  showCodeExporter.value = true
+}
+
+function closeCodeExporter() {
+  showCodeExporter.value = false
+}
 </script>
 
 <template>
@@ -387,6 +400,13 @@ function clearSelection() {
               </div>
               <div class="flex space-x-2">
                 <button
+                  @click="openCodeExporter(request)"
+                  class="p-1 text-indigo-600 hover:text-indigo-800"
+                  title="Export as Code"
+                >
+                  <span class="i-carbon-code"></span>
+                </button>
+                <button
                   @click="openRequestForm(request)"
                   class="p-1 text-indigo-600 hover:text-indigo-800"
                   title="Edit Request"
@@ -536,5 +556,13 @@ function clearSelection() {
         </div>
       </div>
     </div>
+
+    <!-- Code Exporter Modal -->
+    <CodeExporter
+      v-if="selectedRequest"
+      :request="selectedRequest"
+      :show="showCodeExporter"
+      @close="closeCodeExporter"
+    />
   </div>
 </template>
