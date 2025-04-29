@@ -1,6 +1,5 @@
 export * from './config'
 export * from './middleware'
-export { route } from './router'
 export { Router } from './router'
 export type {
   ActionHandler,
@@ -14,3 +13,5 @@ export type {
   ServerOptions,
 } from './types'
 export * from './utils'
+export { default as Auth } from './auth'
+export * from './auth'
