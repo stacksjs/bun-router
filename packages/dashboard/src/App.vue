@@ -13,6 +13,7 @@ const navItems = [
   { name: 'Dashboard', path: '/', icon: 'i-carbon-dashboard' },
   { name: 'Request Inspector', path: '/requests', icon: 'i-carbon-document-multiple' },
   { name: 'Live Capture', path: '/capture', icon: 'i-carbon-recording-filled' },
+  { name: 'WebSocket Monitor', path: '/websocket', icon: 'i-carbon-network-4' },
   { name: 'Headers Analyzer', path: '/headers', icon: 'i-carbon-list-checked' },
   { name: 'Response Tester', path: '/tester', icon: 'i-carbon-test' },
   { name: 'Settings', path: '/settings', icon: 'i-carbon-settings' },
