@@ -82,6 +82,7 @@ const sidebar = [
     items: [
       { text: 'Custom Middleware', link: '/advanced/custom-middleware' },
       { text: 'Error Handling', link: '/advanced/error-handling' },
+      { text: 'Extending Router', link: '/advanced/extending-router' },
       { text: 'Hot Reloading', link: '/advanced/hot-reloading' },
       { text: 'Performance Optimization', link: '/advanced/performance-optimization' },
       { text: 'WebSocket Patterns', link: '/advanced/websocket-patterns' },

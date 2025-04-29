@@ -1261,6 +1261,42 @@ export class Router {
       error: this.errorHandler ? error => this.errorHandler!(error) : undefined,
     })
   }
+
+  /**
+   * Extend the router with custom methods
+   * @param methods An object containing method names and implementations
+   * @returns The router instance for chaining
+   * @example
+   * ```typescript
+   * router.extend({
+   *   apiResource(name, controller) {
+   *     // Custom implementation for RESTful API resources
+   *     this.get(`/${name}`, `${controller}/index`, 'api')
+   *     this.post(`/${name}`, `${controller}/store`, 'api')
+   *     this.get(`/${name}/{id}`, `${controller}/show`, 'api')
+   *     this.put(`/${name}/{id}`, `${controller}/update`, 'api')
+   *     this.delete(`/${name}/{id}`, `${controller}/destroy`, 'api')
+   *     return this
+   *   },
+   *   // Add more methods as needed
+   * })
+   *
+   * // Then use the custom method
+   * router.apiResource('users', 'UsersController')
+   * ```
+   */
+  extend(methods: Record<string, (...args: any[]) => any>): Router {
+    for (const [methodName, implementation] of Object.entries(methods)) {
+      if (methodName in this) {
+        console.warn(`Method '${methodName}' already exists on Router. It will be overwritten.`)
+      }
+
+      // Bind the implementation to this router instance and add it as a method
+      (this as any)[methodName] = implementation.bind(this)
+    }
+
+    return this
+  }
 }
 
 export const route: Router = new Router()
