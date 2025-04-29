@@ -1,17 +1,31 @@
 <template>
-  <div class="requests-view grid grid-cols-4 gap-6">
+  <div class="requests-view grid grid-cols-5 gap-6">
     <!-- Collections Sidebar -->
     <div class="col-span-1 bg-white rounded-lg shadow p-4">
-      <CollectionSidebar @select-request="loadRequestFromCollection" />
+      <div class="h-full flex flex-col">
+        <div class="mb-6">
+          <CollectionSidebar @select-request="loadRequestFromCollection" />
+        </div>
+        <div class="flex-1 mt-4 border-t pt-4">
+          <RequestHistory @use-request="loadRequestFromHistory" />
+        </div>
+      </div>
     </div>
 
     <!-- Request & Response View -->
-    <div class="col-span-3">
+    <div class="col-span-4">
       <div class="mb-6 bg-white rounded-lg shadow overflow-hidden">
         <div class="p-5">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">API Request</h2>
             <div class="flex gap-2">
+              <button
+                @click="showCodeModal = true"
+                class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
+              >
+                <span class="i-carbon-code mr-1"></span>
+                Code
+              </button>
               <button
                 @click="showSaveModal = true"
                 class="px-3 py-1.5 bg-white border border-indigo-300 text-indigo-700 rounded text-sm hover:bg-indigo-50"
@@ -404,6 +418,16 @@
     @close="showSaveModal = false"
     @saved="onRequestSaved"
   />
+
+  <!-- Code Generator Modal -->
+  <CodeGenerator
+    :show="showCodeModal"
+    :method="method"
+    :url="resolvedUrl"
+    :headers="headers"
+    :body="['POST', 'PUT', 'PATCH'].includes(method) ? body : undefined"
+    @close="showCodeModal = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -411,8 +435,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { requestService } from '../services/requestService'
 import { useEnvironmentStore } from '../store/environmentStore'
 import { useCollectionStore, type RequestItem } from '../store/collectionStore'
+import { useHistoryStore } from '../store/historyStore'
 import CollectionSidebar from '../components/CollectionSidebar.vue'
 import SaveRequestModal from '../components/SaveRequestModal.vue'
+import RequestHistory from '../components/RequestHistory.vue'
+import CodeGenerator from '../components/CodeGenerator.vue'
 
 // Request form state
 const method = ref('GET')
@@ -440,6 +467,7 @@ const auth = ref({
 const activeRequestTab = ref('headers')
 const activeResponseTab = ref('body')
 const showSaveModal = ref(false)
+const showCodeModal = ref(false)
 
 const requestTabs = [
   { id: 'headers', name: 'Headers' },
@@ -463,6 +491,7 @@ const responseTime = ref(0)
 // Stores
 const environmentStore = useEnvironmentStore()
 const collectionStore = useCollectionStore()
+const historyStore = useHistoryStore()
 
 // Computed properties with resolved environment variables
 const resolvedUrl = computed(() => {
@@ -576,6 +605,23 @@ function loadRequestFromCollection(request: RequestItem) {
   activeRequestTab.value = 'headers'
 }
 
+function loadRequestFromHistory(data: { method: string, url: string, headers: any[], body?: string }) {
+  method.value = data.method
+  url.value = data.url
+  headers.value = [...data.headers]
+
+  if (data.body) {
+    body.value = data.body
+  }
+
+  // Reset other fields
+  queryParams.value = []
+  authType.value = 'none'
+
+  // Switch to headers tab
+  activeRequestTab.value = 'headers'
+}
+
 function onRequestSaved(data: { request: RequestItem, collectionId: string }) {
   // Handle after request is saved to collection
   console.log(`Request "${data.request.name}" saved to collection`)
@@ -630,9 +676,34 @@ async function sendRequest() {
 
     // Auto-switch to response body tab
     activeResponseTab.value = 'body'
+
+    // Add to history
+    historyStore.addToHistory({
+      method: method.value,
+      url: resolvedUrl.value,
+      headers: [...headers.value],
+      body: ['POST', 'PUT', 'PATCH'].includes(method.value) ? body.value : undefined,
+      status: response.value.status,
+      statusText: response.value.statusText,
+      responseTime: responseTime.value,
+      responseBody: responseBody.value,
+      responseHeaders: { ...responseHeaders.value }
+    })
   } catch (error: any) {
     console.error('Request error:', error)
     responseBody.value = `Error: ${error.message || 'Unknown error'}`
+
+    // Add failed request to history
+    historyStore.addToHistory({
+      method: method.value,
+      url: resolvedUrl.value,
+      headers: [...headers.value],
+      body: ['POST', 'PUT', 'PATCH'].includes(method.value) ? body.value : undefined,
+      status: 0,
+      statusText: 'Failed',
+      responseTime: Date.now() - startTime,
+      responseBody: `Error: ${error.message || 'Unknown error'}`
+    })
   } finally {
     isLoading.value = false
   }

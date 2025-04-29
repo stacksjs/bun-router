@@ -1,269 +1,311 @@
-import type { RequestItem } from '../store/collectionsStore'
+/**
+ * Generates code snippets for API requests in different programming languages
+ */
 
-export type Language = 'javascript' | 'python' | 'curl' | 'php' | 'go' | 'ruby' | 'java'
+type Language = 'curl' | 'javascript' | 'python' | 'php' | 'java' | 'csharp' | 'go' | 'rust';
 
-export const supportedLanguages = [
-  { id: 'javascript', name: 'JavaScript (Fetch)', icon: 'i-logos-javascript' },
-  { id: 'javascript-axios', name: 'JavaScript (Axios)', icon: 'i-logos-javascript' },
-  { id: 'python', name: 'Python (Requests)', icon: 'i-logos-python' },
-  { id: 'curl', name: 'cURL', icon: 'i-carbon-terminal' },
-  { id: 'php', name: 'PHP', icon: 'i-logos-php' },
-  { id: 'go', name: 'Go', icon: 'i-logos-go' },
-  { id: 'ruby', name: 'Ruby', icon: 'i-logos-ruby' },
-  { id: 'java', name: 'Java', icon: 'i-logos-java' }
-]
+interface RequestData {
+  method: string;
+  url: string;
+  headers: { key: string, value: string }[];
+  body?: string;
+}
 
-function escapeQuotes(str: string, quoteChar: string = "'"): string {
-  if (quoteChar === "'") {
-    return str.replace(/'/g, "\\'")
-  } else if (quoteChar === '"') {
-    return str.replace(/"/g, '\\"')
+function escapeQuotes(str: string, quoteChar: string = '"'): string {
+  if (quoteChar === '"') {
+    return str.replace(/"/g, '\\"');
+  } else if (quoteChar === "'") {
+    return str.replace(/'/g, "\\'");
   }
-  return str
+  return str;
 }
 
-function formatHeaders(headers: Record<string, string>, language: string): string {
-  const headerEntries = Object.entries(headers)
-  if (headerEntries.length === 0) return ''
+/**
+ * Generate a cURL command for the request
+ */
+function generateCurl(request: RequestData): string {
+  const { method, url, headers, body } = request;
 
-  switch (language) {
-    case 'javascript':
-      return `headers: {
-${headerEntries.map(([key, value]) => `    '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-  }`
-    case 'javascript-axios':
-      return `headers: {
-${headerEntries.map(([key, value]) => `    '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-  }`
-    case 'python':
-      return `headers = {
-${headerEntries.map(([key, value]) => `    '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-}`
-    case 'curl':
-      return headerEntries.map(([key, value]) => `-H '${escapeQuotes(key)}: ${escapeQuotes(value)}'`).join(' \\\n  ')
-    case 'php':
-      return `$headers = array(
-${headerEntries.map(([key, value]) => `    '${escapeQuotes(key)}' => '${escapeQuotes(value)}'`).join(',\n')}
-);`
-    case 'go':
-      return `headers := map[string]string{
-${headerEntries.map(([key, value]) => `    "${escapeQuotes(key, '"')}": "${escapeQuotes(value, '"')}"`).join(',\n')}
-}`
-    case 'ruby':
-      return `headers = {
-${headerEntries.map(([key, value]) => `  '${escapeQuotes(key)}' => '${escapeQuotes(value)}'`).join(',\n')}
-}`
-    case 'java':
-      return `Map<String, String> headers = new HashMap<>();
-${headerEntries.map(([key, value]) => `headers.put("${escapeQuotes(key, '"')}", "${escapeQuotes(value, '"')}");`).join('\n')}`
-    default:
-      return ''
-  }
-}
+  let cmd = `curl -X ${method} "${url}"`;
 
-export function generateCode(request: RequestItem, language: string): string {
-  const { method, url, headers, body } = request
-  const hasBody = !!body && ['POST', 'PUT', 'PATCH'].includes(method)
-
-  switch (language) {
-    case 'javascript':
-      return `// JavaScript Fetch API
-${hasBody ? `const requestBody = ${body};\n` : ''}${Object.keys(headers).length > 0 ? `const headers = {
-${Object.entries(headers).map(([key, value]) => `  '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-};\n` : ''}
-fetch('${escapeQuotes(url)}', {
-  method: '${method}'${Object.keys(headers).length > 0 ? ',\n  headers' : ''}${hasBody ? `,
-  body: JSON.stringify(requestBody)` : ''}
-})
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));`
-
-    case 'javascript-axios':
-      return `// JavaScript Axios
-import axios from 'axios';
-
-${hasBody ? `const requestBody = ${body};\n` : ''}${Object.keys(headers).length > 0 ? `const headers = {
-${Object.entries(headers).map(([key, value]) => `  '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-};\n` : ''}
-axios({
-  method: '${method.toLowerCase()}',
-  url: '${escapeQuotes(url)}'${Object.keys(headers).length > 0 ? ',\n  headers' : ''}${hasBody ? `,
-  data: requestBody` : ''}
-})
-  .then(response => {
-    console.log(response.data);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });`
-
-    case 'python':
-      return `# Python Requests
-import requests
-
-${Object.keys(headers).length > 0 ? `headers = {
-${Object.entries(headers).map(([key, value]) => `    '${escapeQuotes(key)}': '${escapeQuotes(value)}'`).join(',\n')}
-}
-` : ''}${hasBody ? `data = ${body.replace(/"/g, "'")}\n` : ''}
-response = requests.${method.toLowerCase()}('${escapeQuotes(url)}'${Object.keys(headers).length > 0 ? ', headers=headers' : ''}${hasBody ? ', json=data' : ''})
-
-# Print response
-print(response.status_code)
-print(response.json())`
-
-    case 'curl':
-      return `# cURL Command
-curl -X ${method} \\
-  ${Object.keys(headers).length > 0 ? `${Object.entries(headers).map(([key, value]) => `-H '${escapeQuotes(key)}: ${escapeQuotes(value)}'`).join(' \\\n  ')} \\` : ''}
-  ${hasBody ? `-d '${escapeQuotes(body)}' \\` : ''}
-  '${escapeQuotes(url)}'`
-
-    case 'php':
-      return `<?php
-// PHP cURL
-$curl = curl_init();
-
-${Object.keys(headers).length > 0 ? `$headers = array(
-${Object.entries(headers).map(([key, value]) => `    '${escapeQuotes(key)}' => '${escapeQuotes(value)}'`).join(',\n')}
-);
-` : ''}
-curl_setopt_array($curl, array(
-  CURLOPT_URL => '${escapeQuotes(url)}',
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_CUSTOMREQUEST => '${method}'${Object.keys(headers).length > 0 ? `,
-  CURLOPT_HTTPHEADER => array_map(function($key, $value) {
-    return "$key: $value";
-  }, array_keys($headers), $headers)` : ''}${hasBody ? `,
-  CURLOPT_POSTFIELDS => '${escapeQuotes(body)}'` : ''}
-));
-
-$response = curl_exec($curl);
-$err = curl_error($curl);
-
-curl_close($curl);
-
-if ($err) {
-  echo "cURL Error: " . $err;
-} else {
-  echo $response;
-}
-?>`
-
-    case 'go':
-      return `// Go
-package main
-
-import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	${hasBody ? `"strings"` : ''}
-)
-
-func main() {
-	${hasBody ? `requestBody := \`${body}\`` : ''}
-
-	${Object.keys(headers).length > 0 ? `headers := map[string]string{
-${Object.entries(headers).map(([key, value]) => `		"${escapeQuotes(key, '"')}": "${escapeQuotes(value, '"')}"`).join(',\n')}
-	}
-	` : ''}
-	client := &http.Client{}
-	req, err := http.NewRequest("${method}", "${escapeQuotes(url, '"')}", ${hasBody ? 'strings.NewReader(requestBody)' : 'nil'})
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return
-	}
-
-	${Object.keys(headers).length > 0 ? `// Add headers
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
-	` : ''}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return
-	}
-
-	fmt.Println("Status:", resp.Status)
-	fmt.Println("Response:", string(body))
-}`
-
-    case 'ruby':
-      return `# Ruby
-require 'net/http'
-require 'uri'
-require 'json'
-
-uri = URI.parse('${escapeQuotes(url)}')
-${Object.keys(headers).length > 0 ? `headers = {
-${Object.entries(headers).map(([key, value]) => `  '${escapeQuotes(key)}' => '${escapeQuotes(value)}'`).join(',\n')}
-}
-` : ''}
-http = Net::HTTP.new(uri.host, uri.port)
-${url.startsWith('https') ? 'http.use_ssl = true' : ''}
-
-request = Net::HTTP::${method.charAt(0) + method.slice(1).toLowerCase()}.new(uri.request_uri)
-${Object.keys(headers).length > 0 ? `headers.each do |key, value|
-  request[key] = value
-end
-` : ''}${hasBody ? `request.body = '${escapeQuotes(body)}'
-` : ''}
-response = http.request(request)
-
-puts "Status: #{response.code}"
-puts "Response: #{response.body}"`
-
-    case 'java':
-      return `// Java HttpClient (Java 11+)
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
-
-public class HttpRequestExample {
-    public static void main(String[] args) {
-        try {
-            HttpClient client = HttpClient.newHttpClient();
-
-            ${Object.keys(headers).length > 0 ? `Map<String, String> headers = new HashMap<>();
-${Object.entries(headers).map(([key, value]) => `            headers.put("${escapeQuotes(key, '"')}", "${escapeQuotes(value, '"')}");`).join('\n')}
-            ` : ''}
-            ${hasBody ? `String requestBody = "${escapeQuotes(body, '"')}";
-            ` : ''}
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create("${escapeQuotes(url, '"')}"))
-                .method("${method}", ${hasBody ? 'HttpRequest.BodyPublishers.ofString(requestBody)' : 'HttpRequest.BodyPublishers.noBody()'});
-
-            ${Object.keys(headers).length > 0 ? `// Add headers
-            headers.forEach((name, value) -> {
-                requestBuilder.header(name, value);
-            });
-            ` : ''}
-            HttpRequest request = requestBuilder.build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            System.out.println("Status: " + response.statusCode());
-            System.out.println("Response: " + response.body());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+  // Add headers
+  headers.forEach(header => {
+    if (header.key.trim()) {
+      cmd += ` \\\n  -H "${escapeQuotes(header.key)}: ${escapeQuotes(header.value)}"`;
     }
-}`
+  });
 
+  // Add body if present
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    cmd += ` \\\n  -d '${escapeQuotes(body, "'")}'`;
+  }
+
+  return cmd;
+}
+
+/**
+ * Generate JavaScript (fetch) code for the request
+ */
+function generateJavaScript(request: RequestData): string {
+  const { method, url, headers, body } = request;
+
+  let code = 'const options = {\n';
+  code += `  method: "${method}",\n`;
+
+  // Add headers if present
+  if (headers.length > 0) {
+    code += '  headers: {\n';
+    headers.forEach(header => {
+      if (header.key.trim()) {
+        code += `    "${escapeQuotes(header.key)}": "${escapeQuotes(header.value)}",\n`;
+      }
+    });
+    code += '  },\n';
+  }
+
+  // Add body if present
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    code += `  body: ${body.trim().startsWith('{') ? body : `"${escapeQuotes(body)}"`}\n`;
+  } else {
+    code = code.slice(0, -2) + '\n'; // Remove trailing comma
+  }
+
+  code += '};\n\n';
+  code += `fetch("${url}", options)\n`;
+  code += '  .then(response => response.json())\n';
+  code += '  .then(data => console.log(data))\n';
+  code += '  .catch(error => console.error(error));';
+
+  return code;
+}
+
+/**
+ * Generate Python (requests) code for the request
+ */
+function generatePython(request: RequestData): string {
+  const { method, url, headers, body } = request;
+
+  let code = 'import requests\n\n';
+
+  // Add headers if present
+  if (headers.length > 0) {
+    code += 'headers = {\n';
+    headers.forEach(header => {
+      if (header.key.trim()) {
+        code += `    "${escapeQuotes(header.key)}": "${escapeQuotes(header.value)}",\n`;
+      }
+    });
+    code += '}\n\n';
+  } else {
+    code += 'headers = {}\n\n';
+  }
+
+  // Prepare body if present
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    if (body.trim().startsWith('{')) {
+      code += 'import json\n';
+      code += 'data = json.loads(\'\'\'';
+      code += body;
+      code += '\'\'\')\n\n';
+    } else {
+      code += `data = "${escapeQuotes(body)}"\n\n`;
+    }
+    code += `response = requests.${method.toLowerCase()}("${url}", headers=headers, json=data)\n`;
+  } else {
+    code += `response = requests.${method.toLowerCase()}("${url}", headers=headers)\n`;
+  }
+
+  code += '\n# Print response\n';
+  code += 'print(response.status_code)\n';
+  code += 'print(response.json())';
+
+  return code;
+}
+
+/**
+ * Generate PHP code for the request
+ */
+function generatePhp(request: RequestData): string {
+  const { method, url, headers, body } = request;
+
+  let code = '<?php\n\n';
+  code += '$curl = curl_init();\n\n';
+  code += 'curl_setopt_array($curl, [\n';
+  code += `    CURLOPT_URL => "${url}",\n`;
+  code += '    CURLOPT_RETURNTRANSFER => true,\n';
+  code += `    CURLOPT_CUSTOMREQUEST => "${method}",\n`;
+
+  // Add headers if present
+  if (headers.length > 0) {
+    code += '    CURLOPT_HTTPHEADER => [\n';
+    headers.forEach(header => {
+      if (header.key.trim()) {
+        code += `        "${escapeQuotes(header.key)}: ${escapeQuotes(header.value)}",\n`;
+      }
+    });
+    code += '    ],\n';
+  }
+
+  // Add body if present
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    code += `    CURLOPT_POSTFIELDS => '${escapeQuotes(body, "'")}',\n`;
+  }
+
+  code += ']);\n\n';
+  code += '$response = curl_exec($curl);\n';
+  code += '$error = curl_error($curl);\n\n';
+  code += 'curl_close($curl);\n\n';
+  code += 'if ($error) {\n';
+  code += '    echo "cURL Error: " . $error;\n';
+  code += '} else {\n';
+  code += '    echo $response;\n';
+  code += '}\n';
+
+  return code;
+}
+
+/**
+ * Generate C# code for the request
+ */
+function generateCSharp(request: RequestData): string {
+  const { method, url, headers, body } = request;
+
+  let code = 'using System;\n';
+  code += 'using System.Net.Http;\n';
+  code += 'using System.Text;\n';
+  code += 'using System.Threading.Tasks;\n\n';
+
+  code += 'class Program\n{\n';
+  code += '    static async Task Main()\n';
+  code += '    {\n';
+  code += '        using var client = new HttpClient();\n\n';
+
+  // Add headers
+  headers.forEach(header => {
+    if (header.key.trim()) {
+      code += `        client.DefaultRequestHeaders.Add("${escapeQuotes(header.key)}", "${escapeQuotes(header.value)}");\n`;
+    }
+  });
+
+  if (headers.length > 0) {
+    code += '\n';
+  }
+
+  // Add request
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    code += '        var content = new StringContent(\n';
+    code += `            @"${escapeQuotes(body)}",\n`;
+    code += '            Encoding.UTF8,\n';
+
+    // Try to determine content type from headers
+    const contentTypeHeader = headers.find(h => h.key.toLowerCase() === 'content-type');
+    if (contentTypeHeader) {
+      code += `            "${escapeQuotes(contentTypeHeader.value)}"\n`;
+    } else {
+      code += '            "application/json"\n';
+    }
+    code += '        );\n\n';
+
+    code += `        var response = await client.${method.charAt(0) + method.slice(1).toLowerCase()}Async("${url}", content);\n`;
+  } else {
+    code += `        var response = await client.${method.charAt(0) + method.slice(1).toLowerCase()}Async("${url}");\n`;
+  }
+
+  code += '\n        var responseContent = await response.Content.ReadAsStringAsync();\n';
+  code += '        Console.WriteLine(responseContent);\n';
+  code += '    }\n';
+  code += '}';
+
+  return code;
+}
+
+/**
+ * Generate Go code for the request
+ */
+function generateGo(request: RequestData): string {
+  const { method, url, headers, body } = request;
+
+  let code = 'package main\n\n';
+  code += 'import (\n';
+  code += '    "fmt"\n';
+  code += '    "io/ioutil"\n';
+  code += '    "net/http"\n';
+  code += '    "strings"\n';
+  code += ')\n\n';
+
+  code += 'func main() {\n';
+
+  // Prepare the body
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    code += `    payload := strings.NewReader(\`${body}\`)\n\n`;
+    code += `    req, err := http.NewRequest("${method}", "${url}", payload)\n`;
+  } else {
+    code += `    req, err := http.NewRequest("${method}", "${url}", nil)\n`;
+  }
+
+  code += '    if err != nil {\n';
+  code += '        fmt.Println("Error creating request:", err)\n';
+  code += '        return\n';
+  code += '    }\n\n';
+
+  // Add headers
+  if (headers.length > 0) {
+    headers.forEach(header => {
+      if (header.key.trim()) {
+        code += `    req.Header.Add("${escapeQuotes(header.key)}", "${escapeQuotes(header.value)}")\n`;
+      }
+    });
+    code += '\n';
+  }
+
+  code += '    client := &http.Client{}\n';
+  code += '    resp, err := client.Do(req)\n';
+  code += '    if err != nil {\n';
+  code += '        fmt.Println("Error sending request:", err)\n';
+  code += '        return\n';
+  code += '    }\n';
+  code += '    defer resp.Body.Close()\n\n';
+
+  code += '    body, err := ioutil.ReadAll(resp.Body)\n';
+  code += '    if err != nil {\n';
+  code += '        fmt.Println("Error reading response:", err)\n';
+  code += '        return\n';
+  code += '    }\n\n';
+
+  code += '    fmt.Println("Status:", resp.Status)\n';
+  code += '    fmt.Println("Response:", string(body))\n';
+  code += '}';
+
+  return code;
+}
+
+/**
+ * Generate a code snippet based on the language and request data
+ */
+export function generateCode(language: Language, request: RequestData): string {
+  switch (language) {
+    case 'curl':
+      return generateCurl(request);
+    case 'javascript':
+      return generateJavaScript(request);
+    case 'python':
+      return generatePython(request);
+    case 'php':
+      return generatePhp(request);
+    case 'csharp':
+      return generateCSharp(request);
+    case 'go':
+      return generateGo(request);
     default:
-      return '// Language not supported'
+      throw new Error(`Language ${language} not supported`);
   }
 }
+
+export const supportedLanguages: { id: Language; name: string }[] = [
+  { id: 'curl', name: 'cURL' },
+  { id: 'javascript', name: 'JavaScript' },
+  { id: 'python', name: 'Python' },
+  { id: 'php', name: 'PHP' },
+  { id: 'csharp', name: 'C#' },
+  { id: 'go', name: 'Go' }
+];
