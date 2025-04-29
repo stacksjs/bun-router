@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useQueueStore } from '../store/queueStore'
 import { JobStatus } from '../types/job'
+import StatCard from '../components/StatCard.vue'
 
 const queueStore = useQueueStore()
 const error = ref<string | null>(null)
@@ -44,8 +45,26 @@ const recentBatches = ref([
   { id: 'batch_ghi789', name: 'User Import', jobCount: 120, completedJobs: 98, status: 'active' },
 ])
 
+const totalRequests = ref(0)
+const totalBytes = ref(0)
+const avgResponseTime = ref(0)
+const errorRate = ref(0)
+const recentRequests = ref([])
+
 onMounted(async () => {
   await fetchDashboardData()
+  totalRequests.value = 1254
+  totalBytes.value = 8.73
+  avgResponseTime.value = 156
+  errorRate.value = 2.3
+
+  recentRequests.value = [
+    { id: '1', method: 'GET', path: '/api/users', status: 200, time: '12ms', timestamp: '2023-05-15T14:23:45' },
+    { id: '2', method: 'POST', path: '/api/auth/login', status: 200, time: '245ms', timestamp: '2023-05-15T14:22:30' },
+    { id: '3', method: 'GET', path: '/api/products', status: 404, time: '34ms', timestamp: '2023-05-15T14:20:12' },
+    { id: '4', method: 'PUT', path: '/api/users/5', status: 204, time: '89ms', timestamp: '2023-05-15T14:18:45' },
+    { id: '5', method: 'DELETE', path: '/api/posts/12', status: 500, time: '120ms', timestamp: '2023-05-15T14:15:23' },
+  ]
 })
 
 async function fetchDashboardData(forceRefresh = false) {
@@ -77,6 +96,25 @@ async function fetchDashboardData(forceRefresh = false) {
 
 async function refreshData() {
   await fetchDashboardData(true)
+}
+
+const getStatusClass = (status: number) => {
+  if (status >= 200 && status < 300) return 'text-green-600'
+  if (status >= 300 && status < 400) return 'text-blue-600'
+  if (status >= 400 && status < 500) return 'text-orange-600'
+  if (status >= 500) return 'text-red-600'
+  return 'text-gray-600'
+}
+
+const getMethodClass = (method: string) => {
+  switch (method) {
+    case 'GET': return 'bg-blue-100 text-blue-800'
+    case 'POST': return 'bg-green-100 text-green-800'
+    case 'PUT': return 'bg-yellow-100 text-yellow-800'
+    case 'PATCH': return 'bg-indigo-100 text-indigo-800'
+    case 'DELETE': return 'bg-red-100 text-red-800'
+    default: return 'bg-gray-100 text-gray-800'
+  }
 }
 </script>
 
@@ -554,6 +592,106 @@ async function refreshData() {
             <span class="i-carbon-list-boxes mr-2" />
             View All Queues
           </router-link>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard
+          title="Total Requests"
+          :value="totalRequests"
+          icon="i-carbon-document-multiple"
+          trend="+12.5%"
+          trend-direction="up"
+        />
+        <StatCard
+          title="Data Transferred"
+          :value="`${totalBytes} MB`"
+          icon="i-carbon-data-storage"
+          trend="+5.2%"
+          trend-direction="up"
+        />
+        <StatCard
+          title="Avg Response Time"
+          :value="`${avgResponseTime} ms`"
+          icon="i-carbon-time"
+          trend="-8.3%"
+          trend-direction="down"
+        />
+        <StatCard
+          title="Error Rate"
+          :value="`${errorRate}%`"
+          icon="i-carbon-warning"
+          trend="+1.2%"
+          trend-direction="up"
+          trend-negative
+        />
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-lg font-semibold mb-4">HTTP Method Distribution</h2>
+          <div class="h-64 flex items-center justify-center">
+            <p class="text-gray-500">Chart will be shown here</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-lg font-semibold mb-4">Response Status Distribution</h2>
+          <div class="h-64 flex items-center justify-center">
+            <p class="text-gray-500">Chart will be shown here</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow mb-8">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h2 class="text-lg font-semibold">Recent Requests</h2>
+          <router-link to="/requests" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+            View All
+          </router-link>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="request in recentRequests" :key="request.id" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span :class="`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${getMethodClass(request.method)}`">
+                    {{ request.method }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ request.path }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <span :class="`font-medium ${getStatusClass(request.status)}`">
+                    {{ request.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ request.time }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ new Date(request.timestamp).toLocaleString() }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <router-link :to="`/requests/${request.id}`" class="text-indigo-600 hover:text-indigo-900">
+                    Details
+                  </router-link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

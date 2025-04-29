@@ -11,11 +11,11 @@ function toggleSidebar() {
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: 'i-carbon-dashboard' },
-  { name: 'Monitoring', path: '/monitoring', icon: 'i-carbon-cloud-monitoring' },
-  { name: 'Metrics', path: '/metrics', icon: 'i-carbon-chart-line' },
-  { name: 'Groups', path: '/groups', icon: 'i-carbon-group' },
-  { name: 'Batches', path: '/batches', icon: 'i-carbon-batch-job' },
-  { name: 'Jobs', path: '/jobs', icon: 'i-carbon-time' },
+  { name: 'Request Inspector', path: '/requests', icon: 'i-carbon-document-multiple' },
+  { name: 'Live Capture', path: '/capture', icon: 'i-carbon-recording-filled' },
+  { name: 'Headers Analyzer', path: '/headers', icon: 'i-carbon-list-checked' },
+  { name: 'Response Tester', path: '/tester', icon: 'i-carbon-test' },
+  { name: 'Settings', path: '/settings', icon: 'i-carbon-settings' },
 ]
 </script>
 
