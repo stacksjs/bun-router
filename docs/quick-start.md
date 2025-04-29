@@ -1,10 +1,10 @@
 # Quick Start
 
-This guide will help you get up and running with bun-router quickly. We'll create a simple API with multiple routes, parameters, and middleware.
+This guide will help you get up and running with `bun-router` quickly. We'll create a simple API with multiple routes, parameters, and middleware.
 
 ## Basic Setup
 
-First, make sure you have bun-router installed:
+First, make sure you have `bun-router` installed:
 
 ```bash
 bun add bun-router

@@ -171,7 +171,7 @@ router.use(session({
 
 ### Redis Store
 
-For production applications, Redis is recommended for session storage. bun-router integrates with Bun's native Redis client for optimal performance:
+For production applications, Redis is recommended for session storage. `bun-router` integrates with Bun's native Redis client for optimal performance:
 
 ```typescript
 import { redis } from 'bun'
@@ -496,7 +496,7 @@ router.post('/logout', async (req) => {
 
 ## Session Stores in Clustered Environments
 
-When running bun-router in a clustered or distributed environment (multiple server instances), you must use a shared session store to ensure session data is consistent across instances:
+When running `bun-router` in a clustered or distributed environment (multiple server instances), you must use a shared session store to ensure session data is consistent across instances:
 
 ```typescript
 import { Router, session } from 'bun-router'

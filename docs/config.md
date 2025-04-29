@@ -33,7 +33,7 @@ Here's a complete list of configuration options:
 
 ## Verbose Logging
 
-When `verbose` is set to `true`, bun-router will log detailed information about route registration and request handling:
+When `verbose` is set to `true`, `bun-router` will log detailed information about route registration and request handling:
 
 ```typescript
 const router = new Router({

@@ -4,7 +4,7 @@ Installing `bun-router` is simple. You can use Bun's built-in package manager or
 
 ## Using Bun
 
-The recommended way to install bun-router is with Bun:
+The recommended way to install `bun-router` is with Bun:
 
 ```bash
 bun add bun-router
@@ -68,4 +68,4 @@ Visit `http://localhost:3000` in your browser and you should see "Hello from bun
 
 ## Next Steps
 
-Now that you have bun-router installed, check out the [Quick Start](/quick-start) guide to learn the basics.
+Now that you have `bun-router` installed, check out the [Quick Start](/quick-start) guide to learn the basics.

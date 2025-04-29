@@ -115,7 +115,7 @@ router.get('/logout', (req) => {
 
 ## Cookie Middleware
 
-For more advanced cookie handling, bun-router provides a cookie parser middleware:
+For more advanced cookie handling, `bun-router` provides a cookie parser middleware:
 
 ```typescript
 import { Router, cookieParser } from 'bun-router'

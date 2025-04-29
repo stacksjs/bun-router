@@ -1,6 +1,6 @@
 # WebSockets
 
-bun-router provides first-class support for WebSockets, leveraging Bun's high-performance WebSocket implementation. This page covers how to work with WebSockets in your bun-router applications.
+bun-router provides first-class support for WebSockets, leveraging Bun's high-performance WebSocket implementation. This page covers how to work with WebSockets in your `bun-router` applications.
 
 ## Basic WebSocket Setup
 

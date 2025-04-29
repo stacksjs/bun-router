@@ -1,6 +1,6 @@
 # Advanced Error Handling
 
-Proper error handling is crucial for building robust web applications. This guide covers strategies for comprehensive error handling in bun-router applications.
+Proper error handling is crucial for building robust web applications. This guide covers strategies for comprehensive error handling in `bun-router` applications.
 
 ## Global Error Handling
 

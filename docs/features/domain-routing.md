@@ -1,6 +1,6 @@
 # Domain Routing
 
-Domain routing in bun-router allows you to route requests based on the domain or subdomain of the incoming request. This is particularly useful for multi-tenant applications, subdomains for different services, or serving separate content for different domains using the same application.
+Domain routing in `bun-router` allows you to route requests based on the domain or subdomain of the incoming request. This is particularly useful for multi-tenant applications, subdomains for different services, or serving separate content for different domains using the same application.
 
 ## Basic Domain Routing
 

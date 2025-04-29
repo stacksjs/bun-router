@@ -1,6 +1,6 @@
 # CSRF Protection
 
-Cross-Site Request Forgery (CSRF) is a type of attack that forces users to execute unwanted actions on a web application in which they're currently authenticated. bun-router provides built-in protection against CSRF attacks.
+Cross-Site Request Forgery (CSRF) is a type of attack that forces users to execute unwanted actions on a web application in which they're currently authenticated. `bun-router` provides built-in protection against CSRF attacks.
 
 ## Understanding CSRF Attacks
 

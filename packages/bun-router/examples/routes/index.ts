@@ -2,7 +2,7 @@ import { Router } from '../../src'
 import type { EnhancedRequest } from '../../src/types'
 
 /**
- * Example of using bun-router with Bun's native router features
+ * Example of using `bun-router` with Bun's native router features
  */
 
 // Create a router instance

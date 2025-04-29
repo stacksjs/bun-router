@@ -4,7 +4,7 @@ Routing is the core functionality of bun-router. This page covers the basics of 
 
 ## Defining Routes
 
-Routes in bun-router follow a simple pattern: HTTP method + path + handler function.
+Routes in `bun-router` follow a simple pattern: HTTP method + path + handler function.
 
 ```typescript
 import { Router } from 'bun-router'
@@ -123,7 +123,7 @@ router.get('/version', () => Response.json({ version: '1.0.0' }))
 
 ## Route Matching Order
 
-Routes are matched in the order they are defined. When a request comes in, bun-router will try each route in order until it finds a match:
+Routes are matched in the order they are defined. When a request comes in, `bun-router` will try each route in order until it finds a match:
 
 ```typescript
 router.get('/users/special', specialUserHandler) // Specific route first
@@ -134,7 +134,7 @@ In this example, a request to `/users/special` will be handled by `specialUserHa
 
 ## Handling 404 Not Found
 
-If no route matches the incoming request, bun-router will return a 404 Not Found response. You can customize this behavior:
+If no route matches the incoming request, `bun-router` will return a 404 Not Found response. You can customize this behavior:
 
 ```typescript
 // Custom 404 handler

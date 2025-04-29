@@ -1,6 +1,6 @@
 # Performance Optimization
 
-Optimizing your bun-router application is essential for delivering a fast, responsive experience to your users. This guide covers strategies to improve the performance of your application.
+Optimizing your `bun-router` application is essential for delivering a fast, responsive experience to your users. This guide covers strategies to improve the performance of your application.
 
 ## Leveraging Bun's Speed
 

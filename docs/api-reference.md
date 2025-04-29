@@ -1,6 +1,6 @@
 # API Reference
 
-This page provides detailed documentation for the bun-router API.
+This page provides detailed documentation for the `bun-router` API.
 
 ## Router
 

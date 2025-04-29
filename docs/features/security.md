@@ -467,7 +467,7 @@ router.post('/upload', async (req) => {
 
 ## Conclusion
 
-Implementing these security practices will significantly improve the security posture of your bun-router application. Remember to:
+Implementing these security practices will significantly improve the security posture of your `bun-router` application. Remember to:
 
 1. Always use HTTPS in production
 2. Implement proper authentication and session management

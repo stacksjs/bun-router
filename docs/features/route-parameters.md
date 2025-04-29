@@ -133,7 +133,7 @@ router.get('/search', (req) => {
 
 ## Type Safety with Parameters
 
-When using TypeScript, bun-router provides type safety for your route parameters:
+When using TypeScript, `bun-router` provides type safety for your route parameters:
 
 ```typescript
 // The params type is inferred from the route path
