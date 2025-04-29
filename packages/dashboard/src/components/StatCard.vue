@@ -1,69 +1,53 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
-interface Props {
+const props = defineProps<{
   title: string
-  value: number
+  value: string | number
   icon?: string
-  color?: string
+  trend?: string
+  trendDirection?: 'up' | 'down' | 'neutral'
+  trendNegative?: boolean
+}>()
+
+const getTrendClass = () => {
+  if (!props.trendDirection || props.trendDirection === 'neutral')
+    return 'text-gray-500'
+
+  if (props.trendDirection === 'up') {
+    return props.trendNegative
+      ? 'text-red-500'
+      : 'text-green-500'
+  }
+
+  return props.trendNegative
+    ? 'text-green-500'
+    : 'text-red-500'
 }
 
-const props = defineProps<Props>()
+const getTrendIcon = () => {
+  if (!props.trendDirection || props.trendDirection === 'neutral')
+    return 'i-carbon-circle-dash'
 
-const iconClass = computed(() => {
-  switch (props.icon) {
-    case 'queue':
-      return 'i-carbon-service-desk'
-    case 'waiting':
-      return 'i-carbon-time'
-    case 'active':
-      return 'i-carbon-play-filled'
-    case 'completed':
-      return 'i-carbon-checkmark'
-    case 'failed':
-      return 'i-carbon-close'
-    default:
-      return 'i-carbon-document'
-  }
-})
-
-const colorClass = computed(() => {
-  switch (props.color) {
-    case 'primary':
-      return 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white'
-    case 'secondary':
-      return 'bg-gradient-to-br from-slate-500 to-slate-600 text-white'
-    case 'success':
-      return 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white'
-    case 'danger':
-      return 'bg-gradient-to-br from-red-500 to-red-600 text-white'
-    case 'warning':
-      return 'bg-gradient-to-br from-amber-500 to-amber-600 text-white'
-    case 'info':
-      return 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-    default:
-      return 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-800'
-  }
-})
-
-const formattedValue = computed(() => {
-  return props.value.toLocaleString()
-})
+  return props.trendDirection === 'up'
+    ? 'i-carbon-arrow-up'
+    : 'i-carbon-arrow-down'
+}
 </script>
 
 <template>
-  <div class="card transition-all duration-300 hover:shadow-lg hover:transform hover:translate-y-[-2px]">
-    <div class="flex items-center p-5">
-      <div class="rounded-full p-3.5 mr-5 shadow-md" :class="[colorClass]">
-        <div class="text-2xl" :class="[iconClass]" />
-      </div>
-      <div>
-        <h4 class="text-sm font-medium text-gray-500">
-          {{ title }}
-        </h4>
-        <p class="text-3xl font-bold mt-1">
-          {{ formattedValue }}
-        </p>
+  <div class="bg-white rounded-lg shadow p-5">
+    <div class="flex items-center mb-3">
+      <span v-if="icon" :class="icon + ' text-indigo-600 text-lg mr-2'" />
+      <p class="text-sm font-medium text-gray-500">
+        {{ title }}
+      </p>
+    </div>
+    <div class="flex items-baseline">
+      <p class="text-2xl font-semibold text-gray-800 mr-2">
+        {{ value }}
+      </p>
+      <div v-if="trend" class="flex items-center text-sm" :class="getTrendClass()">
+        <span :class="getTrendIcon() + ' mr-1'" />
+        {{ trend }}
       </div>
     </div>
   </div>

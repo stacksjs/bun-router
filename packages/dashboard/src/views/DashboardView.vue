@@ -1,70 +1,62 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useQueueStore } from '../store/queueStore'
-import { JobStatus } from '../types/job'
 import StatCard from '../components/StatCard.vue'
 
-const queueStore = useQueueStore()
 const error = ref<string | null>(null)
 const isLoading = ref(false)
 
-// Mock data for charts
-const processingRateData = ref([42, 50, 65, 59, 80, 81, 56, 55, 72, 64, 61, 68, 75, 62, 44, 35, 41, 48])
-const jobsByStatusData = computed(() => ({
-  labels: [JobStatus.WAITING, JobStatus.ACTIVE, JobStatus.COMPLETED, JobStatus.FAILED],
-  data: [
-    queueStore.stats.waitingJobs,
-    queueStore.stats.activeJobs,
-    queueStore.stats.completedJobs,
-    queueStore.stats.failedJobs,
-  ],
-}))
-
-const queueActivityData = computed(() => {
-  if (!queueStore.hasQueues)
-    return []
-
-  return queueStore.queues
-    .slice(0, 5)
-    .map(queue => ({
-      name: queue.name,
-      count: queue.jobCount,
-    }))
-})
-
-// Mock data for groups and batches
-const groupData = ref([
-  { name: 'Daily Reports', jobCount: 45, completionRate: 78, activeJobs: 3 },
-  { name: 'User Notifications', jobCount: 128, completionRate: 62, activeJobs: 12 },
-  { name: 'Data Exports', jobCount: 34, completionRate: 91, activeJobs: 1 },
-])
-
-const recentBatches = ref([
-  { id: 'batch_abc123', name: 'Weekly Newsletter', jobCount: 15, completedJobs: 12, status: 'active' },
-  { id: 'batch_def456', name: 'Image Processing', jobCount: 24, completedJobs: 24, status: 'completed' },
-  { id: 'batch_ghi789', name: 'User Import', jobCount: 120, completedJobs: 98, status: 'active' },
-])
-
+// Dashboard metrics
 const totalRequests = ref(0)
 const totalBytes = ref(0)
 const avgResponseTime = ref(0)
 const errorRate = ref(0)
-const recentRequests = ref([])
+const successRate = ref(0)
+const requestsPerMinute = ref(0)
+
+// Mock data for charts
+const responseTimeData = ref([42, 50, 65, 59, 80, 81, 56, 55, 72, 64, 61, 68, 75, 62, 44, 35, 41, 48])
+const requestsByStatusData = computed(() => ({
+  labels: ['2xx Success', '3xx Redirect', '4xx Client Error', '5xx Server Error'],
+  data: [72, 8, 15, 5],
+}))
+
+// Mock data for endpoint activity
+const endpointActivityData = ref([
+  { path: '/api/users', count: 245, avgResponseTime: 82 },
+  { path: '/api/products', count: 189, avgResponseTime: 125 },
+  { path: '/api/orders', count: 132, avgResponseTime: 167 },
+  { path: '/api/auth/login', count: 87, avgResponseTime: 210 },
+  { path: '/api/search', count: 76, avgResponseTime: 312 },
+])
+
+// Recent requests
+const recentRequests = ref([
+  { id: '1', method: 'GET', path: '/api/users', status: 200, time: '12ms', timestamp: '2023-05-15T14:23:45' },
+  { id: '2', method: 'POST', path: '/api/auth/login', status: 200, time: '245ms', timestamp: '2023-05-15T14:22:30' },
+  { id: '3', method: 'GET', path: '/api/products', status: 404, time: '34ms', timestamp: '2023-05-15T14:20:12' },
+  { id: '4', method: 'PUT', path: '/api/users/5', status: 204, time: '89ms', timestamp: '2023-05-15T14:18:45' },
+  { id: '5', method: 'DELETE', path: '/api/posts/12', status: 500, time: '120ms', timestamp: '2023-05-15T14:15:23' },
+])
+
+// HTTP Method distribution
+const methodDistribution = ref({
+  GET: 64,
+  POST: 18,
+  PUT: 10,
+  DELETE: 6,
+  PATCH: 2
+})
+
+// Status code distribution
+const statusDistribution = ref({
+  '2xx': 72,
+  '3xx': 8,
+  '4xx': 15,
+  '5xx': 5
+})
 
 onMounted(async () => {
   await fetchDashboardData()
-  totalRequests.value = 1254
-  totalBytes.value = 8.73
-  avgResponseTime.value = 156
-  errorRate.value = 2.3
-
-  recentRequests.value = [
-    { id: '1', method: 'GET', path: '/api/users', status: 200, time: '12ms', timestamp: '2023-05-15T14:23:45' },
-    { id: '2', method: 'POST', path: '/api/auth/login', status: 200, time: '245ms', timestamp: '2023-05-15T14:22:30' },
-    { id: '3', method: 'GET', path: '/api/products', status: 404, time: '34ms', timestamp: '2023-05-15T14:20:12' },
-    { id: '4', method: 'PUT', path: '/api/users/5', status: 204, time: '89ms', timestamp: '2023-05-15T14:18:45' },
-    { id: '5', method: 'DELETE', path: '/api/posts/12', status: 500, time: '120ms', timestamp: '2023-05-15T14:15:23' },
-  ]
 })
 
 async function fetchDashboardData(forceRefresh = false) {
@@ -72,18 +64,21 @@ async function fetchDashboardData(forceRefresh = false) {
   isLoading.value = true
 
   try {
-    await Promise.all([
-      queueStore.fetchQueueStats(forceRefresh),
-      queueStore.fetchQueues(forceRefresh),
-    ])
+    // In a real app, this would fetch data from an API
+    // Simulate API call with a delay
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-    // Generate processing rate data (last 18 minutes)
-    processingRateData.value = Array.from({ length: 18 }, () =>
-      Math.max(20, Math.floor(Math.random() * queueStore.stats.processingRate * 1.5)))
+    // Set mock dashboard metrics
+    totalRequests.value = 1254
+    totalBytes.value = 8.73
+    avgResponseTime.value = 156
+    errorRate.value = 2.3
+    successRate.value = 92.4
+    requestsPerMinute.value = 42
 
-    // In a real implementation, you would fetch groups and batches data here
-    // await queueStore.fetchGroups(forceRefresh)
-    // await queueStore.fetchBatches(forceRefresh)
+    // Generate response time data (last 18 minutes)
+    responseTimeData.value = Array.from({ length: 18 }, () =>
+      Math.max(20, Math.floor(Math.random() * 300)))
   }
   catch (err) {
     error.value = 'Failed to load dashboard data'
@@ -122,11 +117,11 @@ const getMethodClass = (method: string) => {
   <div>
     <div class="mb-6">
       <h2 class="text-2xl font-medium text-gray-800">
-        Overview
+        API Overview
       </h2>
     </div>
 
-    <div v-if="isLoading && !queueStore.hasStats" class="card p-8 text-center bg-white rounded-xl shadow-md">
+    <div v-if="isLoading && !totalRequests" class="card p-8 text-center bg-white rounded-xl shadow-md">
       <div class="flex justify-center items-center space-x-3">
         <div class="w-5 h-5 rounded-full bg-indigo-600 animate-pulse" />
         <div class="w-5 h-5 rounded-full bg-indigo-600 animate-pulse" style="animation-delay: 0.2s" />
@@ -149,167 +144,82 @@ const getMethodClass = (method: string) => {
     </div>
 
     <div v-else>
-      <!-- Metrics overview (Horizon style) -->
+      <!-- Key metrics overview -->
       <div class="card bg-white rounded-lg shadow-sm mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <!-- Jobs Per Minute -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <!-- Requests Per Minute -->
           <div class="p-6 border-b md:border-r border-gray-100 md:border-b-0">
             <div class="text-sm font-medium text-gray-500 mb-1">
-              Jobs Per Minute
+              Requests Per Minute
             </div>
             <div class="text-2xl font-semibold">
-              {{ queueStore.stats.processingRate }}
+              {{ requestsPerMinute }}
             </div>
           </div>
 
-          <!-- Jobs Past Hour -->
+          <!-- Total Requests -->
           <div class="p-6 border-b lg:border-r border-gray-100 lg:border-b-0">
             <div class="text-sm font-medium text-gray-500 mb-1">
-              Jobs Past Hour
+              Total Requests
             </div>
             <div class="text-2xl font-semibold">
-              {{ queueStore.stats.completedJobs }}
+              {{ totalRequests }}
             </div>
           </div>
 
-          <!-- Failed Jobs Past 7 Days -->
-          <div class="p-6 border-b md:border-r md:border-b-0 border-gray-100">
+          <!-- Avg Response Time -->
+          <div class="p-6 border-b md:border-r md:border-b-0 border-gray-100 xl:border-r-0">
             <div class="text-sm font-medium text-gray-500 mb-1">
-              Failed Jobs Past 7 Days
+              Avg Response Time
             </div>
             <div class="text-2xl font-semibold">
-              {{ queueStore.stats.failedJobs }}
+              {{ avgResponseTime }}ms
             </div>
           </div>
 
-          <!-- Status -->
+          <!-- Success Rate -->
+          <div class="p-6 border-b xl:border-r xl:border-b-0 border-gray-100">
+            <div class="text-sm font-medium text-gray-500 mb-1">
+              Success Rate
+            </div>
+            <div class="text-2xl font-semibold text-green-600">
+              {{ successRate }}%
+            </div>
+          </div>
+
+          <!-- Error Rate -->
+          <div class="p-6 border-b lg:border-r lg:border-b-0 border-gray-100">
+            <div class="text-sm font-medium text-gray-500 mb-1">
+              Error Rate
+            </div>
+            <div class="text-2xl font-semibold text-red-600">
+              {{ errorRate }}%
+            </div>
+          </div>
+
+          <!-- Data Transferred -->
           <div class="p-6">
             <div class="text-sm font-medium text-gray-500 mb-1">
-              Status
+              Data Transferred
             </div>
-            <div class="flex items-center">
-              <span class="w-2 h-2 bg-green-500 rounded-full mr-2" />
-              <span class="text-2xl font-semibold text-green-600">Active</span>
+            <div class="text-2xl font-semibold">
+              {{ totalBytes }} MB
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Workload -->
-      <div class="card bg-white rounded-lg shadow-sm mb-6">
-        <div class="px-6 pt-6 pb-3">
-          <h3 class="text-lg font-medium text-gray-800">
-            Current Workload
-          </h3>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="text-left text-sm font-medium text-gray-500 border-b border-gray-200">
-                <th class="px-6 py-3">
-                  Queue
-                </th>
-                <th class="px-6 py-3">
-                  Jobs
-                </th>
-                <th class="px-6 py-3">
-                  Processes
-                </th>
-                <th class="px-6 py-3">
-                  Wait
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="queue in queueActivityData" :key="queue.name" class="border-b border-gray-100">
-                <td class="px-6 py-4 text-gray-800">
-                  {{ queue.name }}
-                </td>
-                <td class="px-6 py-4">
-                  {{ queue.count }}
-                </td>
-                <td class="px-6 py-4">
-                  {{ Math.max(1, Math.floor(Math.random() * 4)) }}
-                </td>
-                <td class="px-6 py-4 text-gray-600">
-                  A few seconds
-                </td>
-              </tr>
-              <tr v-if="queueActivityData.length === 0">
-                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                  No queue data available
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Supervisors -->
-      <div class="card bg-white rounded-lg shadow-sm mb-6">
-        <div class="px-6 pt-6 pb-3">
-          <h3 class="text-lg font-medium text-gray-800">
-            Supervisor
-          </h3>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="text-left text-sm font-medium text-gray-500 border-b border-gray-200">
-                <th class="px-6 py-3">
-                  Supervisor
-                </th>
-                <th class="px-6 py-3">
-                  Queues
-                </th>
-                <th class="px-6 py-3">
-                  Processes
-                </th>
-                <th class="px-6 py-3">
-                  Balancing
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="border-b border-gray-100">
-                <td class="px-6 py-4 text-gray-800">
-                  supervisor-1
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="(queue, i) in queueActivityData.slice(0, 3)" :key="i"
-                      class="inline-block px-2 py-1 bg-gray-100 rounded text-xs text-gray-700"
-                    >
-                      {{ queue.name }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  2
-                </td>
-                <td class="px-6 py-4 text-gray-600">
-                  Auto
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-        <!-- Processing Rate Chart -->
+        <!-- Response Time Chart -->
         <div class="card p-5 rounded-xl shadow-sm bg-white">
           <div class="flex items-center mb-4">
             <span class="i-carbon-chart-line text-xl text-indigo-600 mr-2" />
             <h3 class="text-lg font-medium text-gray-800">
-              Processing Rate (Last 18 minutes)
+              Response Time Trend (Last 18 minutes)
             </h3>
           </div>
           <div class="p-2 h-64 bg-white rounded-lg">
-            <div v-if="isLoading && !queueStore.hasStats" class="flex h-full items-center justify-center">
+            <div v-if="isLoading" class="flex h-full items-center justify-center">
               <div class="loader mr-2" />
               <span class="text-gray-500">Loading chart data...</span>
             </div>
@@ -317,10 +227,10 @@ const getMethodClass = (method: string) => {
               <!-- Simple bar chart implementation -->
               <div class="flex h-52 items-end justify-between">
                 <div
-                  v-for="(value, index) in processingRateData"
+                  v-for="(value, index) in responseTimeData"
                   :key="index"
                   class="w-2 bg-indigo-500 mx-1 rounded-t-sm"
-                  :style="{ height: `${Math.min(100, value / processingRateData.reduce((a, b) => Math.max(a, b), 0) * 100)}%` }"
+                  :style="{ height: `${Math.min(100, value / responseTimeData.reduce((a, b) => Math.max(a, b), 0) * 100)}%` }"
                 />
               </div>
               <div class="flex justify-between mt-2">
@@ -329,22 +239,22 @@ const getMethodClass = (method: string) => {
                 <span class="text-xs text-gray-500">now</span>
               </div>
               <div class="text-center mt-2 text-sm text-gray-600">
-                <span class="font-semibold">{{ queueStore.stats.processingRate }}</span> jobs/minute average
+                <span class="font-semibold">{{ avgResponseTime }}</span> ms average
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Jobs by Status Chart -->
+        <!-- Requests by Status Chart -->
         <div class="card p-5 rounded-xl shadow-sm bg-white">
           <div class="flex items-center mb-4">
             <span class="i-carbon-chart-pie text-xl text-indigo-600 mr-2" />
             <h3 class="text-lg font-medium text-gray-800">
-              Jobs by Status
+              Requests by Status
             </h3>
           </div>
           <div class="p-2 h-64 bg-white rounded-lg flex justify-center items-center">
-            <div v-if="isLoading && !queueStore.hasStats" class="flex items-center">
+            <div v-if="isLoading" class="flex items-center">
               <div class="loader mr-2" />
               <span class="text-gray-500">Loading chart data...</span>
             </div>
@@ -354,50 +264,50 @@ const getMethodClass = (method: string) => {
                 <div class="absolute inset-0 flex items-center justify-center">
                   <div class="text-center">
                     <div class="text-3xl font-bold text-gray-800">
-                      {{ jobsByStatusData.data.reduce((a, b) => a + b, 0) }}
+                      {{ requestsByStatusData.data.reduce((a, b) => a + b, 0) }}
                     </div>
                     <div class="text-sm text-gray-500">
-                      Total Jobs
+                      Total Requests
                     </div>
                   </div>
                 </div>
-                <!-- Colored segments -->
+                <!-- Colored segments - a simplified pie chart representation -->
                 <svg viewBox="0 0 100 100" class="absolute inset-0">
                   <circle
-                    cx="50" cy="50" r="45" fill="transparent" stroke="#f59e0b" stroke-width="10"
+                    cx="50" cy="50" r="45" fill="transparent" stroke="#10b981" stroke-width="10"
                     stroke-dasharray="282.6" stroke-dashoffset="0"
                   />
                   <circle
                     cx="50" cy="50" r="45" fill="transparent" stroke="#3b82f6" stroke-width="10"
-                    stroke-dasharray="282.6" stroke-dashoffset="211.95"
+                    stroke-dasharray="282.6" stroke-dashoffset="203.47"
                   />
                   <circle
-                    cx="50" cy="50" r="45" fill="transparent" stroke="#10b981" stroke-width="10"
-                    stroke-dasharray="282.6" stroke-dashoffset="197.82"
+                    cx="50" cy="50" r="45" fill="transparent" stroke="#f97316" stroke-width="10"
+                    stroke-dasharray="282.6" stroke-dashoffset="225.81"
                   />
                   <circle
                     cx="50" cy="50" r="45" fill="transparent" stroke="#ef4444" stroke-width="10"
-                    stroke-dasharray="282.6" stroke-dashoffset="14.13"
+                    stroke-dasharray="282.6" stroke-dashoffset="267.97"
                   />
                 </svg>
               </div>
               <!-- Legend -->
               <div class="ml-4 space-y-3">
                 <div class="flex items-center">
-                  <div class="w-3 h-3 bg-amber-500 rounded-full mr-2" />
-                  <span class="text-sm text-gray-600">Waiting ({{ jobsByStatusData.data[0] }})</span>
+                  <div class="w-3 h-3 bg-emerald-500 rounded-full mr-2" />
+                  <span class="text-sm text-gray-600">2xx Success ({{ requestsByStatusData.data[0] }}%)</span>
                 </div>
                 <div class="flex items-center">
                   <div class="w-3 h-3 bg-blue-500 rounded-full mr-2" />
-                  <span class="text-sm text-gray-600">Active ({{ jobsByStatusData.data[1] }})</span>
+                  <span class="text-sm text-gray-600">3xx Redirect ({{ requestsByStatusData.data[1] }}%)</span>
                 </div>
                 <div class="flex items-center">
-                  <div class="w-3 h-3 bg-emerald-500 rounded-full mr-2" />
-                  <span class="text-sm text-gray-600">Completed ({{ jobsByStatusData.data[2] }})</span>
+                  <div class="w-3 h-3 bg-orange-500 rounded-full mr-2" />
+                  <span class="text-sm text-gray-600">4xx Client Error ({{ requestsByStatusData.data[2] }}%)</span>
                 </div>
                 <div class="flex items-center">
                   <div class="w-3 h-3 bg-red-500 rounded-full mr-2" />
-                  <span class="text-sm text-gray-600">Failed ({{ jobsByStatusData.data[3] }})</span>
+                  <span class="text-sm text-gray-600">5xx Server Error ({{ requestsByStatusData.data[3] }}%)</span>
                 </div>
               </div>
             </template>
@@ -405,241 +315,102 @@ const getMethodClass = (method: string) => {
         </div>
       </div>
 
-      <!-- Group Activity Section -->
-      <div class="card p-5 rounded-xl shadow-sm bg-white mb-8">
-        <div class="flex items-center mb-6">
-          <span class="i-carbon-group text-xl text-indigo-600 mr-2" />
-          <h3 class="text-lg font-medium text-gray-800">
-            Job Groups
-          </h3>
-        </div>
-
-        <div v-if="isLoading" class="py-8 text-center">
-          <div class="loader mx-auto mb-4" />
-          <p class="text-gray-500">
-            Loading group data...
-          </p>
-        </div>
-
-        <div v-else-if="groupData.length === 0" class="py-8 text-center text-gray-500">
-          No group data available
-        </div>
-
-        <div v-else>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div v-for="group in groupData" :key="group.name" class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <div class="flex justify-between items-start mb-2">
-                <h4 class="font-medium text-gray-800">
-                  {{ group.name }}
-                </h4>
-                <span class="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">{{ group.activeJobs }} active</span>
-              </div>
-
-              <div class="mt-3">
-                <div class="flex justify-between text-xs mb-1">
-                  <span>Completion</span>
-                  <span>{{ group.completionRate }}%</span>
-                </div>
-                <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    class="h-full bg-indigo-500 rounded-full"
-                    :style="{ width: `${group.completionRate}%` }"
-                  />
-                </div>
-              </div>
-
-              <div class="mt-3 text-sm text-gray-600">
-                {{ group.jobCount }} total jobs
-              </div>
-            </div>
-          </div>
-
-          <div class="text-right mt-4">
-            <router-link to="/groups" class="btn btn-outline text-sm">
-              <span class="i-carbon-list-checked mr-2" />
-              View All Groups
-            </router-link>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Batches Section -->
-      <div class="card p-5 rounded-xl shadow-sm bg-white mb-8">
-        <div class="flex items-center mb-6">
-          <span class="i-carbon-batch-job text-xl text-indigo-600 mr-2" />
-          <h3 class="text-lg font-medium text-gray-800">
-            Recent Batches
-          </h3>
-        </div>
-
-        <div v-if="isLoading" class="py-8 text-center">
-          <div class="loader mx-auto mb-4" />
-          <p class="text-gray-500">
-            Loading batch data...
-          </p>
-        </div>
-
-        <div v-else-if="recentBatches.length === 0" class="py-8 text-center text-gray-500">
-          No batch data available
-        </div>
-
-        <div v-else>
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr class="text-left border-b border-gray-200">
-                  <th class="pb-3 font-medium text-gray-500">
-                    Batch Name
-                  </th>
-                  <th class="pb-3 font-medium text-gray-500">
-                    Status
-                  </th>
-                  <th class="pb-3 font-medium text-gray-500">
-                    Progress
-                  </th>
-                  <th class="pb-3 font-medium text-gray-500 text-right">
-                    Jobs
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="batch in recentBatches" :key="batch.id" class="border-b border-gray-100">
-                  <td class="py-3">
-                    <div class="font-medium text-gray-800">
-                      {{ batch.name }}
-                    </div>
-                    <div class="text-xs text-gray-500">
-                      {{ batch.id }}
-                    </div>
-                  </td>
-                  <td class="py-3">
-                    <span
-                      class="px-2 py-1 text-xs rounded-full"
-                      :class="{
-                        'bg-blue-100 text-blue-700': batch.status === 'active',
-                        'bg-emerald-100 text-emerald-700': batch.status === 'completed',
-                        'bg-amber-100 text-amber-700': batch.status === 'waiting',
-                        'bg-red-100 text-red-700': batch.status === 'failed',
-                      }"
-                    >
-                      {{ batch.status }}
-                    </span>
-                  </td>
-                  <td class="py-3">
-                    <div class="flex items-center">
-                      <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                        <div
-                          class="bg-indigo-500 h-2 rounded-full"
-                          :style="{ width: `${(batch.completedJobs / batch.jobCount) * 100}%` }"
-                        />
-                      </div>
-                      <span class="text-sm">{{ Math.round((batch.completedJobs / batch.jobCount) * 100) }}%</span>
-                    </div>
-                  </td>
-                  <td class="py-3 text-right">
-                    <span class="font-medium">{{ batch.completedJobs }}</span>
-                    <span class="text-gray-500">/{{ batch.jobCount }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="text-right mt-4">
-            <router-link to="/batches" class="btn btn-outline text-sm">
-              <span class="i-carbon-list mr-2" />
-              View All Batches
-            </router-link>
-          </div>
-        </div>
-      </div>
-
-      <!-- Queue Activity -->
-      <div class="card p-5 rounded-xl shadow-sm bg-white">
-        <div class="flex items-center mb-6">
-          <span class="i-carbon-analytics text-xl text-indigo-600 mr-2" />
-          <h3 class="text-lg font-medium text-gray-800">
-            Queue Activity
-          </h3>
-        </div>
-
-        <div v-if="isLoading && !queueStore.hasQueues" class="py-8 text-center">
-          <div class="loader mx-auto mb-4" />
-          <p class="text-gray-500">
-            Loading queue data...
-          </p>
-        </div>
-
-        <div v-else-if="queueActivityData.length === 0" class="py-8 text-center text-gray-500">
-          No queue data available
-        </div>
-
-        <div v-else class="space-y-4">
-          <div v-for="queue in queueActivityData" :key="queue.name" class="flex items-center">
-            <span class="w-32 text-sm text-gray-600 truncate">{{ queue.name }}</span>
-            <div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden mx-4">
-              <div
-                class="h-full bg-indigo-500 rounded-full"
-                :style="{ width: `${Math.min(100, queue.count / queueActivityData.reduce((max, q) => Math.max(max, q.count), 0) * 100)}%` }"
-              />
-            </div>
-            <span class="text-sm font-medium">{{ queue.count }} jobs</span>
-          </div>
-        </div>
-
-        <div class="mt-6 text-right">
-          <router-link to="/queues" class="btn btn-outline text-sm">
-            <span class="i-carbon-list-boxes mr-2" />
-            View All Queues
-          </router-link>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Requests"
-          :value="totalRequests"
-          icon="i-carbon-document-multiple"
-          trend="+12.5%"
-          trend-direction="up"
-        />
-        <StatCard
-          title="Data Transferred"
-          :value="`${totalBytes} MB`"
-          icon="i-carbon-data-storage"
-          trend="+5.2%"
-          trend-direction="up"
-        />
-        <StatCard
-          title="Avg Response Time"
-          :value="`${avgResponseTime} ms`"
-          icon="i-carbon-time"
-          trend="-8.3%"
-          trend-direction="down"
-        />
-        <StatCard
-          title="Error Rate"
-          :value="`${errorRate}%`"
-          icon="i-carbon-warning"
-          trend="+1.2%"
-          trend-direction="up"
-          trend-negative
-        />
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-4">
           <h2 class="text-lg font-semibold mb-4">HTTP Method Distribution</h2>
-          <div class="h-64 flex items-center justify-center">
-            <p class="text-gray-500">Chart will be shown here</p>
+          <div class="h-64">
+            <div class="h-full flex flex-col justify-center">
+              <!-- Method bars -->
+              <div v-for="(value, method) in methodDistribution" :key="method" class="mb-3">
+                <div class="flex items-center">
+                  <div class="w-16 text-sm font-medium">{{ method }}</div>
+                  <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      class="h-full rounded"
+                      :class="{
+                        'bg-blue-500': method === 'GET',
+                        'bg-green-500': method === 'POST',
+                        'bg-yellow-500': method === 'PUT',
+                        'bg-red-500': method === 'DELETE',
+                        'bg-indigo-500': method === 'PATCH'
+                      }"
+                      :style="{ width: `${value}%` }"
+                    ></div>
+                  </div>
+                  <div class="w-12 text-right text-sm ml-2">{{ value }}%</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="bg-white rounded-lg shadow p-4">
           <h2 class="text-lg font-semibold mb-4">Response Status Distribution</h2>
-          <div class="h-64 flex items-center justify-center">
-            <p class="text-gray-500">Chart will be shown here</p>
+          <div class="h-64">
+            <div class="h-full flex flex-col justify-center">
+              <!-- Status code bars -->
+              <div v-for="(value, status) in statusDistribution" :key="status" class="mb-3">
+                <div class="flex items-center">
+                  <div class="w-16 text-sm font-medium">{{ status }}</div>
+                  <div class="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      class="h-full rounded"
+                      :class="{
+                        'bg-green-500': status === '2xx',
+                        'bg-blue-500': status === '3xx',
+                        'bg-orange-500': status === '4xx',
+                        'bg-red-500': status === '5xx'
+                      }"
+                      :style="{ width: `${value}%` }"
+                    ></div>
+                  </div>
+                  <div class="w-12 text-right text-sm ml-2">{{ value }}%</div>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Endpoint Activity -->
+      <div class="card p-5 rounded-xl shadow-sm bg-white mb-8">
+        <div class="flex items-center mb-6">
+          <span class="i-carbon-analytics text-xl text-indigo-600 mr-2" />
+          <h3 class="text-lg font-medium text-gray-800">
+            Top Endpoints
+          </h3>
+        </div>
+
+        <div v-if="isLoading" class="py-8 text-center">
+          <div class="loader mx-auto mb-4" />
+          <p class="text-gray-500">
+            Loading endpoint data...
+          </p>
+        </div>
+
+        <div v-else-if="endpointActivityData.length === 0" class="py-8 text-center text-gray-500">
+          No endpoint data available
+        </div>
+
+        <div v-else class="space-y-4">
+          <div v-for="endpoint in endpointActivityData" :key="endpoint.path" class="flex items-center">
+            <span class="w-32 text-sm text-gray-600 truncate">{{ endpoint.path }}</span>
+            <div class="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden mx-4">
+              <div
+                class="h-full bg-indigo-500 rounded-full"
+                :style="{ width: `${Math.min(100, endpoint.count / endpointActivityData.reduce((max, e) => Math.max(max, e.count), 0) * 100)}%` }"
+              />
+            </div>
+            <span class="text-sm font-medium mr-6">{{ endpoint.count }} requests</span>
+            <span class="text-sm text-gray-600">{{ endpoint.avgResponseTime }}ms</span>
+          </div>
+        </div>
+
+        <div class="mt-6 text-right">
+          <router-link to="/requests" class="btn btn-outline text-sm">
+            <span class="i-carbon-list-boxes mr-2" />
+            View All Requests
+          </router-link>
         </div>
       </div>
 

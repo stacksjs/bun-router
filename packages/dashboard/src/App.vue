@@ -33,13 +33,13 @@ const navItems = [
       <div class="sidebar-header">
         <div class="sidebar-logo">
           <div class="logo-icon">
-            <span class="i-carbon-delivery text-indigo-600 text-2xl" />
+            <span class="i-carbon-api text-indigo-600 text-2xl" />
           </div>
           <h1
             class="logo-text"
             :class="isSidebarOpen ? 'visible' : 'hidden'"
           >
-            Bun Queue
+            API Inspector
           </h1>
         </div>
         <button
@@ -77,7 +77,7 @@ const navItems = [
       <div v-if="isSidebarOpen" class="sidebar-footer">
         <div class="status-indicator">
           <span class="status-dot bg-green-500" />
-          <span class="status-text">Active</span>
+          <span class="status-text">Connected</span>
         </div>
       </div>
     </aside>
