@@ -9,7 +9,7 @@ Middleware allows you to run code before or after a route handler executes. This
 To apply middleware to all routes, use the `use` method:
 
 ```typescript
-import { Router, jsonBody, cors } from 'bun-router'
+import { cors, jsonBody, Router } from 'bun-router'
 
 const router = new Router()
 
@@ -59,7 +59,7 @@ bun-router includes several built-in middleware components:
 Parses JSON request bodies and makes them available as `req.jsonBody`:
 
 ```typescript
-import { Router, jsonBody } from 'bun-router'
+import { jsonBody, Router } from 'bun-router'
 
 const router = new Router()
 router.use(jsonBody())
@@ -78,7 +78,7 @@ router.post('/api/users', (req) => {
 Handles Cross-Origin Resource Sharing headers:
 
 ```typescript
-import { Router, cors } from 'bun-router'
+import { cors, Router } from 'bun-router'
 
 const router = new Router()
 
@@ -101,7 +101,7 @@ router.use(cors({
 Adds unique IDs to requests via the `X-Request-ID` header:
 
 ```typescript
-import { Router, requestId } from 'bun-router'
+import { requestId, Router } from 'bun-router'
 
 const router = new Router()
 router.use(requestId())
@@ -166,7 +166,7 @@ router.post('/login', async (req) => {
 Protects against Cross-Site Request Forgery attacks:
 
 ```typescript
-import { Router, csrf, session } from 'bun-router'
+import { csrf, Router, session } from 'bun-router'
 
 const router = new Router()
 
@@ -207,7 +207,7 @@ router.post('/submit', (req) => {
 Basic authentication middleware:
 
 ```typescript
-import { Router, auth } from 'bun-router'
+import { auth, Router } from 'bun-router'
 
 const router = new Router()
 

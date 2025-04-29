@@ -70,7 +70,7 @@ const url = router.route('users.show', { id: '123' })
 ## Middleware
 
 ```typescript
-import { Router, cors, jsonBody } from 'bun-router'
+import { cors, jsonBody, Router } from 'bun-router'
 
 const router = new Router()
 

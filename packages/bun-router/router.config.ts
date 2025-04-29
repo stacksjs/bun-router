@@ -1,4 +1,4 @@
-import type { CorsConfig, RateLimitConfig, RouterOptions } from './src/types'
+import type { RouterOptions } from './src/types'
 import process from 'node:process'
 
 const config: RouterOptions = {

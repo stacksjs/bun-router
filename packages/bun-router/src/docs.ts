@@ -1,4 +1,3 @@
-import type { RouteDefinition } from './types'
 import { join } from 'node:path'
 import process from 'node:process'
 

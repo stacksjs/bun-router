@@ -154,7 +154,7 @@ router.get('/products/{id}', (req) => {
   const productId = Number.parseInt(req.params.id, 10)
 
   // Handle possible NaN result
-  if (isNaN(productId)) {
+  if (Number.isNaN(productId)) {
     return new Response('Invalid product ID', { status: 400 })
   }
 

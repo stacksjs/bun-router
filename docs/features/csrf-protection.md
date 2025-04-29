@@ -18,7 +18,7 @@ A typical CSRF attack works like this:
 bun-router provides CSRF protection through the `csrfProtection` middleware. Here's how to use it:
 
 ```typescript
-import { Router, csrfProtection } from 'bun-router'
+import { csrfProtection, Router } from 'bun-router'
 
 const router = new Router()
 
@@ -273,7 +273,7 @@ When writing tests for routes that use CSRF protection, you'll need to include v
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { Router, csrfProtection } from 'bun-router'
+import { csrfProtection, Router } from 'bun-router'
 
 test('protected route should reject requests without CSRF token', async () => {
   const router = new Router()

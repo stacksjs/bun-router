@@ -108,7 +108,7 @@ router.get('/users/by-username/{username}', (req) => {
 Middleware allows you to process requests before they reach your route handlers:
 
 ```typescript
-import { Router, jsonBody } from 'bun-router'
+import { jsonBody, Router } from 'bun-router'
 
 const router = new Router()
 

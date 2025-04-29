@@ -134,8 +134,8 @@ router.get('/api/users', async (req) => {
 
 // More efficient - pagination
 router.get('/api/users', async (req) => {
-  const page = parseInt(req.query.page || '1')
-  const limit = parseInt(req.query.limit || '10')
+  const page = Number.parseInt(req.query.page || '1')
+  const limit = Number.parseInt(req.query.limit || '10')
 
   const users = await db.users.findMany({
     skip: (page - 1) * limit,
@@ -153,8 +153,8 @@ router.get('/api/users', async (req) => {
 
 // Best - optimized with projection based on client needs
 router.get('/api/users', async (req) => {
-  const page = parseInt(req.query.page || '1')
-  const limit = parseInt(req.query.limit || '10')
+  const page = Number.parseInt(req.query.page || '1')
+  const limit = Number.parseInt(req.query.limit || '10')
 
   // Allow clients to request only needed fields
   const fields = req.query.fields ? req.query.fields.split(',') : ['id', 'name', 'email']
@@ -228,7 +228,7 @@ router.get('/api/products/:id', async (req) => {
 Enable compression to reduce payload sizes:
 
 ```typescript
-import { gzip, gunzip } from 'bun'
+import { gunzip, gzip } from 'bun'
 
 // Compression middleware
 function compressionMiddleware(req, next) {
@@ -370,8 +370,8 @@ router.get('/api/updates', async (req) => {
 Leverage modern HTTP protocols:
 
 ```typescript
-import { createSecureServer } from 'node:https'
 import { readFileSync } from 'node:fs'
+import { createSecureServer } from 'node:https'
 
 // HTTP/2 server setup with Bun router
 const serverOptions = {
@@ -537,7 +537,7 @@ Profile your application to identify bottlenecks:
 function requestTimingMiddleware(req, next) {
   const start = performance.now()
 
-  return next(req).then(response => {
+  return next(req).then((response) => {
     const duration = performance.now() - start
     console.log(`${req.method} ${req.url} completed in ${duration.toFixed(2)}ms`)
 

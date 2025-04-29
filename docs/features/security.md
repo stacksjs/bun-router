@@ -69,7 +69,7 @@ router.get('/set-cookie', (req) => {
 Properly configure CORS to restrict which domains can access your API:
 
 ```typescript
-import { Router, cors } from 'bun-router'
+import { cors, Router } from 'bun-router'
 
 const router = new Router()
 
@@ -128,7 +128,7 @@ router.use(cspMiddleware)
 Use bun-router's built-in CSRF protection for forms and state-changing requests:
 
 ```typescript
-import { Router, csrfProtection, session } from 'bun-router'
+import { csrfProtection, Router, session } from 'bun-router'
 
 const router = new Router()
 

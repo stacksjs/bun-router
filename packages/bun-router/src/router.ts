@@ -1,8 +1,8 @@
-import type { Server, ServerWebSocket } from 'bun'
+import type { Server } from 'bun'
 import type { ActionHandler, ActionHandlerClass, EnhancedRequest, MiddlewareHandler, Route, RouteDefinition, RouteGroup, RouteHandler, RouterConfig, ServerOptions, WebSocketConfig } from './types'
 import { join } from 'node:path'
 import process from 'node:process'
-import { fileExists, isActionClass, isRouteHandler, matchPath, normalizePath, processHtmlTemplate, resolveViewPath, toActionPath } from './utils'
+import { isActionClass, isRouteHandler, matchPath, normalizePath, processHtmlTemplate, resolveViewPath, toActionPath } from './utils'
 
 export class Router {
   private routes: Route[] = []

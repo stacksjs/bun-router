@@ -354,7 +354,7 @@ const router = new Router()
 // Event store
 const events = []
 // Current state
-let currentState = { count: 0, lastUpdated: null }
+const currentState = { count: 0, lastUpdated: null }
 
 router.ws('/events', {
   open(ws) {

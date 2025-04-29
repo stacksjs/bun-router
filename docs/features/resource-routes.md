@@ -215,7 +215,7 @@ router.group({
 Here's a complete example of a blog API using resource routes:
 
 ```typescript
-import { auth, Router, jsonBody } from 'bun-router'
+import { auth, jsonBody, Router } from 'bun-router'
 
 const router = new Router()
 

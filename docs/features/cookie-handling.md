@@ -118,7 +118,7 @@ router.get('/logout', (req) => {
 For more advanced cookie handling, `bun-router` provides a cookie parser middleware:
 
 ```typescript
-import { Router, cookieParser } from 'bun-router'
+import { cookieParser, Router } from 'bun-router'
 
 const router = new Router()
 
@@ -152,7 +152,7 @@ router.get('/profile', (req) => {
 Signed cookies help verify that a cookie hasn't been tampered with by the client:
 
 ```typescript
-import { Router, cookieParser } from 'bun-router'
+import { cookieParser, Router } from 'bun-router'
 
 const router = new Router()
 

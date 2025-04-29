@@ -499,9 +499,8 @@ router.post('/logout', async (req) => {
 When running `bun-router` in a clustered or distributed environment (multiple server instances), you must use a shared session store to ensure session data is consistent across instances:
 
 ```typescript
-import { Router, session } from 'bun-router'
 import { redis, RedisClient } from 'bun'
-import { redisStore } from 'bun-router'
+import { redisStore, Router, session } from 'bun-router'
 
 const router = new Router()
 
