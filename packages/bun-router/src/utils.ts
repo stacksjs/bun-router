@@ -6,7 +6,19 @@ import { join } from 'node:path'
  * @param path The path to normalize
  */
 export function normalizePath(path: string): string {
-  return `/${path.replace(/^\/+|\/+$/g, '')}`
+  // First replace double (or more) slashes with a single slash
+  let normalizedPath = path.replace(/\/+/g, '/')
+
+  // Then ensure there's a leading slash and no trailing slash (unless it's just /)
+  if (!normalizedPath.startsWith('/')) {
+    normalizedPath = '/' + normalizedPath
+  }
+
+  if (normalizedPath.length > 1 && normalizedPath.endsWith('/')) {
+    normalizedPath = normalizedPath.slice(0, -1)
+  }
+
+  return normalizedPath
 }
 
 /**
@@ -22,7 +34,24 @@ export function toActionPath(path: string): string {
  * @param handler The handler to check
  */
 export function isActionClass(handler: ActionHandler): handler is new () => ActionHandlerClass {
-  return typeof handler === 'function' && 'prototype' in handler && 'handle' in handler.prototype
+  if (typeof handler !== 'function' && typeof handler !== 'object') {
+    return false
+  }
+
+  // Check if it's a class constructor
+  if (typeof handler === 'function' && handler.prototype) {
+    const prototype = handler.prototype as unknown as { handle?: unknown }
+    if (typeof prototype.handle === 'function') {
+      return true
+    }
+  }
+
+  // Check if it's an instance with a handle method
+  if (typeof handler === 'object' && handler !== null && 'handle' in handler && typeof (handler as any).handle === 'function') {
+    return true
+  }
+
+  return false
 }
 
 /**
@@ -55,35 +84,65 @@ export function createPathRegex(pattern: string): RegExp {
  * Matches a path against a pattern and extracts parameters
  * @param pattern The path pattern (e.g., '/users/{id}')
  * @param path The actual path (e.g., '/users/123')
- * @param constraints Optional parameter constraints
+ * @param params Output parameter object that will contain extracted parameters
+ * @returns Boolean indicating whether the path matches the pattern
  */
-export function matchPath(pattern: string, path: string, constraints?: Record<string, string>): Record<string, string> | null {
-  const regex = createPathRegex(pattern)
-  const paramNames = extractParamNames(pattern)
-  const matches = path.match(regex)
+export function matchPath(pattern: string, path: string, params: Record<string, string>): boolean {
+  // Both paths should be normalized
+  const normalizedPattern = normalizePath(pattern)
+  const normalizedPath = normalizePath(path)
 
-  if (!matches) {
-    return null
-  }
-
-  const params: Record<string, string> = {}
-
-  for (let i = 0; i < paramNames.length; i++) {
-    const name = paramNames[i]
-    const value = matches[i + 1]
-    params[name] = value
-
-    // Check if this parameter has a constraint
-    if (constraints && constraints[name]) {
-      const constraintPattern = new RegExp(`^${constraints[name]}$`)
-      // If it doesn't match the constraint, return null
-      if (!constraintPattern.test(value)) {
-        return null
-      }
+  // Special case for wildcard patterns
+  if (pattern.endsWith('/*')) {
+    const basePattern = pattern.slice(0, -2)
+    if (path.startsWith(basePattern)) {
+      return true
     }
   }
 
-  return params
+  // Handle patterns with parameters
+  const patternSegments = normalizedPattern.split('/').filter(Boolean)
+  const pathSegments = normalizedPath.split('/').filter(Boolean)
+
+  // Quick check - if segments don't match (accounting for optional params) then no match
+  // For mandatory parameters, the pattern and path must have same number of segments
+  const optionalParamCount = (normalizedPattern.match(/\{[^}]+\?\}/g) || []).length
+
+  if (pathSegments.length < patternSegments.length - optionalParamCount ||
+      pathSegments.length > patternSegments.length) {
+    return false
+  }
+
+  // Match each segment
+  for (let i = 0; i < patternSegments.length; i++) {
+    const patternSegment = patternSegments[i]
+    const pathSegment = pathSegments[i]
+
+    // If we've run out of path segments and this is not an optional parameter
+    if (pathSegment === undefined) {
+      if (patternSegment.match(/\{[^}]+\?\}/)) {
+        // This is an optional parameter and we have no path segment for it
+        continue
+      } else {
+        // Required parameter or static segment with no matching path segment
+        return false
+      }
+    }
+
+    // Check if this segment is a parameter
+    const paramMatch = patternSegment.match(/\{([^}]+)(\?)?\}/)
+    if (paramMatch) {
+      // This is a parameter segment, extract param name
+      const paramName = paramMatch[1].replace('?', '')
+      // Store the parameter value
+      params[paramName] = pathSegment
+    } else if (patternSegment !== pathSegment) {
+      // Static segment doesn't match
+      return false
+    }
+  }
+
+  return true
 }
 
 /**

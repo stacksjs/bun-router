@@ -14,6 +14,7 @@ export class Router {
   private currentDomain: string | null = null
   private serverInstance: Server | null = null
   private wsConfig: WebSocketConfig | null = null
+  private errorHandler: ((error: Error) => Response | Promise<Response>) | null = null
   private config: RouterConfig = {
     verbose: false,
     routesPath: 'routes',
@@ -155,7 +156,24 @@ export class Router {
    */
   async group(options: RouteGroup, callback: () => void): Promise<Router> {
     const previousGroup = this.currentGroup
-    this.currentGroup = options
+
+    // If we already have a group, merge the attributes
+    if (previousGroup) {
+      this.currentGroup = {
+        // Combine prefixes if both exist
+        prefix: options.prefix
+          ? (previousGroup.prefix ? previousGroup.prefix + options.prefix : options.prefix)
+          : previousGroup.prefix,
+
+        // Combine middleware if both exist
+        middleware: [
+          ...(previousGroup.middleware || []),
+          ...(options.middleware || [])
+        ]
+      }
+    } else {
+      this.currentGroup = options
+    }
 
     callback()
 
@@ -221,9 +239,13 @@ export class Router {
    * Register a healthcheck route at /health
    */
   async health(): Promise<Router> {
-    return this.get('/health', () => {
+    // Add a health check route at /health that returns 200 OK
+    // Use an API route by default
+    await this.get('/health', () => {
       return new Response('OK', { status: 200 })
     }, 'api')
+
+    return this
   }
 
   /**
@@ -248,17 +270,22 @@ export class Router {
       await this.delete(resourcePath('/{id}'), `${handler}/destroy`, type)
     }
     else {
-      // Object with explicit handlers
-      if (handler.index)
+      // Object with method handlers
+      if (handler.index) {
         await this.get(resourcePath(), handler.index, type)
-      if (handler.show)
+      }
+      if (handler.show) {
         await this.get(resourcePath('/{id}'), handler.show, type)
-      if (handler.store)
+      }
+      if (handler.store) {
         await this.post(resourcePath(), handler.store, type)
-      if (handler.update)
+      }
+      if (handler.update) {
         await this.put(resourcePath('/{id}'), handler.update, type)
-      if (handler.destroy)
+      }
+      if (handler.destroy) {
         await this.delete(resourcePath('/{id}'), handler.destroy, type)
+      }
     }
 
     return this
@@ -292,10 +319,10 @@ export class Router {
    * @param middleware The middleware to register
    */
   async use(...middleware: (string | MiddlewareHandler)[]): Promise<Router> {
-    for (const m of middleware) {
-      const resolvedMiddleware = await this.resolveMiddleware(m)
-      if (resolvedMiddleware) {
-        this.globalMiddleware.push(resolvedMiddleware)
+    for (const middlewareItem of middleware) {
+      const resolved = await this.resolveMiddleware(middlewareItem)
+      if (resolved) {
+        this.globalMiddleware.push(resolved)
       }
     }
     return this
@@ -320,28 +347,56 @@ export class Router {
     }
   }
 
+  /**
+   * Run a chain of middleware handlers
+   * @param req The enhanced request object
+   * @param middlewareStack Array of middleware handlers to execute
+   * @returns Response from middleware or null to continue to route handler
+   */
   private async runMiddleware(req: EnhancedRequest, middlewareStack: MiddlewareHandler[]): Promise<Response | null> {
-    let index = 0
-
-    const next = async (): Promise<Response> => {
-      if (index >= middlewareStack.length) {
-        return new Response('Middleware stack exhausted without a response', { status: 500 })
-      }
-
-      const middleware = middlewareStack[index++]
-      return await middleware(req, next)
-    }
-
-    if (middlewareStack.length === 0) {
+    if (!middlewareStack.length) {
       return null
     }
 
+    // We'll use a special symbol to track the middleware chain completion internally
+    let middlewareComplete = false
+
+    // Create a chain of middleware functions where each calls the next
+    const executeMiddleware = async (index: number): Promise<Response> => {
+      // If we've run through all middleware, signal to continue to route handler
+      if (index >= middlewareStack.length) {
+        middlewareComplete = true
+        // Return a valid "empty" response - this will be checked later and never sent to the client
+        return new Response('', { status: 200 })
+      }
+
+      const currentMiddleware = middlewareStack[index]
+
+      // Define the next function for this middleware
+      const next = async (): Promise<Response> => {
+        return await executeMiddleware(index + 1)
+      }
+
+      // Execute the current middleware with the next function
+      return await currentMiddleware(req, next)
+    }
+
     try {
-      return await next()
+      // Start executing the middleware chain
+      const response = await executeMiddleware(0)
+
+      // If we completed the middleware chain without a short-circuit,
+      // continue to the route handler
+      if (middlewareComplete) {
+        return null
+      }
+
+      // Otherwise return the middleware response (short-circuit)
+      return response
     }
     catch (error) {
-      console.error('Error in middleware:', error)
-      return new Response('Middleware error', { status: 500 })
+      // Re-throw any errors to be handled by the error handler
+      throw error
     }
   }
 
@@ -480,92 +535,62 @@ export class Router {
   private templateCache = new Map<string, string>()
 
   /**
-   * Render a view with the provided data
-   * @param view The view name or path to render
-   * @param data The data to pass to the view
-   * @param options View rendering options
+   * Renders a view with the provided data
+   * @param view The name of the view file to render
+   * @param data Data to pass to the view template
+   * @param options Rendering options like layout
    */
   async renderView(
     view: string,
     data: Record<string, any> = {},
     options: { layout?: string } = {},
   ): Promise<string> {
-    const viewConfig = this.config.views || {
-      viewsPath: 'resources/views',
-      extensions: ['.html', '.stx'],
-      cache: false,
-      engine: 'auto',
+    const viewConfig = this.config.views
+    if (!viewConfig) {
+      throw new Error('Views configuration is missing. Set it in router config.')
     }
 
-    // Set path defaults
-    const viewsPath = viewConfig.viewsPath || 'resources/views'
-    const extensions = viewConfig.extensions || ['.html', '.stx']
-
-    // Try to find the view file
+    // Resolve view path
+    const viewsPath = viewConfig.viewsPath
+    const extensions = viewConfig.extensions || ['.html']
     const viewPath = await resolveViewPath(view, viewsPath, extensions)
 
     if (!viewPath) {
-      throw new Error(`View '${view}' not found in '${viewsPath}' with extensions ${extensions.join(', ')}`)
+      throw new Error(`View "${view}" not found in ${viewsPath}`)
     }
 
-    // Check cache first
-    if (viewConfig.cache && this.templateCache.has(viewPath)) {
-      return await this.processTemplate(this.templateCache.get(viewPath)!, data, viewConfig)
-    }
+    // Read view content
+    const viewContent = await Bun.file(viewPath).text()
 
-    // Read the view file
-    const file = Bun.file(viewPath)
-    const viewContent = await file.text()
+    // Process the view template with provided data
+    const renderedView = await this.processTemplate(viewContent, data, viewConfig)
 
-    // Cache the template if enabled
-    if (viewConfig.cache) {
-      this.templateCache.set(viewPath, viewContent)
-    }
+    // Check if we should use a layout
+    const layoutName = options.layout || viewConfig.defaultLayout
 
-    // Process the template
-    let processed = await this.processTemplate(viewContent, data, viewConfig)
+    if (layoutName) {
+      // Resolve layout path
+      const layoutsPath = join(viewsPath, 'layouts')
+      const layoutPath = await resolveViewPath(layoutName, layoutsPath, extensions)
 
-    // Handle layout if specified
-    if (options.layout || viewConfig.defaultLayout) {
-      const layoutName = options.layout || viewConfig.defaultLayout
-
-      if (layoutName) {
-        const layoutPath = await resolveViewPath(layoutName, viewsPath, extensions)
-
-        if (layoutPath) {
-          // Cache check for layout
-          let layoutContent
-          if (viewConfig.cache && this.templateCache.has(layoutPath)) {
-            layoutContent = this.templateCache.get(layoutPath)!
-          }
-          else {
-            const layoutFile = Bun.file(layoutPath)
-            layoutContent = await layoutFile.text()
-
-            if (viewConfig.cache) {
-              this.templateCache.set(layoutPath, layoutContent)
-            }
-          }
-
-          // Replace {{content}} in the layout with the processed view
-          processed = layoutContent.replace(/\{\{content\}\}/g, processed)
-
-          // Process the layout with the data
-          processed = await this.processTemplate(processed, data, viewConfig)
-        }
+      if (!layoutPath) {
+        throw new Error(`Layout "${layoutName}" not found in ${layoutsPath}`)
       }
+
+      // Read layout content
+      const layoutContent = await Bun.file(layoutPath).text()
+
+      // Create data with the rendered view as the content
+      const layoutData = {
+        ...data,
+        content: renderedView,
+      }
+
+      // Process the layout with the view content
+      return await this.processTemplate(layoutContent, layoutData, viewConfig)
     }
 
-    // Apply minification if enabled
-    if (viewConfig.minify?.enabled) {
-      // Simple minification - replace multiple whitespace with single space
-      processed = processed
-        .replace(/\s+/g, ' ')
-        .replace(/>\s+</g, '><')
-        .trim()
-    }
-
-    return processed
+    return renderedView
   }
 
   /**
@@ -777,13 +802,48 @@ export class Router {
   }
 
   private matchRoute(path: string, method: string): Route | null {
-    return this.routes.find(route =>
-      matchPath(route.path, path, route.constraints) !== null && route.method === method,
-    ) || null
+    for (const route of this.routes) {
+      if (route.method !== method && route.method !== 'ANY') {
+        continue
+      }
+
+      // Handle domain matching if the route has a domain constraint
+      if (route.domain) {
+        const url = new URL(path)
+        if (!this.matchDomain(route.domain, url.hostname)) {
+          continue
+        }
+      }
+
+      const params: Record<string, string> = {}
+      const isMatch = matchPath(route.path, path, params)
+
+      if (isMatch) {
+        // Apply constraints if any
+        if (route.constraints && Object.keys(route.constraints).length > 0) {
+          let constraintsMet = true
+          for (const [param, pattern] of Object.entries(route.constraints)) {
+            if (params[param] && !new RegExp(`^${pattern}$`).test(params[param])) {
+              constraintsMet = false
+              break
+            }
+          }
+          if (!constraintsMet) {
+            continue
+          }
+        }
+
+        return { ...route, params }
+      }
+    }
+
+    return null
   }
 
   private extractParams(routePath: string, requestPath: string): Record<string, string> {
-    return matchPath(routePath, requestPath) || {}
+    const params: Record<string, string> = {}
+    matchPath(routePath, requestPath, params)
+    return params
   }
 
   async loadRoutes(): Promise<void> {
@@ -834,58 +894,97 @@ export class Router {
   }
 
   async handleRequest(req: Request): Promise<Response> {
-    const url: URL = new URL(req.url)
-    const path: string = url.pathname
-    const method: string = req.method
-    const hostname: string = url.hostname
-
-    const matchedRoute: Route | null = this.routes.find((route) => {
-      // Check domain if specified
-      if (route.domain && !this.matchDomain(route.domain, hostname)) {
-        return false
-      }
-
-      return matchPath(route.path, path, route.constraints) !== null && route.method === method
-    }) || null
-
-    if (!matchedRoute) {
-      if (this.fallbackHandler) {
-        // Create enhanced request with empty params
-        const enhancedReq: EnhancedRequest = this.enhanceRequest(req, {})
-        return await this.resolveHandler(this.fallbackHandler, enhancedReq)
-      }
-      return new Response('Not Found', { status: 404 })
-    }
-
-    // Extract route parameters
-    const params: Record<string, string> = matchPath(matchedRoute.path, path, matchedRoute.constraints) || {}
-
-    // Add domain parameters if applicable
-    if (matchedRoute.domain) {
-      const domainParams = this.extractDomainParams(matchedRoute.domain, hostname)
-      Object.assign(params, domainParams)
-    }
-
-    // Create enhanced request with params
-    const enhancedReq: EnhancedRequest = this.enhanceRequest(req, params)
-
     try {
-      // Run global middleware first
-      const globalMiddlewareResult = await this.runMiddleware(enhancedReq, this.globalMiddleware)
-      if (globalMiddlewareResult)
-        return this.applyModifiedCookies(globalMiddlewareResult, enhancedReq)
+      const url = new URL(req.url)
+      const path = normalizePath(url.pathname)
+      const method = req.method
 
-      // Run route-specific middleware
-      const routeMiddlewareResult = await this.runMiddleware(enhancedReq, matchedRoute.middleware)
-      if (routeMiddlewareResult)
-        return this.applyModifiedCookies(routeMiddlewareResult, enhancedReq)
+      // Find a matching route
+      let route = this.matchRoute(path, method)
 
-      // If middleware passes, run the handler
-      const response = await this.resolveHandler(matchedRoute.handler, enhancedReq)
-      return this.applyModifiedCookies(response, enhancedReq)
+      // If no route found and this is a HEAD request, try to find a GET route
+      if (!route && method === 'HEAD') {
+        route = this.matchRoute(path, 'GET')
+      }
+
+      // If still no route, check for OPTIONS request to support CORS
+      if (!route && method === 'OPTIONS') {
+        // Create a default OPTIONS response with CORS headers
+        const headers = new Headers({
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Content-Length': '0',
+        })
+        return new Response(null, { status: 204, headers })
+      }
+
+      // If no route found, try the fallback handler or return 404
+      if (!route) {
+        if (this.fallbackHandler) {
+          const enhancedReq = this.enhanceRequest(req, {})
+          return await this.resolveHandler(this.fallbackHandler, enhancedReq)
+        }
+        return new Response('Not Found', { status: 404 })
+      }
+
+      // Create enhanced request with route parameters
+      const params = route.params ?? {}
+      const enhancedReq = this.enhanceRequest(req, params)
+
+      // Apply global middleware first
+      if (this.globalMiddleware.length > 0) {
+        try {
+          const middlewareResponse = await this.runMiddleware(enhancedReq, this.globalMiddleware)
+          if (middlewareResponse) {
+            // Middleware provided a response, so return it
+            return this.applyModifiedCookies(middlewareResponse, enhancedReq)
+          }
+        }
+        catch (error) {
+          console.error('Error in global middleware:', error)
+          return new Response('Internal Server Error', { status: 500 })
+        }
+      }
+
+      // Apply route-specific middleware next
+      if (route.middleware && route.middleware.length > 0) {
+        try {
+          const middlewareResponse = await this.runMiddleware(enhancedReq, route.middleware)
+          if (middlewareResponse) {
+            // Middleware provided a response, so return it
+            return this.applyModifiedCookies(middlewareResponse, enhancedReq)
+          }
+        }
+        catch (error) {
+          console.error('Error in route middleware:', error)
+          return new Response('Internal Server Error', { status: 500 })
+        }
+      }
+
+      // Handle the request with the route handler
+      try {
+        const response = await this.resolveHandler(route.handler, enhancedReq)
+        return this.applyModifiedCookies(response, enhancedReq)
+      }
+      catch (error) {
+        console.error('Error handling request:', error)
+
+        // Use custom error handler if available
+        if (this.errorHandler) {
+          try {
+            return await this.errorHandler(error as Error)
+          }
+          catch (handlerError) {
+            console.error('Error in error handler:', handlerError)
+          }
+        }
+
+        return new Response('Internal Server Error', { status: 500 })
+      }
     }
     catch (error) {
-      console.error('Error handling request:', error)
+      console.error('Unhandled error:', error)
       return new Response('Internal Server Error', { status: 500 })
     }
   }
@@ -893,93 +992,91 @@ export class Router {
   /**
    * Enhance a regular request with additional properties like params and cookies
    */
-  private enhanceRequest(req: Request, params: Record<string, string>): EnhancedRequest {
-    // Parse and organize cookies from the request
-    const cookieHeader = req.headers.get('cookie') || ''
-    const cookieMap: Record<string, string> = {}
+  private enhanceRequest(req: Request, params: Record<string, string> = {}): EnhancedRequest {
+    const enhancedReq = req as EnhancedRequest
+    enhancedReq.params = params || {}
 
-    cookieHeader.split(';').forEach((cookie) => {
-      const [name, value] = cookie.trim().split('=')
-      if (name && value) {
-        cookieMap[name] = decodeURIComponent(value)
-      }
-    })
+    // Parse cookies from request headers
+    const cookieHeader = req.headers.get('Cookie')
+    const cookies: Record<string, string> = {}
 
-    // Set of modified cookies (for tracking changes)
-    const modifiedCookies = new Set<string>()
-
-    // Create the cookie handler
-    const cookies = {
-      get: (name: string): string | undefined => {
-        return cookieMap[name]
-      },
-
-      set: (name: string, value: string, options: any = {}): void => {
-        cookieMap[name] = value
-        modifiedCookies.add(name)
-        // Store options for later serialization
-        ;(cookies as any)._options = (cookies as any)._options || {}
-        ;(cookies as any)._options[name] = options
-      },
-
-      delete: (name: string, options: any = {}): void => {
-        delete cookieMap[name]
-        modifiedCookies.add(name)
-        // Store deletion options
-        ;(cookies as any)._options = (cookies as any)._options || {}
-        ;(cookies as any)._options[name] = { ...options, deleted: true }
-      },
-
-      getAll: (): Record<string, string> => {
-        return { ...cookieMap }
-      },
-
-      // Add internal properties for tracking
-      _modified: modifiedCookies,
-      _options: {} as Record<string, any>,
+    if (cookieHeader) {
+      cookieHeader.split(';').forEach((cookie) => {
+        const [name, value] = cookie.trim().split('=')
+        if (name && value) {
+          cookies[name] = value
+        }
+      })
     }
 
-    // Create enhanced request
-    return Object.assign(req, {
-      params,
-      cookies,
-    }) as EnhancedRequest
+    // Store cookies and cookie manipulation methods on the request
+    const cookiesToSet: { name: string, value: string, options: any }[] = []
+    const cookiesToDelete: { name: string, options: any }[] = []
+
+    enhancedReq.cookies = {
+      get: (name: string) => cookies[name],
+
+      set: (name: string, value: string, options: any = {}) => {
+        cookiesToSet.push({ name, value, options })
+      },
+
+      delete: (name: string, options: any = {}) => {
+        // To delete a cookie, we set its Max-Age to 0
+        cookiesToDelete.push({
+          name,
+          options: {
+            ...options,
+            maxAge: 0,
+            // Ensure the path is maintained when deleting
+            path: options.path || '/'
+          }
+        })
+      },
+
+      getAll: () => ({ ...cookies })
+    }
+
+    // Store the cookies for use when generating the response
+    enhancedReq._cookiesToSet = cookiesToSet
+    enhancedReq._cookiesToDelete = cookiesToDelete
+
+    return enhancedReq
   }
 
   /**
    * Apply modified cookies to the response
    */
   private applyModifiedCookies(response: Response, req: EnhancedRequest): Response {
-    const cookies = req.cookies as any
-    if (!cookies || !cookies._modified || cookies._modified.size === 0) {
+    // If no cookies were modified, return the original response
+    if (!req._cookiesToSet?.length && !req._cookiesToDelete?.length) {
       return response
     }
 
-    // Clone the response to modify headers
+    // Create a new response with the same status, body and headers
     const headers = new Headers(response.headers)
 
-    // Add Set-Cookie headers for each modified cookie
-    cookies._modified.forEach((name: string) => {
-      const value = cookies.get(name)
-      const options = cookies._options[name] || {}
-
-      if (options.deleted || value === undefined) {
-        // Delete cookie by setting maxAge=0 and empty value
-        const cookieStr = this.serializeCookie(name, '', { ...options, maxAge: 0 })
-        headers.append('Set-Cookie', cookieStr)
+    // Add cookies to be set
+    if (req._cookiesToSet && req._cookiesToSet.length > 0) {
+      for (const { name, value, options } of req._cookiesToSet) {
+        const serialized = this.serializeCookie(name, value, options)
+        headers.append('Set-Cookie', serialized)
       }
-      else {
-        // Set new/modified cookie
-        const cookieStr = this.serializeCookie(name, value, options)
-        headers.append('Set-Cookie', cookieStr)
-      }
-    })
+    }
 
-    // Return new response with updated headers
+    // Add cookies to be deleted
+    if (req._cookiesToDelete && req._cookiesToDelete.length > 0) {
+      for (const { name, options } of req._cookiesToDelete) {
+        // To delete a cookie, set an empty value and Max-Age=0
+        const serialized = this.serializeCookie(name, '', options)
+        headers.append('Set-Cookie', serialized)
+      }
+    }
+
+    // Create a new response with the modified headers
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers,
+      headers
     })
   }
 
@@ -987,37 +1084,49 @@ export class Router {
    * Serialize a cookie name, value and options to a cookie string
    */
   private serializeCookie(name: string, value: string, options: any = {}): string {
-    let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`
-
-    if (options.maxAge) {
-      cookie += `; Max-Age=${options.maxAge}`
-    }
+    const cookieParts = [`${name}=${value}`]
 
     if (options.expires) {
-      cookie += `; Expires=${options.expires.toUTCString()}`
+      const expires = options.expires instanceof Date
+        ? options.expires.toUTCString()
+        : new Date(options.expires).toUTCString()
+      cookieParts.push(`Expires=${expires}`)
     }
 
-    if (options.path) {
-      cookie += `; Path=${options.path}`
+    if (options.maxAge !== undefined && options.maxAge !== null) {
+      cookieParts.push(`Max-Age=${options.maxAge}`)
     }
 
     if (options.domain) {
-      cookie += `; Domain=${options.domain}`
+      cookieParts.push(`Domain=${options.domain}`)
     }
 
-    if (options.httpOnly) {
-      cookie += '; HttpOnly'
+    if (options.path) {
+      cookieParts.push(`Path=${options.path}`)
+    }
+    else {
+      // Default path to root
+      cookieParts.push('Path=/')
     }
 
     if (options.secure) {
-      cookie += '; Secure'
+      cookieParts.push('Secure')
+    }
+
+    if (options.httpOnly) {
+      cookieParts.push('HttpOnly')
     }
 
     if (options.sameSite) {
-      cookie += `; SameSite=${options.sameSite}`
+      if (['Strict', 'Lax', 'None'].includes(options.sameSite)) {
+        cookieParts.push(`SameSite=${options.sameSite}`)
+      }
+      else {
+        cookieParts.push(`SameSite=${options.sameSite.charAt(0).toUpperCase() + options.sameSite.slice(1)}`)
+      }
     }
 
-    return cookie
+    return cookieParts.join('; ')
   }
 
   /**
@@ -1060,12 +1169,8 @@ export class Router {
   }
 
   /**
-   * Set up an error handler for the server
-   */
-  errorHandler: ((error: Error) => Response | Promise<Response>) | null = null
-
-  /**
-   * Register an error handler for the server
+   * Register a global error handler
+   * @param handler The error handler function
    */
   async onError(handler: (error: Error) => Response | Promise<Response>): Promise<Router> {
     this.errorHandler = handler
@@ -1298,6 +1403,3 @@ export class Router {
     return this
   }
 }
-
-export const route: Router = new Router()
-export default route

@@ -44,51 +44,68 @@ describe('Bun Router - Middleware Tests', () => {
   })
 
   it('should apply middleware in the correct order', async () => {
-    // Create middleware functions
+    // Create a fresh router
+    router = new Router()
+
+    // Make our execution order tracking global
+    let executionOrder: string[] = []
+
+    // First middleware that runs first, ends last
     const middleware1 = async (req: EnhancedRequest, next: NextFunction) => {
-      req.testOrder = ['middleware1']
+      executionOrder.push('before_middleware1')
       const response = await next()
+      executionOrder.push('after_middleware1')
 
-      // Read the final content
-      const text = await response.text()
-
-      // Return a modified response
-      return new Response(`${text}, after middleware1`, {
+      // Add our mark to the response
+      const text = await response.clone().text()
+      return new Response(`${text} + MW1`, {
         status: response.status,
         headers: response.headers,
       })
     }
 
+    // Second middleware that runs second, ends second-to-last
     const middleware2 = async (req: EnhancedRequest, next: NextFunction) => {
-      req.testOrder?.push('middleware2')
+      executionOrder.push('before_middleware2')
       const response = await next()
+      executionOrder.push('after_middleware2')
 
-      // Read the final content
-      const text = await response.text()
-
-      // Return a modified response
-      return new Response(`${text}, after middleware2`, {
+      // Add our mark to the response
+      const text = await response.clone().text()
+      return new Response(`${text} + MW2`, {
         status: response.status,
         headers: response.headers,
       })
     }
 
-    // Register middlewares in order
+    // Register middlewares
     await router.use(middleware1)
     await router.use(middleware2)
 
-    // Create a route
-    await router.get('/order-test', (req) => {
-      req.testOrder?.push('handler')
-      return new Response(`Order: ${req.testOrder?.join(' -> ')}`, { status: 200 })
+    // Create a simple route
+    await router.get('/order-test', () => {
+      executionOrder.push('handler')
+      return new Response('RESPONSE', { status: 200 })
     })
 
     // Make a request
     const response = await router.handleRequest(new Request('http://localhost/order-test'))
 
-    // Verify middleware execution order
+    // Verify status
     expect(response.status).toBe(200)
-    expect(await response.text()).toBe('Order: middleware1 -> middleware2 -> handler, after middleware2, after middleware1')
+
+    // Verify response text has correct order of modifications
+    const text = await response.text()
+    expect(text).toBe('RESPONSE + MW2 + MW1')
+
+    // Verify execution order
+    expect(executionOrder).toEqual([
+      'before_middleware1',
+      'before_middleware2',
+      'handler',
+      'after_middleware2',
+      'after_middleware1'
+    ])
   })
 
   it('should allow middleware to short-circuit responses', async () => {

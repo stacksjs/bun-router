@@ -4,7 +4,12 @@ import {
   isRouteHandler,
   matchPath,
   normalizePath,
-  processHtmlTemplate
+  processHtmlTemplate,
+  createPathRegex,
+  extractParamNames,
+  joinPaths,
+  validatePath,
+  toActionPath
 } from '../src/utils'
 import type { ActionHandlerClass, EnhancedRequest } from '../src/types'
 
@@ -30,35 +35,48 @@ describe('Utils', () => {
 
   describe('matchPath', () => {
     it('should match exact path', () => {
-      expect(matchPath('/users', '/users', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users', '/users', params)).toBe(true)
     })
 
     it('should not match different paths', () => {
-      expect(matchPath('/users', '/posts', {})).toBe(false)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users', '/posts', params)).toBe(false)
     })
 
     it('should match path with parameters', () => {
-      expect(matchPath('/users/{id}', '/users/123', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users/{id}', '/users/123', params)).toBe(true)
+      expect(params.id).toBe('123')
     })
 
     it('should match path with multiple parameters', () => {
-      expect(matchPath('/users/{userId}/posts/{postId}', '/users/123/posts/456', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users/{userId}/posts/{postId}', '/users/123/posts/456', params)).toBe(true)
+      expect(params.userId).toBe('123')
+      expect(params.postId).toBe('456')
     })
 
     it('should not match path with missing parameters', () => {
-      expect(matchPath('/users/{id}/posts', '/users/posts', {})).toBe(false)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users/{id}/posts', '/users/posts', params)).toBe(false)
     })
 
     it('should match path with optional parameters present', () => {
-      expect(matchPath('/users/{id?}', '/users/123', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users/{id?}', '/users/123', params)).toBe(true)
+      expect(params.id).toBe('123')
     })
 
     it('should match path with optional parameters missing', () => {
-      expect(matchPath('/users/{id?}', '/users', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/users/{id?}', '/users', params)).toBe(true)
+      expect(params.id).toBeUndefined()
     })
 
     it('should match wildcard paths', () => {
-      expect(matchPath('/assets/*', '/assets/images/logo.png', {})).toBe(true)
+      const params: Record<string, string> = {}
+      expect(matchPath('/assets/*', '/assets/images/logo.png', params)).toBe(true)
     })
   })
 
@@ -69,9 +87,9 @@ describe('Utils', () => {
     })
 
     it('should reject non-function values', () => {
-      expect(isRouteHandler('not a function')).toBe(false)
-      expect(isRouteHandler(123)).toBe(false)
-      expect(isRouteHandler({})).toBe(false)
+      expect(isRouteHandler('not a function' as any)).toBe(false)
+      expect(isRouteHandler(123 as any)).toBe(false)
+      expect(isRouteHandler({} as any)).toBe(false)
     })
   })
 
@@ -83,16 +101,16 @@ describe('Utils', () => {
         }
       }
 
-      expect(isActionClass(new TestAction())).toBe(true)
+      expect(isActionClass(TestAction as any)).toBe(true)
     })
 
     it('should reject objects without handle method', () => {
-      expect(isActionClass({})).toBe(false)
+      expect(isActionClass({} as any)).toBe(false)
     })
 
     it('should reject non-objects', () => {
-      expect(isActionClass('string')).toBe(false)
-      expect(isActionClass(123)).toBe(false)
+      expect(isActionClass('string' as any)).toBe(false)
+      expect(isActionClass(123 as any)).toBe(false)
     })
   })
 
@@ -137,6 +155,74 @@ describe('Utils', () => {
 
       const result = processHtmlTemplate(template, data)
       expect(result).toBe('<ul><li>one</li><li>two</li><li>three</li></ul>')
+    })
+  })
+
+  describe('createPathRegex', () => {
+    it('should create regex for simple paths', () => {
+      const regex = createPathRegex('/users')
+      expect('/users'.match(regex)).toBeTruthy()
+      expect('/users/'.match(regex)).toBeFalsy()
+      expect('/users/123'.match(regex)).toBeFalsy()
+    })
+
+    it('should create regex for paths with parameters', () => {
+      const regex = createPathRegex('/users/{id}')
+      expect('/users/123'.match(regex)).toBeTruthy()
+      expect('/users/abc'.match(regex)).toBeTruthy()
+      expect('/users/'.match(regex)).toBeFalsy()
+      expect('/users'.match(regex)).toBeFalsy()
+    })
+
+    it('should create regex for paths with multiple parameters', () => {
+      const regex = createPathRegex('/users/{userId}/posts/{postId}')
+      expect('/users/123/posts/456'.match(regex)).toBeTruthy()
+      expect('/users/abc/posts/def'.match(regex)).toBeTruthy()
+      expect('/users/123/posts'.match(regex)).toBeFalsy()
+      expect('/users/posts/456'.match(regex)).toBeFalsy()
+    })
+  })
+
+  describe('extractParamNames', () => {
+    it('should extract parameter names from path pattern', () => {
+      expect(extractParamNames('/users/{id}')).toEqual(['id'])
+      expect(extractParamNames('/users/{userId}/posts/{postId}')).toEqual(['userId', 'postId'])
+      expect(extractParamNames('/static/path')).toEqual([])
+    })
+
+    it('should handle optional parameters', () => {
+      expect(extractParamNames('/users/{id?}')).toEqual(['id?'])
+      expect(extractParamNames('/users/{id}/posts/{page?}')).toEqual(['id', 'page?'])
+    })
+  })
+
+  describe('joinPaths', () => {
+    it('should join path segments correctly', () => {
+      expect(joinPaths('api', 'users')).toBe('/api/users')
+      expect(joinPaths('/api', '/users')).toBe('/api/users')
+      expect(joinPaths('/api/', '/users/')).toBe('/api/users')
+      expect(joinPaths('', 'users')).toBe('/users')
+    })
+  })
+
+  describe('validatePath', () => {
+    it('should validate correct paths', () => {
+      expect(validatePath('/users')).toBe(true)
+      expect(validatePath('/users/{id}')).toBe(true)
+      expect(validatePath('/users/{id}/posts/{postId}')).toBe(true)
+    })
+
+    it('should reject invalid paths', () => {
+      expect(validatePath('users')).toBe(false) // Missing leading slash
+      expect(validatePath('/users/{id')).toBe(false) // Unbalanced braces
+      expect(validatePath('/users/}id{')).toBe(false) // Reversed braces
+    })
+  })
+
+  describe('toActionPath', () => {
+    it('should convert paths to action paths', () => {
+      expect(toActionPath('Actions/Home/IndexAction')).toBe('actions_home_indexaction')
+      expect(toActionPath('controllers/user/show')).toBe('controllers_user_show')
     })
   })
 })

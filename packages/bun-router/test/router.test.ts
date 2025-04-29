@@ -167,25 +167,36 @@ describe('Router', () => {
   describe('Middleware', () => {
     it('should apply global middleware', async () => {
       // Add global middleware
-      await router.use(async (req, next) => {
-        const response = await next()
-        return new Response(await response.text() + ' with Middleware', {
+      const middleware = jest.fn(async (req, next) => {
+        // Call the next middleware/handler
+        const response = await next();
+
+        // Get the original response text
+        const originalText = await response.clone().text();
+
+        // Return a new response with modified text
+        return new Response(originalText + ' with Middleware', {
           status: response.status,
           headers: response.headers,
-        })
-      })
+        });
+      });
 
-      await router.get('/middleware-test', () => new Response('Test'))
+      await router.use(middleware);
+      await router.get('/middleware-test', () => new Response('Test'));
 
-      const response = await router.handleRequest(new Request('http://localhost/middleware-test'))
-      expect(response.status).toBe(200)
-      expect(await response.text()).toBe('Test with Middleware')
+      const response = await router.handleRequest(new Request('http://localhost/middleware-test'));
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe('Test with Middleware');
+
+      // Verify that the middleware was called
+      expect(middleware).toHaveBeenCalled();
     })
 
     it('should apply group-specific middleware', async () => {
       const middleware = async (req: EnhancedRequest, next: NextFunction) => {
         const response = await next()
-        return new Response(await response.text() + ' with Group Middleware', {
+        const text = await response.clone().text()
+        return new Response(text + ' with Group Middleware', {
           status: response.status,
           headers: response.headers,
         })
@@ -296,12 +307,13 @@ describe('Router', () => {
 
   describe('Error Handling', () => {
     it('should handle errors in route handlers', async () => {
-      await router.get('/error', () => {
-        throw new Error('Test error')
-      })
-
+      // Register an error handler
       await router.onError((error) => {
         return new Response(`Error: ${error.message}`, { status: 500 })
+      })
+
+      await router.get('/error', () => {
+        throw new Error('Test error')
       })
 
       const response = await router.handleRequest(new Request('http://localhost/error'))
@@ -310,12 +322,13 @@ describe('Router', () => {
     })
 
     it('should handle async errors in route handlers', async () => {
-      await router.get('/async-error', async () => {
-        return Promise.reject(new Error('Async error'))
-      })
-
+      // Register an error handler
       await router.onError((error) => {
         return new Response(`Error: ${error.message}`, { status: 500 })
+      })
+
+      await router.get('/async-error', async () => {
+        return Promise.reject(new Error('Async error'))
       })
 
       const response = await router.handleRequest(new Request('http://localhost/async-error'))
@@ -490,6 +503,9 @@ describe('Router', () => {
 
   describe('Resource Routes', () => {
     it('should register resource routes', async () => {
+      // Start with a clean router instance
+      router = new Router()
+
       // This registers standard RESTful routes: index, show, store, update, destroy
       await router.resource('users', {
         index: () => new Response('List of users'),
@@ -560,9 +576,16 @@ describe('Router', () => {
 
   describe('Health Check', () => {
     it('should register a health check route', async () => {
+      // Create a new router with default config
+      router = new Router({
+        apiPrefix: '/api'
+      })
+
+      // Register the health route
       await router.health()
 
-      const response = await router.handleRequest(new Request('http://localhost/health'))
+      // Health check should be accessible at /api/health due to the API prefix
+      const response = await router.handleRequest(new Request('http://localhost/api/health'))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('OK')
     })

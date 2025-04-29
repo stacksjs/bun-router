@@ -566,6 +566,8 @@ export interface EnhancedRequest extends Request {
   requestId?: string
   jsonBody?: any // Use jsonBody instead of body to avoid conflict
   cookies: CookieMap
+  _cookiesToSet?: { name: string, value: string, options: any }[]
+  _cookiesToDelete?: { name: string, options: any }[]
 }
 
 export type RouteHandler = (req: EnhancedRequest) => Response | Promise<Response>
@@ -606,6 +608,7 @@ export interface Route {
   name?: string
   constraints?: Record<string, string>
   domain?: string
+  params?: Record<string, string>
 }
 
 /**
