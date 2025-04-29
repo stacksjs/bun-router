@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import EnvironmentSelector from './components/EnvironmentSelector.vue'
 
 const route = useRoute()
 const isSidebarOpen = ref(true)
@@ -87,6 +88,13 @@ const navItems = [
       class="main-content"
       :class="isSidebarOpen ? 'main-content-shifted' : ''"
     >
+      <!-- Header with environment selector -->
+      <div class="app-header bg-white border-b border-gray-200 px-6 py-2 sticky top-0 z-10">
+        <div class="flex justify-end">
+          <EnvironmentSelector />
+        </div>
+      </div>
+
       <div class="page-container">
         <router-view />
       </div>
@@ -246,6 +254,8 @@ const navItems = [
 .main-content {
   flex: 1;
   transition: margin-left 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content-shifted {
@@ -256,7 +266,14 @@ const navItems = [
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-  height: 100%;
+  width: 100%;
+  flex: 1;
+}
+
+.app-header {
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
 }
 
 /* Icon classes - fallback if UnoCSS icons don't load */

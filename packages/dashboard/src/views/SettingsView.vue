@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useEnvironmentStore } from '../store/environmentStore'
 
 // App settings
 const darkMode = ref(false)
@@ -31,6 +32,14 @@ const defaultExportFormat = ref('json')
 // API key for sharing/sync
 const apiKey = ref('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')
 const showApiKey = ref(false)
+
+// Environment management
+const environmentStore = useEnvironmentStore()
+const showNewEnvironmentForm = ref(false)
+const showNewVariableForm = ref(false)
+const editingEnvironmentId = ref<string | null>(null)
+const newEnvironment = ref({ name: '', description: '' })
+const newVariable = ref({ name: '', value: '', description: '' })
 
 function toggleApiKeyVisibility() {
   showApiKey.value = !showApiKey.value
@@ -69,6 +78,64 @@ function regenerateApiKey() {
   // In a real app, would call an API to regenerate the key
   apiKey.value = 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
 }
+
+// Environment management functions
+function toggleNewEnvironmentForm() {
+  showNewEnvironmentForm.value = !showNewEnvironmentForm.value
+  if (showNewEnvironmentForm.value) {
+    newEnvironment.value = { name: '', description: '' }
+  }
+}
+
+function toggleNewVariableForm(environmentId: string) {
+  editingEnvironmentId.value = environmentId
+  showNewVariableForm.value = !showNewVariableForm.value
+  if (showNewVariableForm.value) {
+    newVariable.value = { name: '', value: '', description: '' }
+  }
+}
+
+function createEnvironment() {
+  if (newEnvironment.value.name.trim()) {
+    environmentStore.createEnvironment(
+      newEnvironment.value.name.trim(),
+      newEnvironment.value.description.trim() || undefined
+    )
+    toggleNewEnvironmentForm()
+  }
+}
+
+function createVariable() {
+  if (editingEnvironmentId.value && newVariable.value.name.trim()) {
+    environmentStore.addVariable(
+      editingEnvironmentId.value,
+      {
+        name: newVariable.value.name.trim(),
+        value: newVariable.value.value,
+        description: newVariable.value.description.trim() || undefined
+      }
+    )
+    toggleNewVariableForm(editingEnvironmentId.value)
+  }
+}
+
+function deleteEnv(envId: string) {
+  if (confirm('Are you sure you want to delete this environment?')) {
+    environmentStore.deleteEnvironment(envId)
+  }
+}
+
+function deleteVar(envId: string, varId: string) {
+  environmentStore.deleteVariable(envId, varId)
+}
+
+function setActiveEnv(envId: string) {
+  environmentStore.setActiveEnvironment(envId)
+}
+
+onMounted(async () => {
+  await environmentStore.fetchEnvironments()
+})
 </script>
 
 <template>
@@ -77,6 +144,179 @@ function regenerateApiKey() {
       <h1 class="text-2xl font-bold">Settings</h1>
       <div id="save-message" class="text-green-600 opacity-0 transition-opacity duration-300">
         Settings saved successfully
+      </div>
+    </div>
+
+    <!-- Environment section -->
+    <div id="environments" class="mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Environment Variables</h2>
+        <button
+          @click="toggleNewEnvironmentForm"
+          class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+        >
+          {{ showNewEnvironmentForm ? 'Cancel' : 'New Environment' }}
+        </button>
+      </div>
+
+      <!-- New environment form -->
+      <div v-if="showNewEnvironmentForm" class="bg-white rounded-lg shadow p-4 mb-4">
+        <h3 class="text-md font-medium mb-3">Create New Environment</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              v-model="newEnvironment.name"
+              type="text"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="e.g. Development, Staging, Production"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+            <input
+              v-model="newEnvironment.description"
+              type="text"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="e.g. Local development environment"
+            />
+          </div>
+          <div class="flex justify-end">
+            <button
+              @click="createEnvironment"
+              class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              :disabled="!newEnvironment.name.trim()"
+            >
+              Create Environment
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environment list -->
+      <div v-if="environmentStore.environments.length === 0" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        No environments defined. Create one to get started.
+      </div>
+
+      <div v-else class="space-y-4">
+        <div v-for="env in environmentStore.environments" :key="env.id" class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+            <div class="flex items-center">
+              <span
+                v-if="env.isActive"
+                class="w-2 h-2 bg-green-500 rounded-full mr-2"
+                title="Active Environment"
+              ></span>
+              <div>
+                <h3 class="font-medium">{{ env.name }}</h3>
+                <p v-if="env.description" class="text-sm text-gray-500">{{ env.description }}</p>
+              </div>
+            </div>
+            <div class="flex space-x-2">
+              <button
+                v-if="!env.isActive"
+                @click="setActiveEnv(env.id)"
+                class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+                title="Set as active environment"
+              >
+                Activate
+              </button>
+              <button
+                @click="toggleNewVariableForm(env.id)"
+                class="px-2 py-1 text-xs bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
+              >
+                Add Variable
+              </button>
+              <button
+                @click="deleteEnv(env.id)"
+                class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- New variable form -->
+          <div v-if="showNewVariableForm && editingEnvironmentId === env.id" class="p-4 bg-indigo-50 border-b">
+            <h4 class="text-sm font-medium mb-2">Add New Variable</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  v-model="newVariable.name"
+                  type="text"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="e.g. API_URL"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Value</label>
+                <input
+                  v-model="newVariable.value"
+                  type="text"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="e.g. https://api.example.com"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Description (optional)</label>
+                <input
+                  v-model="newVariable.description"
+                  type="text"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="e.g. API endpoint URL"
+                />
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button
+                @click="toggleNewVariableForm(env.id)"
+                class="px-2 py-1 text-xs mr-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                @click="createVariable"
+                class="px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                :disabled="!newVariable.name.trim()"
+              >
+                Add Variable
+              </button>
+            </div>
+          </div>
+
+          <!-- Variables table -->
+          <div class="p-4">
+            <div v-if="env.variables.length === 0" class="text-center text-sm text-gray-500 py-4">
+              No variables defined for this environment.
+            </div>
+            <table v-else class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th scope="col" class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="variable in env.variables" :key="variable.id">
+                  <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{ variable.name }}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600 font-mono">{{ variable.value }}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{{ variable.description || '-' }}</td>
+                  <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      @click="deleteVar(env.id, variable.id)"
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
