@@ -1,6 +1,9 @@
 import type { ActionHandler, ActionHandlerClass, RouteHandler } from './types'
 import { join } from 'node:path'
 
+// Re-export query preservation utilities
+export * from './utils/query-preservation'
+
 /**
  * Normalizes a path by ensuring it starts with a forward slash and has no trailing slash
  * @param path The path to normalize

@@ -1,7 +1,7 @@
 import type { ActionHandler, EnhancedRequest, RouterConfig } from '../types'
 import type { Router } from './router'
 import { join } from 'node:path'
-import { processHtmlTemplate, resolveViewPath } from '../utils'
+import { processHtmlTemplate, resolveViewPath, injectQueryPreservationScript } from '../utils'
 
 /**
  * View rendering extension for Router class
@@ -195,9 +195,15 @@ export function registerViewRendering(RouterClass: typeof Router): void {
 
         // Create the route handler
         const handler: ActionHandler = async (_req: EnhancedRequest) => {
-          const renderedView = await this.renderView(view, data, {
+          let renderedView = await this.renderView(view, data, {
             layout: options.layout,
           })
+
+          // Inject query preservation script if configured
+          const queryPreservationConfig = this.config?.queryPreservation
+          if (queryPreservationConfig?.enabled !== false && queryPreservationConfig?.preserve?.length) {
+            renderedView = injectQueryPreservationScript(renderedView, queryPreservationConfig)
+          }
 
           const headers = new Headers()
           headers.set('Content-Type', 'text/html; charset=utf-8')

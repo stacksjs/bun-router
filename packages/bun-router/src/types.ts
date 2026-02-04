@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import type { Router } from './router/router'
+import type { QueryPreservationConfig } from './utils/query-preservation'
 import type {
   AuthContext,
   AuthenticatedUser,
@@ -43,6 +44,9 @@ import type {
   ValidationSchema,
   WebSocketData,
 } from './types/core'
+
+// Re-export query preservation types
+export type { QueryPreservationConfig } from './utils/query-preservation'
 
 // Re-export core types
 export type {
@@ -732,6 +736,17 @@ export interface RouterConfig {
   views?: ViewEngineConfig
   docs?: DocsConfig
   server?: ServerConfig
+  /**
+   * Query parameter preservation configuration
+   * Automatically preserves specified query parameters across navigation
+   * @example
+   * queryPreservation: {
+   *   preserve: ['siteId', 'theme', 'locale'],
+   *   exclude: ['_t', 'utm_source'],
+   *   routes: ['/dashboard/*', '/admin/*']
+   * }
+   */
+  queryPreservation?: QueryPreservationConfig
 }
 
 export type RouterOptions = Partial<RouterConfig>

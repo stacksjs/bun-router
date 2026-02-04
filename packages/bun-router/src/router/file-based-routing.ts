@@ -1,7 +1,8 @@
-import type { ActionHandler, EnhancedRequest } from '../types'
+import type { ActionHandler, EnhancedRequest, QueryPreservationConfig } from '../types'
 import type { Router } from './router'
 import { join, relative, resolve, basename, dirname } from 'node:path'
 import { readdirSync, statSync, existsSync } from 'node:fs'
+import { injectQueryPreservationScript } from '../utils/query-preservation'
 
 /**
  * File-based routing configuration
@@ -341,6 +342,7 @@ function createViewHandler(
   filePath: string,
   viewsDir: string,
   _config: FileBasedRoutingConfig,
+  queryPreservationConfig?: QueryPreservationConfig,
 ): ActionHandler {
   return async (req: EnhancedRequest): Promise<Response> => {
     const url = new URL(req.url)
@@ -355,11 +357,22 @@ function createViewHandler(
       headers: Object.fromEntries(req.headers.entries()),
     }
 
+    /**
+     * Apply query preservation script to HTML if configured
+     */
+    function applyQueryPreservation(html: string): string {
+      if (queryPreservationConfig?.enabled !== false && queryPreservationConfig?.preserve?.length) {
+        return injectQueryPreservationScript(html, queryPreservationConfig)
+      }
+      return html
+    }
+
     try {
       // 1. Check for pre-built HTML (production optimization)
       const prebuiltPath = findPrebuiltView(filePath, viewsDir)
       if (prebuiltPath) {
-        const html = await Bun.file(prebuiltPath).text()
+        let html = await Bun.file(prebuiltPath).text()
+        html = applyQueryPreservation(html)
         return new Response(html, {
           status: 200,
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -368,7 +381,8 @@ function createViewHandler(
 
       // 2. Render STX file
       if (filePath.endsWith('.stx')) {
-        const html = await renderStxFile(filePath, viewsDir, data)
+        let html = await renderStxFile(filePath, viewsDir, data)
+        html = applyQueryPreservation(html)
         return new Response(html, {
           status: 200,
           headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -376,7 +390,8 @@ function createViewHandler(
       }
 
       // 3. Serve raw HTML
-      const content = await Bun.file(filePath).text()
+      let content = await Bun.file(filePath).text()
+      content = applyQueryPreservation(content)
       return new Response(content, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -469,7 +484,7 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
 
         // Register each discovered route
         for (const route of routes) {
-          const handler = createViewHandler(route.filePath, viewsDir, config)
+          const handler = createViewHandler(route.filePath, viewsDir, config, this.config.queryPreservation)
 
           // Only register if no explicit route exists for this path
           const existingRoute = this.routes.find(
