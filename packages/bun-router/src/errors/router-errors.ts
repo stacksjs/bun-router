@@ -175,20 +175,20 @@ export class CircularDependencyException extends RouterException {
     return `How to fix:
 
 1. Break the cycle by introducing an interface:
-   • Create an interface for one of the dependencies
-   • Use lazy injection: container.bind('${chain[0]}').lazy()
+  • Create an interface for one of the dependencies
+  • Use lazy injection: container.bind('${chain[0]}').lazy()
 
 2. Restructure your dependencies:
-   • Extract shared logic into a separate service
-   • Use events/callbacks instead of direct dependencies
+  • Extract shared logic into a separate service
+  • Use events/callbacks instead of direct dependencies
 
 3. Use setter injection instead of constructor injection:
-   • Remove the dependency from the constructor
-   • Set it after instantiation using a setter method
+  • Remove the dependency from the constructor
+  • Set it after instantiation using a setter method
 
 4. Check if the dependency is actually needed:
-   • Sometimes circular dependencies indicate a design issue
-   • Consider if the classes have too many responsibilities
+  • Sometimes circular dependencies indicate a design issue
+  • Consider if the classes have too many responsibilities
 
 Dependency chain involved:
 ${chain.map((dep, i) => `  ${i + 1}. ${dep}`).join('\n')}`
