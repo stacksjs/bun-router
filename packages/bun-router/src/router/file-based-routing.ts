@@ -50,7 +50,7 @@ interface DiscoveredRoute {
 /**
  * Default directories to scan for views (in order of priority)
  */
-const DEFAULT_VIEW_DIRECTORIES = [
+const DEFAULT_VIEW_DIRECTORIES: string[] = [
   'src/views',
   'views',
   'resources/views',
@@ -60,7 +60,7 @@ const DEFAULT_VIEW_DIRECTORIES = [
 /**
  * Default exclusion patterns for non-routable files/directories
  */
-const DEFAULT_EXCLUDES = [
+const DEFAULT_EXCLUDES: string[] = [
   '_',           // Underscore-prefixed files are private
   'components',  // Component partials
   'layouts',     // Layout templates
@@ -72,7 +72,7 @@ const DEFAULT_EXCLUDES = [
 /**
  * Default routable file extensions
  */
-const DEFAULT_EXTENSIONS = ['.stx', '.html']
+const DEFAULT_EXTENSIONS: string[] = ['.stx', '.html']
 
 /**
  * Auto-detect the views directory from common conventions
