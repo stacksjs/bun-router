@@ -382,7 +382,7 @@ export class StreamingCache {
       const writer = stream.writable.getWriter()
       const reader = stream.readable.getReader()
 
-      writer.write(data)
+      writer.write(data as Uint8Array<ArrayBuffer>)
       writer.close()
 
       const chunks: Uint8Array[] = []
@@ -427,7 +427,7 @@ export class StreamingCache {
       const writer = stream.writable.getWriter()
       const reader = stream.readable.getReader()
 
-      writer.write(data)
+      writer.write(data as Uint8Array<ArrayBuffer>)
       writer.close()
 
       const chunks: Uint8Array[] = []
@@ -468,7 +468,7 @@ export class StreamingCache {
       }
 
       // Fallback to Web Crypto API
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data as Uint8Array<ArrayBuffer>)
       const hashArray = new Uint8Array(hashBuffer)
       const hashHex = Array.from(hashArray)
         .map(b => b.toString(16).padStart(2, '0'))
