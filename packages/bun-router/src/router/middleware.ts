@@ -119,6 +119,16 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      */
     middleware: {
       value(...middleware: (string | MiddlewareHandler)[]): Router {
+        // Validate string middleware names against the named middleware registry
+        for (const mw of middleware) {
+          if (typeof mw === 'string') {
+            const [name] = mw.split(':')
+            if (!this.namedMiddleware.has(name)) {
+              throw new Error(`Unknown middleware: ${name}`)
+            }
+          }
+        }
+
         if (this.currentGroup) {
           if (!this.currentGroup.middleware) {
             this.currentGroup.middleware = []
