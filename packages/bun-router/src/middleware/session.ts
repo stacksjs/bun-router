@@ -1,37 +1,69 @@
 import type { EnhancedRequest, NextFunction } from '../types'
+import type { SessionStore, SessionData } from '../types/core'
 import { config } from '../config'
+import { MemorySessionStore } from '../session/memory-store'
+import { SessionManager, generateSessionId } from '../session/index'
 
+/**
+ * Session middleware with pluggable store support.
+ *
+ * By default uses an in-memory store. Configure with a different store
+ * for persistent sessions (file, redis, database).
+ *
+ * @example
+ * // Use default memory store
+ * const session = new Session()
+ *
+ * // Use a custom store
+ * import { RedisSessionStore } from 'bun-router/session'
+ * const session = new Session({ store: new RedisSessionStore(redisClient) })
+ */
 export default class Session {
-  // Simple in-memory session store
-  private static sessions: Map<string, any> = new Map()
+  private store: SessionStore<SessionData>
+
+  constructor(options?: { store?: SessionStore<SessionData> }) {
+    this.store = options?.store || new MemorySessionStore()
+  }
 
   async handle(req: EnhancedRequest, next: NextFunction): Promise<Response> {
     const sessionConfig = config.server?.security?.auth?.session
 
-    // Initialize an empty session object
-    req.session = {}
+    const cookieName = sessionConfig?.name || 'session'
 
-    // Get session ID from cookie if it exists
-    const sessionId = req.cookies?.get(sessionConfig?.name || 'session') || this.generateSessionId()
+    // Get session ID from cookie or generate a new one
+    let sessionId = req.cookies?.get(cookieName) || ''
+    let isNewSession = false
 
-    // If there's a session ID, retrieve the session data
-    if (sessionId && Session.sessions.has(sessionId)) {
-      req.session = Session.sessions.get(sessionId)
+    if (!sessionId) {
+      sessionId = generateSessionId()
+      isNewSession = true
     }
 
-    // Continue to next middleware
+    // Load session data from store
+    let sessionData = isNewSession ? null : await this.store.get(sessionId)
+
+    if (!sessionData) {
+      sessionData = { id: sessionId }
+      isNewSession = true
+    }
+
+    // Create session manager and attach to request
+    const manager = new SessionManager(sessionId, sessionData, this.store)
+    req.session = manager as any
+
+    // Continue to next middleware/handler
     const response = await next()
 
-    // Store session data
-    Session.sessions.set(sessionId, req.session)
+    // Save session after the response
+    await manager.save()
 
-    // Set session cookie
+    // Set session cookie on the response
     const cookieOptions: any = {
       maxAge: sessionConfig?.cookie?.maxAge || 86400000,
       path: sessionConfig?.cookie?.path || '/',
     }
 
-    if (sessionConfig?.cookie?.httpOnly) {
+    if (sessionConfig?.cookie?.httpOnly !== false) {
       cookieOptions.httpOnly = true
     }
 
@@ -47,29 +79,13 @@ export default class Session {
     if (!req._cookiesToSet) {
       req._cookiesToSet = []
     }
+
     req._cookiesToSet.push({
-      name: sessionConfig?.name || 'session',
-      value: sessionId,
+      name: cookieName,
+      value: manager.id,
       options: cookieOptions,
     })
 
     return response || new Response('Not Found', { status: 404 })
-  }
-
-  private parseCookies(req: Request): Record<string, string> {
-    const cookieHeader = req.headers.get('cookie')
-    if (!cookieHeader)
-      return {}
-
-    return cookieHeader.split(';').reduce((cookies, cookie) => {
-      const [name, value] = cookie.trim().split('=')
-      cookies[name] = value
-      return cookies
-    }, {} as Record<string, string>)
-  }
-
-  private generateSessionId(): string {
-    return Array.from({ length: 32 }, () =>
-      Math.floor(Math.random() * 16).toString(16)).join('')
   }
 }
