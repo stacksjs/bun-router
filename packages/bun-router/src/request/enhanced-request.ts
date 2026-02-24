@@ -27,7 +27,7 @@ export type ValidationRules = Record<string, string | ValidationRule[]>
 export interface ValidationRule {
   name: string
   validate: (value: unknown, parameters: string[], field: string, data: Record<string, unknown>) => Promise<boolean> | boolean
-  message: string | ((field: string, parameters: string[]) => string)
+  message: string | ((_field: string, _parameters: string[]) => string)
 }
 
 /**
@@ -250,6 +250,7 @@ export function createSafeData<T extends Record<string, unknown>>(data: T): Safe
       return result as Omit<T, K>
     },
 
+    // eslint-disable-next-line pickier/no-unused-vars
     merge: <U extends Record<string, unknown>>(mergeData: U): T & U => {
       return { ...data, ...mergeData }
     },

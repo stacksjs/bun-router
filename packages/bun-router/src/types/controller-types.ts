@@ -39,7 +39,7 @@ export interface MethodDecoratorMetadata extends ControllerMethodMetadata {
 
 // Extract controller method names
 export type ControllerMethodNames<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never
+  [K in keyof T]: T[K] extends (..._args: any[]) => any ? K : never
 }[keyof T]
 
 // Extract controller methods
@@ -157,7 +157,7 @@ export type ValidateControllerParams<T extends any[]> = {
 
 // Controller dependency injection
 export interface ControllerDependency<T = any> {
-  token: string | symbol | ((...args: any[]) => any)
+  token: string | symbol | ((..._args: any[]) => any)
   value?: T
   factory?: () => T
   singleton?: boolean
@@ -165,18 +165,18 @@ export interface ControllerDependency<T = any> {
 
 export interface DependencyContainer {
   register: <T>(dependency: ControllerDependency<T>) => void
-  resolve: <T>(token: string | symbol | ((...args: any[]) => any)) => T
-  has: (token: string | symbol | ((...args: any[]) => any)) => boolean
+  resolve: <T>(token: string | symbol | ((..._args: any[]) => any)) => T
+  has: (token: string | symbol | ((..._args: any[]) => any)) => boolean
 }
 
 // Injectable decorator
 export interface InjectableDecorator {
-  <T extends new (...args: any[]) => any>(constructor: T): T
+  <T extends new (..._args: any[]) => any>(constructor: T): T
 }
 
 // Inject decorator
 export interface InjectDecorator<T = any> {
-  (token: string | symbol | ((...args: any[]) => any)): ParameterDecorator<T>
+  (token: string | symbol | ((..._args: any[]) => any)): ParameterDecorator<T>
 }
 
 // Controller factory
@@ -207,7 +207,7 @@ export interface ControllerRegistry {
 
 // Controller method validation at compile time
 export type ValidateController<T extends BaseController> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any
+  [K in keyof T]: T[K] extends (..._args: any[]) => any
     ? ValidateControllerMethod<T[K]> extends string
       ? ValidateControllerMethod<T[K]>
       : T[K]
@@ -226,19 +226,20 @@ export type BindControllerMethod<
   TController extends BaseController,
   TMethod extends keyof TController,
 > = TController[TMethod] extends RouteHandler<infer TPath, infer TQuery, infer TBody, infer TContext>
-  ? (this: TController, request: TypedRequest<TPath, TQuery, TBody, TContext>) => Promise<Response> | Response
+  // eslint-disable-next-line pickier/no-unused-vars
+  ? (this: TController, _request: TypedRequest<TPath, TQuery, TBody, TContext>) => Promise<Response> | Response
   : never
 
 // Controller instance type
 export type ControllerInstance<T extends BaseController> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any
+  [K in keyof T]: T[K] extends (..._args: any[]) => any
     ? BindControllerMethod<T, K>
     : T[K]
 }
 
 // Controller method metadata extraction
 export type ExtractMethodMetadata<T extends BaseController> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any
+  [K in keyof T]: T[K] extends (..._args: any[]) => any
     ? InferControllerMethodType<T[K]> extends never
       ? never
       : {
@@ -349,8 +350,8 @@ export interface ControllerTestUtils<T extends BaseController> {
   mockMethod: <K extends keyof T>(method: K, implementation: T[K]) => void
   callMethod: <K extends keyof T>(
     method: K,
-    ...args: T[K] extends (...args: infer TArgs) => any ? TArgs : never
-  ) => T[K] extends (...args: any[]) => infer TReturn ? TReturn : never
+    ..._args: T[K] extends (..._a: infer TArgs) => any ? TArgs : never
+  ) => T[K] extends (..._a: any[]) => infer TReturn ? TReturn : never
   getRoutes: () => ControllerRoute[]
   validateRoutes: () => ControllerValidationError<T>[]
 }

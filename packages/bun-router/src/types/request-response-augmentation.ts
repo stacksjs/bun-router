@@ -93,7 +93,7 @@ export type EnhancedRequest<
     : never
 
   hasPermission?: TAugmentations extends { authz: any }
-    ? (permission: string) => boolean
+    ? (_permission: string) => boolean
     : never
 
   validatedParams?: TAugmentations extends { validation: any }

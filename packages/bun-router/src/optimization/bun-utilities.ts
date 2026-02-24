@@ -346,6 +346,7 @@ export class BunOptimizer {
         const duration = performance.now() - start
 
         if (duration > 10) { // Log slow calls
+          // eslint-disable-next-line pickier/no-unused-vars
           console.warn(`Slow function call: ${fn.name || 'anonymous'} took ${duration.toFixed(2)}ms`)
         }
 

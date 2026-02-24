@@ -93,7 +93,7 @@ export class DevelopmentTools {
     method: string,
     pattern: string,
     handler: (...args: any[]) => any,
-    middleware: ((...args: any[]) => any)[] = [],
+    middleware: ((..._args: any[]) => any)[] = [],
     options: any = {},
   ): string {
     // Register with debugger

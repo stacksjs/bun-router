@@ -106,7 +106,7 @@ export type RouteHandler<
   TQuery extends Record<string, any> = Record<string, never>,
   TBody = unknown,
   TContext = Record<string, never>,
-> = (request: TypedRequest<TPath, TQuery, TBody, TContext>) => Promise<Response> | Response
+> = (_request: TypedRequest<TPath, TQuery, TBody, TContext>) => Promise<Response> | Response
 
 // Typed request interface
 export interface TypedRequest<

@@ -176,7 +176,7 @@ export const mockMiddleware = {
    * Create a rate limiting middleware mock
    */
   rateLimit: (shouldLimit: boolean = false): MiddlewareHandler =>
-    mock(async (req, next) => {
+    mock(async (_req, next) => {
       if (shouldLimit) {
         return new Response('Too Many Requests', { status: 429 })
       }
@@ -187,7 +187,7 @@ export const mockMiddleware = {
    * Create a CORS middleware mock
    */
   cors: (origin: string = '*'): MiddlewareHandler =>
-    mock(async (req, next) => {
+    mock(async (_req, next) => {
       const response = await next()
       if (response) {
         response.headers.set('Access-Control-Allow-Origin', origin)
@@ -274,7 +274,7 @@ export function createMiddlewareSpy(): {
   middleware: MiddlewareHandler
   spy: ReturnType<typeof mock>
 } {
-  const spy = mock(async (req: EnhancedRequest, next: NextFunction) => {
+  const spy = mock(async (_req: EnhancedRequest, next: NextFunction) => {
     return await next()
   })
 
@@ -287,6 +287,7 @@ export function createMiddlewareSpy(): {
 /**
  * Test middleware performance
  */
+// eslint-disable-next-line pickier/no-unused-vars
 export async function benchmarkMiddleware(
   middleware: MiddlewareHandler,
   iterations: number = 1000,

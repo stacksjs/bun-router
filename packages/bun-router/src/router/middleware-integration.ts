@@ -2,7 +2,7 @@ import type { EnhancedRequest, MiddlewareHandler, Route } from '../types'
 import type { Router } from './router'
 
 // Type placeholders for middleware pipeline
-export type SkipConditionFn = (req: EnhancedRequest) => boolean
+export type SkipConditionFn = (_req: EnhancedRequest) => boolean
 export type SkipConditionsList = SkipConditionFn[]
 
 /**

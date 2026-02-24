@@ -86,7 +86,7 @@ declare module './router' {
     // Laravel-style model binding methods
     model: <T>(
       key: string,
-      modelClass: string | ((value: string) => Promise<T | null>),
+      modelClass: string | ((_value: string) => Promise<T | null>),
       callback?: (model: T | null) => Response | null
     ) => Router
 
@@ -137,7 +137,7 @@ declare module './router' {
     view: (path: string, view: string, data?: Record<string, any>, options?: { layout?: string, status?: number, headers?: Record<string, string> }) => Promise<Router>
 
     // Route constraint methods
-    where: ((param: string, pattern: string | RegExp) => Router) & ((constraints: Record<string, string | RegExp>) => Router)
+    where: ((_param: string, _pattern: string | RegExp) => Router) & ((constraints: Record<string, string | RegExp>) => Router)
     whereNumber: (param: string) => Router
     whereAlpha: (param: string) => Router
     whereAlphaNumeric: (param: string) => Router

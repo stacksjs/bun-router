@@ -420,7 +420,7 @@ export const ObservabilityIntegration = {
     router.use(middleware)
 
     // Add observability endpoints
-    Object.entries(handlers).forEach(([path, handler]: [string, (req: EnhancedRequest) => Promise<Response>]) => {
+    Object.entries(handlers).forEach(([path, handler]: [string, (_req: EnhancedRequest) => Promise<Response>]) => {
       router.get(path, handler)
     })
 

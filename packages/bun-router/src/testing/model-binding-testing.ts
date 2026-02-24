@@ -331,10 +331,10 @@ export const modelMocks = {
 }
 
 /** Model constraint function type */
-export type ModelConstraintFn = (model: any, request: EnhancedRequest) => Promise<boolean>
+export type ModelConstraintFn = (_model: any, _request: EnhancedRequest) => Promise<boolean>
 
 /** Simple model constraint function type (no request) */
-export type SimpleModelConstraintFn = (model: any) => Promise<boolean>
+export type SimpleModelConstraintFn = (_model: any) => Promise<boolean>
 
 /**
  * Model binding constraint helpers
@@ -492,7 +492,7 @@ export class ModelResolverTester {
 }
 
 /** Route handler function type */
-export type RouteHandlerFn = (request: EnhancedRequest) => Promise<Response>
+export type RouteHandlerFn = (_request: EnhancedRequest) => Promise<Response>
 
 /** Binding middleware function type */
 export type BindingMiddlewareFn = (request: EnhancedRequest, next: () => Promise<Response>) => Promise<Response>
@@ -593,7 +593,7 @@ export function createModelResolverTester(): ModelResolverTester {
 }
 
 /** User scope constraint function */
-export type UserScopeConstraint = (model: any, user: any) => Promise<boolean>
+export type UserScopeConstraint = (_model: any, _user: any) => Promise<boolean>
 
 /** Default user scope constraint */
 const defaultUserScopeConstraint: UserScopeConstraint = async (m, u) => m.userId === u.id

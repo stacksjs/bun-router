@@ -190,8 +190,8 @@ export class RouteDebugger {
   recordFinalMatch(
     requestId: string,
     pattern: string,
-    handler: (...args: any[]) => any,
-    middleware: ((...args: any[]) => any)[],
+    handler: (..._args: any[]) => any,
+    middleware: ((..._args: any[]) => any)[],
     params: Record<string, string>,
   ): void {
     if (!this.config.enabled || !requestId)

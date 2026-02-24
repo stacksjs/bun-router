@@ -432,7 +432,7 @@ export const ModelUtils = {
   ownershipValidator<T extends { userId?: string | number }>(
     userIdField: string = 'userId',
   ): ModelValidatorFn<T> {
-    return async (model, params, req) => {
+    return async (model, _params, req) => {
       const userId = req?.user?.id
       if (!userId) {
         return {

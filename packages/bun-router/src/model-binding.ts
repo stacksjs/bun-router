@@ -181,7 +181,7 @@ export class ModelNotFoundError extends Error {
  * Model binding registry for explicit bindings (Laravel Route::model and Route::bind)
  */
 export class ModelBindingRegistry {
-  private bindings = new Map<string, BunQueryBuilderModel | ((value: string) => Promise<Model | null>)>()
+  private bindings = new Map<string, BunQueryBuilderModel | ((_value: string) => Promise<Model | null>)>()
 
   /**
    * Register explicit model binding (Laravel Route::model style)
@@ -200,7 +200,7 @@ export class ModelBindingRegistry {
   /**
    * Get binding for parameter
    */
-  getBinding(parameter: string): BunQueryBuilderModel | ((value: string) => Promise<Model | null>) | undefined {
+  getBinding(parameter: string): BunQueryBuilderModel | ((_value: string) => Promise<Model | null>) | undefined {
     return this.bindings.get(parameter)
   }
 
@@ -258,7 +258,7 @@ export interface RouteBindingOptions {
  * Resolve model from route parameter using bun-query-builder
  */
 export async function resolveModel<T extends Model>(
-  paramName: string,
+  _paramName: string,
   value: string | number,
   modelWrapper: BunQueryBuilderModel<T>,
   customKey?: string,

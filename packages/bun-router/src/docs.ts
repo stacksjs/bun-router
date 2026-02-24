@@ -333,7 +333,7 @@ export async function generateApiDocs(options: DocsOptions = {}): Promise<void> 
             path: route.path,
             method: route.method,
             middleware: Array.isArray(route.middleware)
-              ? route.middleware.map((m: string | ((request: Request) => Promise<Request | Response>)) =>
+              ? route.middleware.map((m: string | ((_request: Request) => Promise<Request | Response>)) =>
                   typeof m === 'string' ? m : 'function',
                 )
               : undefined,
@@ -365,7 +365,7 @@ export async function generateApiDocs(options: DocsOptions = {}): Promise<void> 
             path: route.path,
             method: route.method,
             middleware: Array.isArray(route.middleware)
-              ? route.middleware.map((m: string | ((request: Request) => Promise<Request | Response>)) =>
+              ? route.middleware.map((m: string | ((_request: Request) => Promise<Request | Response>)) =>
                   typeof m === 'string' ? m : 'function',
                 )
               : undefined,

@@ -227,7 +227,7 @@ export function fileUpload(config: FileUploadConfig = {}): FileUpload {
 }
 
 // Specialized factory functions
-export function singleFileUpload(fieldName: string, config: FileUploadConfig = {}): FileUpload {
+export function singleFileUpload(_fieldName: string, config: FileUploadConfig = {}): FileUpload {
   return new FileUpload({ ...config, maxFiles: 1 })
 }
 

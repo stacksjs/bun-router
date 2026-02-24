@@ -35,7 +35,7 @@ export interface ContextualBindingBuilder<T> {
   when: (condition: BindingCondition) => ContextualBindingBuilder<T>
   whenEnvironment: (...environments: string[]) => ContextualBindingBuilder<T>
   whenTag: (tag: string) => ContextualBindingBuilder<T>
-  whenParent: (parentToken: string | symbol | ((...args: any[]) => any)) => ContextualBindingBuilder<T>
+  whenParent: (parentToken: string | symbol | ((..._args: any[]) => any)) => ContextualBindingBuilder<T>
   whenRequest: (predicate: (context: ResolutionContext) => boolean) => ContextualBindingBuilder<T>
   withPriority: (priority: number) => ContextualBindingBuilder<T>
   withFallback: (fallback: Binding<T>) => ContextualBindingBuilder<T>
@@ -193,7 +193,7 @@ export class DefaultContextualBindingBuilder<T> implements ContextualBindingBuil
   /**
    * Add parent condition
    */
-  whenParent(parentToken: string | symbol | ((...args: any[]) => any)): ContextualBindingBuilder<T> {
+  whenParent(parentToken: string | symbol | ((..._args: any[]) => any)): ContextualBindingBuilder<T> {
     const condition: BindingCondition = {
       type: 'parent',
       predicate: context => context.parent?.token === parentToken,

@@ -162,7 +162,7 @@ export class RouteTrie {
       }
       else if (part.includes('{')) {
         // Mixed static/dynamic segment like "user-{id}"
-        const regex = part.replace(/\{([^}:]+)(?::([^}]+))?\}/g, (match, name, pattern) => {
+        const regex = part.replace(/\{([^}:]+)(?::([^}]+))?\}/g, (_match, _name, pattern) => {
           return pattern ? `(${pattern})` : '([^/]+)'
         })
 

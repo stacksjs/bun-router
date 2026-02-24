@@ -128,7 +128,7 @@ export class FluentRouteBuilder {
 /**
  * Middleware condition function type
  */
-export type MiddlewareCondition = (request: EnhancedRequest) => boolean | Promise<boolean>
+export type MiddlewareCondition = (_request: EnhancedRequest) => boolean | Promise<boolean>
 
 /**
  * Conditional middleware wrapper

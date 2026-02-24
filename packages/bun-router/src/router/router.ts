@@ -47,7 +47,7 @@ export type {
 }
 
 // Middleware condition type
-export type MiddlewareCondition = (req: EnhancedRequest) => boolean
+export type MiddlewareCondition = (_req: EnhancedRequest) => boolean
 
 /**
  * Unified Router class with advanced middleware patterns
@@ -63,7 +63,7 @@ export class Router {
   domains: Record<string, Route[]> = {}
   serverInstance: Server<WebSocketData> | null = null
   wsConfig: WebSocketConfig | null = null
-  errorHandler: ((error: Error) => Response | Promise<Response>) | null = null
+  errorHandler: ((_error: Error) => Response | Promise<Response>) | null = null
   templateCache: Map<string, string> = new Map<string, string>()
   routeCache: Map<string, { route: Route, params: Record<string, string> }> = new Map()
   staticRoutes: Map<string, Map<string, Route>> = new Map()

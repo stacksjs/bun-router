@@ -9,7 +9,7 @@ export class WebSocketTester {
   private messages: WSTestMessage[] = []
   private isConnected: boolean = false
   private readyState: number = 0 // CONNECTING
-  private eventHandlers: Map<string, ((...args: any[]) => any)[]> = new Map()
+  private eventHandlers: Map<string, ((..._args: any[]) => any)[]> = new Map()
 
   constructor() {
     this.setupEventHandlers()

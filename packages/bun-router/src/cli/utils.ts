@@ -55,7 +55,7 @@ export async function loadRouter(): Promise<any> {
  * Setup a debounced file watcher
  */
 export function setupDebouncedWatcher(
-  callback: () => Promise<void>,
+  _callback: () => Promise<void>,
   _debounceTime = 500,
 ): { timeoutId: NodeJS.Timeout | null } {
   const state = { timeoutId: null as NodeJS.Timeout | null }

@@ -11,8 +11,8 @@ import { CircularDependencyException } from '../errors/router-errors'
 declare global {
   // eslint-disable-next-line ts/no-namespace
   namespace Reflect {
-    function getMetadata(metadataKey: any, target: any, propertyKey?: string | symbol): any
-    function defineMetadata(metadataKey: any, metadataValue: any, target: any, propertyKey?: string | symbol): void
+    function getMetadata(_metadataKey: any, _target: any, _propertyKey?: string | symbol): any
+    function defineMetadata(_metadataKey: any, _metadataValue: any, _target: any, _propertyKey?: string | symbol): void
   }
 }
 
@@ -27,10 +27,10 @@ export interface BindingMetadata {
   scope: BindingScope
   tags?: string[]
   when?: (context: ResolutionContext) => boolean
-  factory?: (...args: any[]) => any
+  factory?: (..._args: any[]) => any
   dependencies?: Token[]
   lazy?: boolean
-  decorators?: ((...args: any[]) => any)[]
+  decorators?: ((..._args: any[]) => any)[]
 }
 
 export interface Binding<T = any> {
@@ -88,7 +88,7 @@ export class Container {
   private bindings = new Map<Token, Binding>()
   private instances = new Map<Token, any>()
   private scopedInstances = new Map<string, Map<Token, any>>()
-  private interceptors = new Map<Token, ((...args: any[]) => any)[]>()
+  private interceptors = new Map<Token, ((..._args: any[]) => any)[]>()
   private parent?: Container
   private children = new Set<Container>()
   private options: Required<ContainerOptions>
@@ -212,7 +212,7 @@ export class Container {
     if (!this.interceptors.has(key)) {
       this.interceptors.set(key, [])
     }
-    this.interceptors.get(key)!.push(interceptor as (service: any) => any)
+    this.interceptors.get(key)!.push(interceptor as (_service: any) => any)
   }
 
   /**
@@ -286,7 +286,7 @@ export class Container {
    * Add interceptor
    */
   intercept<T>(
-    token: string | symbol | ((...args: any[]) => any),
+    token: string | symbol | ((..._args: any[]) => any),
     interceptor: (instance: T, context: ResolutionContext) => T,
   ): this {
     if (!this.interceptors.has(token)) {
@@ -348,7 +348,7 @@ export class Container {
 
       // Auto-registration attempt
       if (this.options.autoRegister && typeof token === 'function') {
-        return this.autoRegisterAndResolve<T>(token as new (...args: any[]) => T, context)
+        return this.autoRegisterAndResolve<T>(token as new (..._args: any[]) => T, context)
       }
 
       // Strict mode check
@@ -358,7 +358,7 @@ export class Container {
 
       // Try to create instance directly
       if (typeof token === 'function') {
-        return this.createInstanceFromConstructor<T>(token as new (...args: any[]) => T, context)
+        return this.createInstanceFromConstructor<T>(token as new (..._args: any[]) => T, context)
       }
 
       throw new Error(`Cannot resolve: ${this.tokenToString(token)}`)
@@ -557,8 +557,8 @@ export class Container {
   /**
    * Apply decorators to instance
    */
-  private applyDecorators(instance: any, constructor: ((...args: any[]) => any) | (new (...args: any[]) => any)): void {
-    const decorators = Reflect.getMetadata?.('decorators', constructor) as ((...args: any[]) => any)[]
+  private applyDecorators(instance: any, constructor: ((..._args: any[]) => any) | (new (..._args: any[]) => any)): void {
+    const decorators = Reflect.getMetadata?.('decorators', constructor) as ((..._args: any[]) => any)[]
     if (decorators) {
       for (const decorator of decorators) {
         decorator(instance)

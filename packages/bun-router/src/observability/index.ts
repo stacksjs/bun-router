@@ -122,6 +122,7 @@ export async function setupObservabilityFromEnv(): Promise<ObservabilityManager>
 /**
  * Create a complete observability middleware stack
  */
+// eslint-disable-next-line pickier/no-unused-vars
 export async function createObservabilityStack(config?: ObservabilityConfig): Promise<{
   middleware: (req: EnhancedRequest, next: () => Promise<Response>) => Promise<Response>
   endpoints: Record<string, (req: EnhancedRequest) => Promise<Response>>

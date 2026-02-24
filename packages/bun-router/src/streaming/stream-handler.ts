@@ -293,6 +293,7 @@ export class StreamHandler {
    */
   private static objectToCsvRow(obj: Record<string, any>, headers?: string[]): string {
     const keys = headers || Object.keys(obj)
+    // eslint-disable-next-line pickier/no-unused-vars
     return keys.map((key) => {
       const value = obj[key]
       const stringValue = value === null || value === undefined ? '' : String(value)

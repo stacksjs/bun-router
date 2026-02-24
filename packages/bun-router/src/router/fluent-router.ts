@@ -547,7 +547,7 @@ export class FluentRouteBuilder implements FluentRoute {
   private routeMiddleware: MiddlewareHandler[] = []
   private excludedMiddleware: string[] = []
   private constraints: Record<string, string | RegExp> = {}
-  private missingHandler: ((req: EnhancedRequest) => Response) | null = null
+  private missingHandler: ((_req: EnhancedRequest) => Response) | null = null
   private includeTrashed: boolean = false
   private scopeBindingsEnabled: boolean = false
   private ability: string | null = null
@@ -829,6 +829,7 @@ export function registerFluentRouting(RouterClass: typeof import('./router').Rou
   /**
    * Get the current route
    */
+  // eslint-disable-next-line pickier/no-unused-vars
   proto.currentRoute = function (this: Router): Route | null {
     // Would need request context
     return null

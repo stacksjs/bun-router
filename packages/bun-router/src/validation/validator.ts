@@ -10,7 +10,7 @@ import { ValidationException } from '../errors/exceptions'
 export interface ValidationRule {
   name: string
   validate: (value: any, parameters: string[], field: string, data: Record<string, any>) => Promise<boolean> | boolean
-  message: string | ((field: string, parameters: string[]) => string)
+  message: string | ((_field: string, _parameters: string[]) => string)
 }
 
 export interface ValidationRules {

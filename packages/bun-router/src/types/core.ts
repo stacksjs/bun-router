@@ -350,7 +350,7 @@ export interface SanitizationRule {
 /**
  * Template helper function signature - replaces `(...args: any[]) => any`
  */
-export type TemplateHelper = (...args: unknown[]) => string | number | boolean | null | undefined
+export type TemplateHelper = (..._args: unknown[]) => string | number | boolean | null | undefined
 
 /**
  * Template helpers map

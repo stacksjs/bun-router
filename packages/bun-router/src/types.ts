@@ -906,7 +906,7 @@ export interface UploadedFile {
   buffer: ArrayBuffer
 }
 
-export type RouteHandler = (req: EnhancedRequest) => Response | Promise<Response>
+export type RouteHandler = (_req: EnhancedRequest) => Response | Promise<Response>
 
 /**
  * Interface for handling route actions.
@@ -960,7 +960,7 @@ export type ActionHandlerVariant<TPath extends string = string> =
   | { type: 'controller', value: ControllerMethod }
 
 export type NextFunction = () => Promise<Response | null> | Response | null
-export type MiddlewareHandler = (req: EnhancedRequest, next: NextFunction) => Promise<Response | null> | Response | null
+export type MiddlewareHandler = (_req: EnhancedRequest, _next: NextFunction) => Promise<Response | null> | Response | null
 
 export interface Middleware {
   handle: MiddlewareHandler
@@ -1011,7 +1011,7 @@ export interface ThrottleMiddlewareParams {
  * CORS middleware configuration with strict options
  */
 export interface CorsMiddlewareConfig {
-  origin: string | string[] | boolean | ((origin: string) => boolean)
+  origin: string | string[] | boolean | ((_origin: string) => boolean)
   methods: HTTPMethod[]
   allowedHeaders: string[]
   exposedHeaders?: string[]
@@ -1044,7 +1044,7 @@ export interface Route {
   middleware: MiddlewareHandler[]
   type?: 'api' | 'web'
   name?: string
-  constraints?: Record<string, string> | ((params: Record<string, string>) => boolean)[]
+  constraints?: Record<string, string> | ((_params: Record<string, string>) => boolean)[]
   domain?: string
   params?: Record<string, string>
   pattern?: {
@@ -1747,17 +1747,17 @@ export type StreamGenerator<T = unknown> = () => AsyncGenerator<T, void, unknown
 /**
  * Direct stream handler function type
  */
-export type DirectStreamHandler = (writer: DirectStreamWriter) => Promise<void>
+export type DirectStreamHandler = (_writer: DirectStreamWriter) => Promise<void>
 
 /**
  * Buffered stream handler function type
  */
-export type BufferedStreamHandler = (writer: BufferedStreamWriter) => Promise<void>
+export type BufferedStreamHandler = (_writer: BufferedStreamWriter) => Promise<void>
 
 /**
  * Transform function type for stream transformation
  */
-export type TransformFunction<T = Uint8Array, R = string | Uint8Array> = (chunk: T) => R | Promise<R>
+export type TransformFunction<T = Uint8Array, R = string | Uint8Array> = (_chunk: T) => R | Promise<R>
 
 /**
  * Advanced Error Handling Types
@@ -2014,7 +2014,7 @@ export interface EnhancedLaravelModelBindingMethods {
    */
   model: <T, K extends string>(
     key: K,
-    modelClass: string | ((value: string) => Promise<T | null>),
+    modelClass: string | ((_value: string) => Promise<T | null>),
     callback?: (model: T | null) => Response | null
   ) => Router & { [P in K]: T }
 

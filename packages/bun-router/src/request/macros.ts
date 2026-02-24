@@ -596,6 +596,7 @@ export const RequestMacroFactory = {
    * Create input validation macro
    */
   validateInput: (_rules: Record<string, string>) => {
+    // eslint-disable-next-line pickier/no-unused-vars
     return function (this: EnhancedRequest): boolean {
       // This would integrate with the validation system
       // For now, return true as placeholder

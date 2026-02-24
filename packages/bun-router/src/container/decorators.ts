@@ -71,7 +71,7 @@ export function Inject(token: string | symbol | Function, options?: {
   tags?: string[]
   when?: (context: ResolutionContext) => boolean
 }): ParameterDecorator {
-  return function (target: any, propertyKey: string | symbol | undefined, parameterIndex: number) {
+  return function (target: any, _propertyKey: string | symbol | undefined, parameterIndex: number) {
     // For constructor parameter decorators, target is the prototype
     // We need to store metadata on the class constructor, not the prototype
     const classConstructor = target.constructor === Function ? target : target.constructor
@@ -93,7 +93,7 @@ export function Inject(token: string | symbol | Function, options?: {
  * Optional decorator - marks a dependency as optional
  */
 export function Optional(): ParameterDecorator {
-  return (target: any, propertyKey: string | symbol | undefined, parameterIndex: number) => {
+  return (target: any, _propertyKey: string | symbol | undefined, parameterIndex: number) => {
     if (!target[OPTIONAL_METADATA_KEY]) {
       target[OPTIONAL_METADATA_KEY] = []
     }
@@ -105,7 +105,7 @@ export function Optional(): ParameterDecorator {
  * Tagged decorator - injects services with specific tags
  */
 export function Tagged(tag: string): ParameterDecorator {
-  return function (target: any, propertyKey: string | symbol | undefined, parameterIndex: number) {
+  return function (target: any, _propertyKey: string | symbol | undefined, parameterIndex: number) {
     if (!target[TAGGED_METADATA_KEY]) {
       target[TAGGED_METADATA_KEY] = []
     }

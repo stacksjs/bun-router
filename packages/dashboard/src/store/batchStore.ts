@@ -277,7 +277,7 @@ export const useBatchStore = defineStore('batch', () => {
   }
 
   // Execute a single request in a batch
-  async function executeRequest(batch: BatchOperation, request: BatchRequestItem): Promise<void> {
+  async function executeRequest(_batch: BatchOperation, request: BatchRequestItem): Promise<void> {
     // Mark request as loading
     request.isLoading = true
 

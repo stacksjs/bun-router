@@ -42,6 +42,7 @@ export const defaultQueryPreservationConfig: QueryPreservationConfig = {
   routes: [],
 }
 
+/* eslint-disable prefer-const */
 /**
  * Generate the client-side script for query preservation
  * This script intercepts link clicks and preserves specified query params

@@ -14,7 +14,7 @@ export interface RequestSigningOptions {
    * Secret key(s) for HMAC verification.
    * Can be a single key or a function that returns the key based on key ID.
    */
-  secret: string | ((keyId: string) => string | Promise<string | null> | null)
+  secret: string | ((_keyId: string) => string | Promise<string | null> | null)
 
   /**
    * HMAC algorithm to use
@@ -88,7 +88,7 @@ export interface RequestSigningOptions {
   /**
    * Skip signature verification for certain paths
    */
-  exclude?: string[] | ((req: EnhancedRequest) => boolean)
+  exclude?: string[] | ((_req: EnhancedRequest) => boolean)
 
   /**
    * Additional headers to include in signature

@@ -75,7 +75,7 @@ export const constraints = {
   /**
    * Ensure a model belongs to a specific parent model
    */
-  belongsTo: (parentKey: string, foreignKey: string): ((query: any, context: Record<string, Model>) => any) =>
+  belongsTo: (parentKey: string, foreignKey: string): ((_query: any, _context: Record<string, Model>) => any) =>
     (query: any, context: Record<string, Model>) => {
       const parent = context[parentKey]
       if (parent) {
@@ -87,7 +87,7 @@ export const constraints = {
   /**
    * Ensure a model belongs to the authenticated user
    */
-  belongsToUser: (userKey = 'user', foreignKey = 'user_id'): ((query: any, context: Record<string, Model>) => any) =>
+  belongsToUser: (userKey = 'user', foreignKey = 'user_id'): ((_query: any, _context: Record<string, Model>) => any) =>
     (query: any, context: Record<string, Model>) => {
       const user = context[userKey]
       if (user) {

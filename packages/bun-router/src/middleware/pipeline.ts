@@ -444,7 +444,7 @@ export const MiddlewareFactory = {
   },
 
   cors: (options: { origin?: string, methods?: string[] } = {}): MiddlewareHandler => {
-    return async (req, next) => {
+    return async (_req, next) => {
       const response = await next()
 
       if (response) {

@@ -200,7 +200,7 @@ export interface MiddlewareFactory<TOptions = any, TMiddleware extends TypedMidd
 
 // Conditional middleware types
 export type ConditionalMiddleware<
-  _TCondition extends (req: any) => boolean,
+  _TCondition extends (_req: any) => boolean,
   TMiddleware extends TypedMiddleware<any, any, any, any>,
 > = TypedMiddleware<
   Parameters<TMiddleware>[0],

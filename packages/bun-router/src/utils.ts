@@ -278,7 +278,7 @@ function processConditionals(template: string, data: Record<string, any>): strin
   // Match {{#if condition}} content {{/if}} or {{#if condition}} content {{else}} alternative {{/if}}
   return template.replace(
     /\{\{#if ([^}]+)\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g,
-    (match, condition, content, alternative = '') => {
+    (_match, condition, content, alternative = '') => {
       const conditionTrimmed = condition.trim()
       const value = getNestedValue(data, conditionTrimmed)
       // Explicitly check for falsy values (false, undefined, null, 0, "")
@@ -294,7 +294,7 @@ function processLoops(template: string, data: Record<string, any>): string {
   // Match {{#each items}} content {{/each}}
   return template.replace(
     /\{\{#each ([^}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
-    (match, arrayKey, content) => {
+    (_match, arrayKey, content) => {
       const array = getNestedValue(data, arrayKey.trim())
       if (!Array.isArray(array))
         return ''
@@ -306,7 +306,7 @@ function processLoops(template: string, data: Record<string, any>): string {
         return content
           .replace(/\{\{@index\}\}/g, String(array.indexOf(item)))
           .replace(/\{\{this\}\}/g, String(item))
-          .replace(/\{\{this\.([^}]+)\}\}/g, (matchStr: string, prop: string) => {
+          .replace(/\{\{this\.([^}]+)\}\}/g, (_matchStr: string, prop: string) => {
             const value = item[prop.trim()]
             return value !== undefined ? String(value) : ''
           })

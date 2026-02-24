@@ -30,7 +30,7 @@ export function registerModelBinding(RouterClass: typeof Router): void {
       value<T>(
         this: Router,
         key: string,
-        modelClass: string | ((value: string) => Promise<T | null>),
+        modelClass: string | ((_value: string) => Promise<T | null>),
         callback?: (model: T | null) => Response | null,
       ): Router {
         if (typeof modelClass === 'string') {

@@ -20,7 +20,7 @@ export interface AdvancedErrorHandlerConfig {
   sanitizeErrors?: boolean
   logErrors?: boolean
   customErrorPages?: {
-    [statusCode: number]: string | ((error: RouterException, req: EnhancedRequest) => Promise<Response>)
+    [statusCode: number]: string | ((_error: RouterException, _req: EnhancedRequest) => Promise<Response>)
   }
 }
 
