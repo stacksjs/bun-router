@@ -33,6 +33,24 @@ export interface FileBasedRoutingConfig {
   exclude?: string[]
 
   /**
+   * Directory containing component files for STX rendering
+   * Default: join(viewsPath, 'components')
+   */
+  componentsDir?: string
+
+  /**
+   * Directory containing layout files for STX rendering
+   * Default: join(viewsPath, 'layouts')
+   */
+  layoutsDir?: string
+
+  /**
+   * Directory containing partial files for STX rendering
+   * Default: join(viewsPath, 'partials')
+   */
+  partialsDir?: string
+
+  /**
    * Custom render function for view files
    * If not provided, attempts to use STX renderer or serves raw content
    */
@@ -289,7 +307,8 @@ function findPrebuiltView(stxFilePath: string, viewsDir: string): string | null 
 async function renderStxFile(
   filePath: string,
   viewsDir: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  routingConfig?: FileBasedRoutingConfig,
 ): Promise<string> {
   // Dynamic import to avoid build-time resolution
   const stxModule = '@stacksjs/stx'
@@ -324,12 +343,25 @@ async function renderStxFile(
     await stx.extractVariables(scriptContent, context, filePath)
   }
 
-  // Configure STX with proper paths relative to views root
+  // Resolve componentsDir: user config > viewsDir/components fallback
+  const resolvedComponentsDir = routingConfig?.componentsDir
+    ? resolve(routingConfig.componentsDir)
+    : join(viewsDir, 'components')
+
+  const resolvedLayoutsDir = routingConfig?.layoutsDir
+    ? resolve(routingConfig.layoutsDir)
+    : join(viewsDir, 'layouts')
+
+  const resolvedPartialsDir = routingConfig?.partialsDir
+    ? resolve(routingConfig.partialsDir)
+    : join(viewsDir, 'partials')
+
+  // Configure STX with proper paths
   const config = {
     ...stx.defaultConfig,
-    componentsDir: join(viewsDir, 'components'),
-    layoutsDir: join(viewsDir, 'layouts'),
-    partialsDir: join(viewsDir, 'partials'),
+    componentsDir: resolvedComponentsDir,
+    layoutsDir: resolvedLayoutsDir,
+    partialsDir: resolvedPartialsDir,
   }
 
   return stx.processDirectives(templateContent, context, filePath, config, new Set())
@@ -341,7 +373,7 @@ async function renderStxFile(
 function createViewHandler(
   filePath: string,
   viewsDir: string,
-  _config: FileBasedRoutingConfig,
+  config: FileBasedRoutingConfig,
   queryPreservationConfig?: QueryPreservationConfig,
 ): ActionHandler {
   return async (req: EnhancedRequest): Promise<Response> => {
@@ -381,7 +413,7 @@ function createViewHandler(
 
       // 2. Render STX file
       if (filePath.endsWith('.stx')) {
-        let html = await renderStxFile(filePath, viewsDir, data)
+        let html = await renderStxFile(filePath, viewsDir, data, config)
         html = applyQueryPreservation(html)
         return new Response(html, {
           status: 200,
