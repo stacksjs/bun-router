@@ -192,7 +192,7 @@ export class RouteCompiler {
     constraints?: Record<string, string>,
   ): { exec: (pathname: string) => { groups?: Record<string, string> } | null } {
     // Convert {param} to named capture groups and {param:pattern} to constrained capture groups
-    const regexPattern = path.replace(/\{([^}:]+)(?::([^}]+))?\}/g, (_match, name, pattern) => {
+    let regexPattern = path.replace(/\{([^}:]+)(?::([^}]+))?\}/g, (_match, name, pattern) => {
       // If there's a constraint for this parameter, use it instead of the default pattern
       if (constraints && constraints[name]) {
         return `(?<${name}>${constraints[name]})`
