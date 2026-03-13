@@ -2,7 +2,7 @@
 
 ## About
 
-A router for Bun.
+A high-performance HTTP router for Bun with native `Bun.serve()` integration. It supports all HTTP methods, path parameters with constraints, middleware (CORS, CSRF, sessions, auth), route groups, RESTful resource routing, domain/subdomain routing, WebSocket support with pub/sub, named routes with URL generation, hot reloading, file streaming with range support, and type-safe route parameters.
 
 ## Linting
 
