@@ -77,7 +77,8 @@ export function generateQueryPreservationScript(config: QueryPreservationConfig)
         });
       }
       return true;
-    } catch (e) { return false; }
+    }
+catch (e) { return false; }
   }
 
   function getPreservedParams() {

@@ -171,7 +171,8 @@ const simulateRequests = async () => {
 
     try {
       await handler(mockReq)
-    } catch (error) {
+    }
+catch (error) {
       console.log('Handler error:', error)
     }
   }
@@ -298,7 +299,8 @@ const exampleMiddlewareStack = async (req: any, next: () => Promise<Response>) =
   for (const middleware of customMiddleware) {
     try {
       response = await middleware(req, async () => response)
-    } catch (error) {
+    }
+catch (error) {
       console.log('Middleware error:', error)
     }
   }

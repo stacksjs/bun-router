@@ -161,7 +161,8 @@ router.get('/files/:filename', async (req) => {
     }
 
     return new Response(file)
-  } catch (error) {
+  }
+catch (error) {
     return new Response('Error serving file', { status: 500 })
   }
 })
@@ -193,7 +194,8 @@ router.post('/upload/with-error-handling', fileUpload({
     }), {
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  }
+catch (error) {
     return new Response(JSON.stringify({
       error: 'Upload processing failed',
       details: error instanceof Error ? error.message : 'Unknown error',

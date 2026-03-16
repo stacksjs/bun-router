@@ -129,7 +129,8 @@ function hasRoutableFiles(dir: string, extensions: string[], exclude: string[]):
         }
       }
     }
-  } catch {
+  }
+catch {
     // Directory not readable
   }
 
@@ -222,7 +223,8 @@ function discoverRoutes(
     if (entry.isDirectory()) {
       // Recursively discover routes in subdirectories
       routes.push(...discoverRoutes(fullPath, viewsDir, extensions, exclude))
-    } else if (entry.isFile()) {
+    }
+else if (entry.isFile()) {
       // Check if file has a routable extension
       const hasRoutableExtension = extensions.some(ext => entry.name.endsWith(ext))
 
@@ -269,7 +271,8 @@ function discoverRoutes(
         `  - ${route.filePath}\n` +
         `  Using: ${existing.filePath}`
       )
-    } else {
+    }
+else {
       seen.set(route.routePath, route)
     }
   }
@@ -428,7 +431,8 @@ function createViewHandler(
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
       })
-    } catch (error) {
+    }
+catch (error) {
       console.error(`[bun-router] Error rendering ${filePath}:`, error)
       return new Response('Internal Server Error', { status: 500 })
     }
@@ -545,7 +549,8 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
           // Just a path
           this._viewsDir = resolve(config)
           this._fileRoutingConfig = {}
-        } else {
+        }
+else {
           // Full config
           if (config.viewsPath) {
             this._viewsDir = resolve(config.viewsPath)

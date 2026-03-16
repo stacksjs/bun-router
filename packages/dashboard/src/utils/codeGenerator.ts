@@ -173,7 +173,8 @@ function generatePhp(request: RequestData): string {
   code += 'curl_close($curl);\n\n'
   code += 'if ($error) {\n'
   code += '    echo "cURL Error: " . $error;\n'
-  code += '} else {\n'
+  code += '}
+else {\n'
   code += '    echo $response;\n'
   code += '}\n'
 

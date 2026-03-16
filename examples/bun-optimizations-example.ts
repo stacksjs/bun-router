@@ -94,7 +94,8 @@ const fileServer = new StaticFileServer({
     // Cache control based on file type
     if (path.endsWith('.js') || path.endsWith('.css')) {
       res.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
-    } else if (path.endsWith('.html')) {
+    }
+else if (path.endsWith('.html')) {
       res.headers.set('Cache-Control', 'public, max-age=3600')
     }
   }
@@ -365,7 +366,8 @@ router.post('/api/process-bulk', async (req) => {
     )
 
     return Response.json({ results, processed: results.length })
-  } finally {
+  }
+finally {
     workerPool.terminate()
   }
 })
@@ -440,7 +442,8 @@ router.use(async (req, next) => {
 router.use(async (req, next) => {
   try {
     return await next()
-  } catch (error) {
+  }
+catch (error) {
     console.error('Request error:', error)
 
     // Log error with context

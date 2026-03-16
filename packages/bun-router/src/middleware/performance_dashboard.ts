@@ -475,7 +475,8 @@ export default class PerformanceDashboard {
                         // For now, we'll just refresh the page
                         setTimeout(() => window.location.reload(), ${this.options.refreshInterval});
                     }
-                } catch (error) {
+                }
+catch (error) {
                     console.error('Failed to refresh data:', error);
                 }
             }, ${this.options.refreshInterval});
@@ -488,7 +489,8 @@ export default class PerformanceDashboard {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 clearInterval(refreshInterval);
-            } else {
+            }
+else {
                 startAutoRefresh();
             }
         });

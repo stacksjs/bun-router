@@ -71,7 +71,8 @@ router.get('/blog/{post}', async (req) => {
     return new Response(content, {
       headers: { 'Content-Type': 'text/html' }
     })
-  } catch (error) {
+  }
+catch (error) {
     console.error('Error rendering blog post:', error)
     return new Response('Post not found', { status: 404 })
   }

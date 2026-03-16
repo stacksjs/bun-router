@@ -377,7 +377,8 @@ class EventBus {
     for (const listener of listeners) {
       try {
         listener(data)
-      } catch (error) {
+      }
+catch (error) {
         console.error(`Error in event listener for ${event}:`, error)
       }
     }

@@ -205,14 +205,16 @@ class EcommerceAPI {
                 timestamp: Date.now(),
                 metadata: data
               }
-            } else {
+            }
+else {
               return {
                 status: 'unhealthy',
                 message: `Inventory service returned ${response.status}`,
                 timestamp: Date.now()
               }
             }
-          } catch (error) {
+          }
+catch (error) {
             return {
               status: 'unhealthy',
               message: 'Cannot reach inventory service',
@@ -288,7 +290,8 @@ class EcommerceAPI {
           'inventory.valid': inventoryValid,
           'inventory.response_time': Date.now() - (inventorySpan?.startTime || 0)
         })
-      } finally {
+      }
+finally {
         if (inventorySpan) TraceHelpers.finishSpan(req, inventorySpan)
       }
       
@@ -344,7 +347,8 @@ class EcommerceAPI {
         if (!paymentResponse.ok) {
           throw new Error(`Payment failed: ${paymentResult.error}`)
         }
-      } finally {
+      }
+finally {
         if (paymentSpan) TraceHelpers.finishSpan(req, paymentSpan)
       }
       
@@ -389,7 +393,8 @@ class EcommerceAPI {
         }
       })
       
-    } catch (error) {
+    }
+catch (error) {
       // Record failed order metric
       this.metrics.get('orders_failed_total')?.inc(1, {
         reason: 'processing_error'
@@ -411,7 +416,8 @@ class EcommerceAPI {
         headers: { 'Content-Type': 'application/json' }
       })
       
-    } finally {
+    }
+finally {
       if (orderSpan) TraceHelpers.finishSpan(req, orderSpan)
     }
   }
@@ -457,7 +463,8 @@ class EcommerceAPI {
         headers: { 'Content-Type': 'application/json' }
       })
       
-    } catch (error) {
+    }
+catch (error) {
       TraceHelpers.log(req, {
         level: 'error',
         message: 'Failed to retrieve order',
@@ -472,7 +479,8 @@ class EcommerceAPI {
         headers: { 'Content-Type': 'application/json' }
       })
       
-    } finally {
+    }
+finally {
       if (dbSpan) TraceHelpers.finishSpan(req, dbSpan)
     }
   }
@@ -679,7 +687,8 @@ async function runExamples() {
       console.log(`  ${endpoint}`)
     })
     
-  } catch (error) {
+  }
+catch (error) {
     console.error('❌ Example failed:', error)
   }
 }

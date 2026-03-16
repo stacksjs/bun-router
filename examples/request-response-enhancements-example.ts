@@ -130,7 +130,8 @@ const registerRoute = new RouteBuilder('POST', '/api/register', async (req: Enha
 
     return ResponseWithMacros.callMacro('apiSuccess', userResponse, 'Registration successful')
 
-  } catch (error) {
+  }
+catch (error) {
     console.error('Registration error:', error)
     return BuiltInResponseMacros.serverError('Registration failed')
   }

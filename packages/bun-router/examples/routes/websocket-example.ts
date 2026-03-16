@@ -66,12 +66,15 @@ router.get('/', () => {
         const data = JSON.parse(event.data);
         if (data.type === 'system') {
           addMessage(data.message, "system");
-        } else if (data.type === 'chat') {
+        }
+else if (data.type === 'chat') {
           addMessage(\`\${data.username}: \${data.message}\`, "user");
-        } else if (data.type === 'room-change') {
+        }
+else if (data.type === 'room-change') {
           addMessage(\`Room changed to \${data.room}\`, "system");
         }
-      } catch (e) {
+      }
+catch (e) {
         // Fallback for plain text messages
         addMessage(event.data, "system");
       }
@@ -133,7 +136,8 @@ router.get('/', () => {
       if (type === "system") {
         messageEl.style.color = "#666";
         messageEl.style.fontStyle = "italic";
-      } else if (type === "error") {
+      }
+else if (type === "error") {
         messageEl.style.color = "red";
       }
 
@@ -174,7 +178,8 @@ router.websocket({
               message: `Unknown command: ${data.command}`
             });
         }
-      } else {
+      }
+else {
         // Handle binary data if needed
         console.log("Received binary data of length: ", message instanceof ArrayBuffer ?
           message.byteLength : message.length);
@@ -185,7 +190,8 @@ router.websocket({
           message: "Received binary data"
         });
       }
-    } catch (error) {
+    }
+catch (error) {
       // Fallback for non-JSON messages
       console.log("Failed to parse message:", message);
 
@@ -251,7 +257,8 @@ router.websocket({
         type: 'error',
         message: "An error occurred on the server"
       });
-    } catch (e) {
+    }
+catch (e) {
       console.error("Failed to send error message:", e);
     }
   },
@@ -319,9 +326,11 @@ function sendJson(ws: ServerWebSocket<ClientData>, data: any, compress = true) {
     if (ws.data.messageQueue.length < 100) { // Limit queue size
       ws.data.messageQueue.push(message);
     }
-  } else if (result === 0) {
+  }
+else if (result === 0) {
     console.log("Failed to send message, connection may be closed");
-  } else {
+  }
+else {
     // Message sent successfully, result is bytes sent
     console.log(`Sent ${result} bytes to ${ws.data.username}`);
   }

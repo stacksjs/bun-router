@@ -152,7 +152,8 @@ router.post('/payments', async (req) => {
     })
     
     return paymentResult
-  } catch (error) {
+  }
+catch (error) {
     if (error.code === 'CIRCUIT_BREAKER_OPEN') {
       throw ErrorFactory.serviceUnavailable(
         'Payment service temporarily unavailable',
@@ -354,7 +355,8 @@ async function runExamples() {
     const healthResponse = await fetch(`${baseUrl}/health`)
     console.log('Health:', await healthResponse.json())
     
-  } catch (error) {
+  }
+catch (error) {
     console.error('Example error:', error)
   }
 }
