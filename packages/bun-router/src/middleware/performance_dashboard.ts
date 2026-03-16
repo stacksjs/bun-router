@@ -138,7 +138,7 @@ export default class PerformanceDashboard {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>${this.options.title}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -305,29 +305,29 @@ export default class PerformanceDashboard {
     </style>
 </head>
 <body>
-    <div class="header">
+    <div class='header'>
         <h1>${this.options.title}</h1>
-        <div class="status">
-            <div class="status-item">
-                <div class="status-value">${data.metrics.current.totalRequests}</div>
+        <div class='status'>
+            <div class='status-item'>
+                <div class='status-value'>${data.metrics.current.totalRequests}</div>
                 <div>Total Requests</div>
             </div>
-            <div class="status-item">
-                <div class="status-value">${Math.round(data.metrics.current.averageResponseTime)}ms</div>
+            <div class='status-item'>
+                <div class='status-value'>${Math.round(data.metrics.current.averageResponseTime)}ms</div>
                 <div>Avg Response</div>
             </div>
-            <div class="status-item">
-                <div class="status-value">${Math.round(data.metrics.current.errorRate * 100)}%</div>
+            <div class='status-item'>
+                <div class='status-value'>${Math.round(data.metrics.current.errorRate * 100)}%</div>
                 <div>Error Rate</div>
             </div>
-            <div class="status-item">
-                <div class="status-value">${Math.round(data.metrics.current.requestsPerSecond)}/s</div>
+            <div class='status-item'>
+                <div class='status-value'>${Math.round(data.metrics.current.requestsPerSecond)}/s</div>
                 <div>Requests/sec</div>
             </div>
         </div>
     </div>
 
-    <div class="container">
+    <div class='container'>
         ${this.options.features?.realTimeMetrics
           ? `
         <div class='card'>
@@ -336,21 +336,21 @@ export default class PerformanceDashboard {
                 <span class='metric-label'>Response Time</span>
                 <span class='metric-value'>${Math.round(data.metrics.current.averageResponseTime)}ms</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Memory Usage</span>
-                <span class="metric-value">${Math.round(data.metrics.current.memoryUsage / 1024 / 1024)}MB</span>
+            <div class='metric'>
+                <span class='metric-label'>Memory Usage</span>
+                <span class='metric-value'>${Math.round(data.metrics.current.memoryUsage / 1024 / 1024)}MB</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">CPU Usage</span>
-                <span class="metric-value">${Math.round(data.metrics.current.cpuUsage)}%</span>
+            <div class='metric'>
+                <span class='metric-label'>CPU Usage</span>
+                <span class='metric-value'>${Math.round(data.metrics.current.cpuUsage)}%</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Requests/sec</span>
-                <span class="metric-value">${Math.round(data.metrics.current.requestsPerSecond)}</span>
+            <div class='metric'>
+                <span class='metric-label'>Requests/sec</span>
+                <span class='metric-value'>${Math.round(data.metrics.current.requestsPerSecond)}</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Error Rate</span>
-                <span class="metric-value ${data.metrics.current.errorRate > 0.1 ? 'critical' : data.metrics.current.errorRate > 0.05 ? 'warning' : ''}">${Math.round(data.metrics.current.errorRate * 100)}%</span>
+            <div class='metric'>
+                <span class='metric-label'>Error Rate</span>
+                <span class='metric-value ${data.metrics.current.errorRate > 0.1 ? 'critical' : data.metrics.current.errorRate > 0.05 ? 'warning' : ''}'>${Math.round(data.metrics.current.errorRate * 100)}%</span>
             </div>
         </div>
         `
@@ -358,36 +358,36 @@ export default class PerformanceDashboard {
 
         ${this.options.features?.historicalCharts
           ? `
-        <div class="card">
+        <div class='card'>
             <h2>Historical Performance</h2>
-            <div class="chart-container">
+            <div class='chart-container'>
                 Response Time Chart (${data.metrics.historical.length} data points)
             </div>
         </div>
         `
           : ''}
 
-        <div class="card">
+        <div class='card'>
             <h2>Request Distribution</h2>
-            <div class="distribution">
+            <div class='distribution'>
                 ${Object.entries(data.metrics.distribution.statusCodes).map(([code, count]) => `
-                    <div class="distribution-item">
-                        <div class="distribution-value">${count}</div>
-                        <div class="distribution-label">HTTP ${code}</div>
+                    <div class='distribution-item'>
+                        <div class='distribution-value'>${count}</div>
+                        <div class='distribution-label'>HTTP ${code}</div>
                     </div>
                 `).join('')}
             </div>
         </div>
 
-        <div class="card">
+        <div class='card'>
             <h2>Top Endpoints</h2>
             ${Object.entries(data.metrics.distribution.paths)
               .sort(([,a], [,b]) => b - a)
               .slice(0, 10)
               .map(([path, count]) => `
-                    <div class="metric">
-                        <span class="metric-label">${path}</span>
-                        <span class="metric-value">${count}</span>
+                    <div class='metric'>
+                        <span class='metric-label'>${path}</span>
+                        <span class='metric-value'>${count}</span>
                     </div>
                 `)
               .join('')}
@@ -395,11 +395,11 @@ export default class PerformanceDashboard {
 
         ${this.options.features?.alertsPanel
           ? `
-        <div class="card">
+        <div class='card'>
             <h2>Active Alerts</h2>
             ${data.alerts.length === 0 ? '<p>No active alerts</p>' : ''}
             ${data.alerts.filter(alert => !alert.resolved).map(alert => `
-                <div class="alert ${alert.type}">
+                <div class='alert ${alert.type}'>
                     <strong>${alert.type.toUpperCase()}:</strong> ${alert.message}
                     <br><small>${new Date(alert.timestamp).toLocaleString()}</small>
                 </div>
@@ -410,15 +410,15 @@ export default class PerformanceDashboard {
 
         ${this.options.features?.tracingView
           ? `
-        <div class="card">
+        <div class='card'>
             <h2>Recent Traces</h2>
             ${data.traces.slice(0, 10).map(trace => `
-                <div class="trace">
-                    <div class="trace-header">
-                        <span class="trace-operation">${trace.operationName}</span>
-                        <span class="trace-duration">${Math.round((trace.duration || 0) * 100) / 100}ms</span>
+                <div class='trace'>
+                    <div class='trace-header'>
+                        <span class='trace-operation'>${trace.operationName}</span>
+                        <span class='trace-duration'>${Math.round((trace.duration || 0) * 100) / 100}ms</span>
                     </div>
-                    <div class="trace-details">
+                    <div class='trace-details'>
                         Trace ID: ${trace.traceId} | Status: ${trace.status}
                         ${trace.error ? ` | Error: ${trace.error}` : ''}
                     </div>
@@ -430,34 +430,34 @@ export default class PerformanceDashboard {
 
         ${this.options.features?.systemMetrics
           ? `
-        <div class="card">
+        <div class='card'>
             <h2>System Information</h2>
-            <div class="metric">
-                <span class="metric-label">Uptime</span>
-                <span class="metric-value">${Math.round(data.system.uptime / 1000 / 60)} minutes</span>
+            <div class='metric'>
+                <span class='metric-label'>Uptime</span>
+                <span class='metric-value'>${Math.round(data.system.uptime / 1000 / 60)} minutes</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Node.js</span>
-                <span class="metric-value">${data.system.nodeVersion}</span>
+            <div class='metric'>
+                <span class='metric-label'>Node.js</span>
+                <span class='metric-value'>${data.system.nodeVersion}</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Platform</span>
-                <span class="metric-value">${data.system.platform} ${data.system.arch}</span>
+            <div class='metric'>
+                <span class='metric-label'>Platform</span>
+                <span class='metric-value'>${data.system.platform} ${data.system.arch}</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">Heap Used</span>
-                <span class="metric-value">${Math.round(data.system.memory.heapUsed / 1024 / 1024)}MB</span>
+            <div class='metric'>
+                <span class='metric-label'>Heap Used</span>
+                <span class='metric-value'>${Math.round(data.system.memory.heapUsed / 1024 / 1024)}MB</span>
             </div>
-            <div class="metric">
-                <span class="metric-label">RSS</span>
-                <span class="metric-value">${Math.round(data.system.memory.rss / 1024 / 1024)}MB</span>
+            <div class='metric'>
+                <span class='metric-label'>RSS</span>
+                <span class='metric-value'>${Math.round(data.system.memory.rss / 1024 / 1024)}MB</span>
             </div>
         </div>
         `
           : ''}
     </div>
 
-    <div class="refresh-indicator" id="refreshIndicator">Updated</div>
+    <div class='refresh-indicator' id='refreshIndicator'>Updated</div>
 
     <script>
         let refreshInterval;
