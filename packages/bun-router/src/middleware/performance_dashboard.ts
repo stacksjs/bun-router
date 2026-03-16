@@ -330,11 +330,11 @@ export default class PerformanceDashboard {
     <div class="container">
         ${this.options.features?.realTimeMetrics
           ? `
-        <div class="card">
+        <div class='card'>
             <h2>Real-time Metrics</h2>
-            <div class="metric">
-                <span class="metric-label">Response Time</span>
-                <span class="metric-value">${Math.round(data.metrics.current.averageResponseTime)}ms</span>
+            <div class='metric'>
+                <span class='metric-label'>Response Time</span>
+                <span class='metric-value'>${Math.round(data.metrics.current.averageResponseTime)}ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Memory Usage</span>

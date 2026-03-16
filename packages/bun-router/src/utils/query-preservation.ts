@@ -73,7 +73,7 @@ export function generateQueryPreservationScript(config: QueryPreservationConfig)
           if (pattern.endsWith('*')) {
             return path.startsWith(pattern.slice(0, -1));
           }
-          return path === pattern || path.startsWith(pattern + '/');
+          return path === pattern || path.startsWith(`${pattern}/`);
         });
       }
       return true;

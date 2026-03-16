@@ -170,6 +170,7 @@ export default class Security {
     this.sqlInjectionPatterns = [
       /(\bunion\b.+\bselect\b)|(\bselect\b.+\bunion\b)/gi,
       /\b(select|insert|update|delete|drop|create|alter|exec|execute)\b.+\b(from|into|set|where|table|database|schema)\b/gi,
+      // eslint-disable-next-line quotes -- regex pattern needs both quote types
       /(\bor\b|\band\b).+['"]\s*=\s*['"]|['"]\s*=\s*['"].+(\bor\b|\band\b)/gi,
       /\b(sleep|benchmark|waitfor)\s*\(/gi,
       /\b(information_schema|sys\.databases|sysobjects)\b/gi,

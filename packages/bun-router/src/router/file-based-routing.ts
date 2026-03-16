@@ -184,7 +184,7 @@ function filePathToRoutePath(filePath: string, viewsDir: string, extensions: str
 
   // Ensure leading slash
   if (!routePath.startsWith('/')) {
-    routePath = '/' + routePath
+    routePath = `/${routePath}`
   }
 
   // Handle root path
