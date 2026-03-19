@@ -100,7 +100,7 @@ export class RouteCacheWarmer {
     cacheHitRateImprovement: 0,
   }
 
-  private warmupTimer?: Timer
+  private warmupTimer?: ReturnType<typeof setInterval>
 
   constructor(
     private config: WarmupConfig,

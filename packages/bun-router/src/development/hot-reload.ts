@@ -47,7 +47,7 @@ export class HotReloadManager {
     watchers: new Map(),
   }
 
-  private debounceTimer?: Timer
+  private debounceTimer?: ReturnType<typeof setTimeout>
   private isReloading = false
 
   constructor(config: HotReloadConfig = {}) {

@@ -352,7 +352,7 @@ export const BuiltInResponseMacros = {
     filename: string,
     contentType = 'application/octet-stream',
   ): Response => {
-    return new Response(data, {
+    return new Response(data as any, {
       status: 200,
       headers: {
         'Content-Type': contentType,

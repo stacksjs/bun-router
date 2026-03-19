@@ -231,7 +231,7 @@ export function createRouteCacheMiddleware(config: RouteCacheConfig) {
         }
       }
 
-      return new Response(cached.body, {
+      return new Response(cached.body as any, {
         status: cached.status,
         headers,
       })

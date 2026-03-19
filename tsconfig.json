@@ -39,6 +39,7 @@
   "exclude": [
     "**/dashboard/**/*",
     "**/node_modules/**/*",
-    "**/dist/**/*"
+    "**/dist/**/*",
+    "**/pantry/**/*"
   ]
 }

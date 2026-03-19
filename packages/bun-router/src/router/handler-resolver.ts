@@ -42,7 +42,7 @@ export function wrapResponse(value: unknown): Response {
 
   // ArrayBuffer or Uint8Array - return as binary
   if (value instanceof ArrayBuffer || value instanceof Uint8Array) {
-    return new Response(value, {
+    return new Response(value as any, {
       headers: { 'Content-Type': 'application/octet-stream' },
     })
   }

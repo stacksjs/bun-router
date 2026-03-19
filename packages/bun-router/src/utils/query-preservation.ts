@@ -73,8 +73,8 @@ export function generateQueryPreservationScript(config: QueryPreservationConfig)
           if (pattern.endsWith('*')) {
             return path.startsWith(pattern.slice(0, -1));
           }
+          // eslint-disable-next-line prefer-template
           return path === pattern || path.startsWith(pattern + '/');
-          // eslint-disable-next-line
         });
       }
       return true;

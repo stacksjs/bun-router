@@ -47,7 +47,7 @@ export default class RequestTracer {
   private spans: Map<string, TraceSpan> = new Map()
   private activeSpans: Map<string, string> = new Map() // requestId -> spanId
   private exportQueue: TraceSpan[] = []
-  private exportInterval?: Timer
+  private exportInterval?: ReturnType<typeof setInterval>
 
   constructor(options: TracingOptions = {}) {
     const tracingConfig = (config.server?.performance?.monitoring as any)?.tracing || {}
@@ -140,7 +140,7 @@ export default class RequestTracer {
         const cloned = req.clone()
         const formData = await cloned.formData()
         const result: Record<string, any> = {}
-        for (const [key, value] of formData.entries()) {
+        for (const [key, value] of (formData as any).entries()) {
           result[key] = value
         }
         return result

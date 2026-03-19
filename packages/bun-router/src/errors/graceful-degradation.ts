@@ -90,7 +90,7 @@ export interface DegradationContext {
  */
 export class ServiceHealthMonitor {
   private healthStatus = new Map<string, ServiceHealth>()
-  private healthCheckIntervals = new Map<string, NodeJS.Timeout>()
+  private healthCheckIntervals = new Map<string, ReturnType<typeof setInterval>>()
   private config: DegradationConfig
 
   constructor(config: DegradationConfig) {

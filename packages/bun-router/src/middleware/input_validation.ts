@@ -338,7 +338,7 @@ export default class InputValidation {
       else if (contentType.includes('application/x-www-form-urlencoded')) {
         const formData = await req.formData()
         const result: Record<string, any> = {}
-        for (const [key, value] of formData.entries()) {
+        for (const [key, value] of (formData as any).entries()) {
           result[key] = value
         }
         return result
@@ -346,7 +346,7 @@ export default class InputValidation {
       else if (contentType.includes('multipart/form-data')) {
         const formData = await req.formData()
         const result: Record<string, any> = {}
-        for (const [key, value] of formData.entries()) {
+        for (const [key, value] of (formData as any).entries()) {
           result[key] = value
         }
         return result

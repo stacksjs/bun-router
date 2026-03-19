@@ -49,7 +49,7 @@ export class SQLiteCache {
   private db!: Database
   private config: Required<SQLiteCacheConfig>
   private stats: CacheStats
-  private cleanupTimer?: Timer
+  private cleanupTimer?: ReturnType<typeof setInterval>
   private preparedStatements!: {
     get: any
     set: any

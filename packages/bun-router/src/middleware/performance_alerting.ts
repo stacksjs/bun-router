@@ -60,7 +60,7 @@ export default class PerformanceAlerting {
   private notifications: AlertNotification[] = []
   private lastAlertTimes: Map<string, number> = new Map()
   private metricsBuffer: PerformanceMetrics[] = []
-  private checkInterval?: Timer
+  private checkInterval?: ReturnType<typeof setInterval>
 
   constructor(options: AlertingOptions = {}) {
     this.options = {

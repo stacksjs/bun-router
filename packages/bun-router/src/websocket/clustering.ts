@@ -69,7 +69,7 @@ export class WebSocketCluster {
   private rooms = new Map<string, WebSocketRoom>()
   private messageHandlers = new Map<string, (...args: any[]) => any>()
   private stats: ClusterStats
-  private heartbeatTimer?: Timer
+  private heartbeatTimer?: ReturnType<typeof setInterval>
   private isMainWorker: boolean
   private workerId: string
 

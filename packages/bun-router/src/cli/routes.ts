@@ -212,7 +212,7 @@ export async function watchRoutesDirectory(outputPath: string): Promise<void> {
   console.log(chalk.blue(`Watching for changes in ${routesPath}...`))
 
   // Setup file watcher
-  let timeoutId: NodeJS.Timeout | null = null
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
   const watcher = fs.watch(routesPath, { recursive: true })
 
   for await (const _event of watcher) {

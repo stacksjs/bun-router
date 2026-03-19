@@ -73,7 +73,7 @@ export default class FileUpload {
       const uploadedFiles: UploadedFile[] = []
       const fields: Record<string, any> = {}
 
-      for (const [key, value] of formData.entries()) {
+      for (const [key, value] of (formData as any).entries()) {
         if (value instanceof File) {
           // Validate file count
           if (uploadedFiles.length >= this.config.maxFiles) {

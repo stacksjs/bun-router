@@ -6,5 +6,7 @@ await Bun.build({
   splitting: true,
   target: 'bun',
   format: 'esm',
-  plugins: [dts()],
+  plugins: [dts({
+    entrypoints: ['index.ts', 'cli.ts'],
+  })],
 })

@@ -72,7 +72,7 @@ export class ResponseCache implements Middleware {
     memoryUsage: 0,
   }
 
-  private cleanupInterval?: Timer
+  private cleanupInterval?: ReturnType<typeof setInterval>
 
   constructor(options: ResponseCacheOptions = {}) {
     this.options = {

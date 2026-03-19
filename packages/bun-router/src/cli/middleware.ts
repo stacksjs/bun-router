@@ -224,7 +224,7 @@ export async function watchDirectoryForMiddleware(
   console.log(chalk.blue(`Watching for changes in ${directoryPath}...`))
 
   // Setup file watcher
-  let timeoutId: NodeJS.Timeout | null = null
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
   const watcher = fs.watch(directoryPath, { recursive: true })
 
   for await (const _event of watcher) {
@@ -267,7 +267,7 @@ export async function watchMiddlewareDirectory(outputPath: string): Promise<void
   console.log(chalk.blue(`Watching for changes in ${middlewarePath}...`))
 
   // Setup file watcher
-  let timeoutId: NodeJS.Timeout | null = null
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
   const watcher = fs.watch(middlewarePath, { recursive: true })
 
   for await (const _event of watcher) {

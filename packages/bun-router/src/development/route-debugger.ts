@@ -336,7 +336,7 @@ export class RouteDebugger {
       }
       else if (req.headers.get('content-type')?.includes('application/x-www-form-urlencoded')) {
         const formData = await req.formData()
-        debugInfo.body = Object.fromEntries(formData.entries())
+        debugInfo.body = Object.fromEntries((formData as any).entries())
       }
     }
     catch (error) {

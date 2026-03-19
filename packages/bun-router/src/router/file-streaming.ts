@@ -80,7 +80,7 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
         }
 
         // Use Bun's native async generator support for Response
-        return new Response(generator(), {
+        return new Response(generator() as any, {
           status: options?.status || 200,
           headers,
         })

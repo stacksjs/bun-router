@@ -14,7 +14,7 @@ export class SSEHandler {
   private controller?: ReadableStreamDefaultController<Uint8Array>
   private encoder = new TextEncoder()
   private isConnected = false
-  private heartbeatInterval?: Timer
+  private heartbeatInterval?: ReturnType<typeof setInterval>
 
   constructor(config: SSEConfig = {}) {
     this.config = {
@@ -439,7 +439,7 @@ export const SSEUtils = {
     dataFn: () => any | Promise<any>,
     intervalMs: number,
   ): () => void {
-    const interval: Timer = setInterval(async () => {
+    const interval: ReturnType<typeof setInterval> = setInterval(async () => {
       try {
         const data = await dataFn()
         if (!sse.send({ data })) {

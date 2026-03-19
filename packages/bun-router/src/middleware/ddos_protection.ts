@@ -34,7 +34,7 @@ interface RequestInfo {
 export default class DDoSProtection {
   private options: DDoSProtectionOptions
   private requestStore: Map<string, RequestInfo> = new Map()
-  private cleanupInterval: Timer | null = null
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor(options: DDoSProtectionOptions = {}) {
     const ddosConfig = config.server?.security?.ddos || {}

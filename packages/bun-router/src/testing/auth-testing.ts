@@ -64,8 +64,9 @@ export class AuthTester {
    * Set API key
    */
   withApiKey(apiKey: string, headerName: string = 'X-API-Key'): AuthTester {
-    this.request.headers = this.request.headers || new Headers()
-    this.request.headers.set(headerName, apiKey)
+    const headers = new Headers(this.request.headers)
+    headers.set(headerName, apiKey)
+    this.request = { ...this.request, headers }
     return this
   }
 
@@ -74,8 +75,9 @@ export class AuthTester {
    */
   withBasicAuth(username: string, password: string): AuthTester {
     const credentials = btoa(`${username}:${password}`)
-    this.request.headers = this.request.headers || new Headers()
-    this.request.headers.set('Authorization', `Basic ${credentials}`)
+    const headers = new Headers(this.request.headers)
+    headers.set('Authorization', `Basic ${credentials}`)
+    this.request = { ...this.request, headers }
     return this
   }
 

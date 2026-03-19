@@ -11,10 +11,5 @@
   "files": [
     "README.md",
     "dist"
-  ],
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview"
-  }
+  ]
 }

@@ -153,7 +153,7 @@ export async function watchRouterFiles(outputPath: string): Promise<void> {
   console.log(chalk.blue(`Watching for changes in router files...`))
 
   // Setup file watchers for all paths
-  let timeoutId: NodeJS.Timeout | null = null
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
 
   for (const dirPath of routerFiles) {
     try {

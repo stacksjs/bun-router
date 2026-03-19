@@ -165,7 +165,7 @@ export class StreamingCache {
       }
       else {
         // Small response, return directly
-        return new Response(body, {
+        return new Response(body as any, {
           status: cachedResponse.status,
           statusText: cachedResponse.statusText,
           headers,
