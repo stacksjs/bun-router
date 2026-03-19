@@ -5,7 +5,7 @@
     "": {
       "name": "@stacksjs/bun-router",
       "devDependencies": {
-        "@stacksjs/docs": "^0.70.23",
+        "@stacksjs/bunpress": "^0.1.4",
         "better-dx": "^0.2.7"
       }
     },
@@ -57,6 +57,23 @@
         "@iconify/types": "*"
       }
     },
+    "@stacksjs/bunpress@0.1.4": {
+      "name": "@stacksjs/bunpress",
+      "version": "0.1.4",
+      "source": "npm",
+      "resolved": "https://registry.npmjs.org/@stacksjs/bunpress/-/bunpress-0.1.4.tgz",
+      "integrity": "sha512-uo5ahVHkV0AcUbqhF1OSTqG9TuTIvL3a0UZtU3De+pi0hFfPkj/XrOT5gBp5D3u9XsbYGghYm9VQaReSHnT/YQ==",
+      "dependencies": {
+        "@stacksjs/clapp": "^0.2.0",
+        "@stacksjs/stx": "^0.2.10",
+        "@stacksjs/ts-cloud": "^0.2.2",
+        "@stacksjs/ts-md": "^0.1.1",
+        "bunfig": "^0.15.6"
+      },
+      "bin": {
+        "bunpress": "./dist/bin/cli.js"
+      }
+    },
     "@stacksjs/clapp@0.2.0": {
       "name": "@stacksjs/clapp",
       "version": "0.2.0",
@@ -70,24 +87,6 @@
       "bin": {
         "@stacksjs/clapp": "./dist/bin/cli.js",
         "clapp": "./dist/bin/cli.js"
-      }
-    },
-    "@stacksjs/docs@0.70.23": {
-      "name": "@stacksjs/docs",
-      "version": "0.70.23",
-      "source": "npm",
-      "resolved": "https://registry.npmjs.org/@stacksjs/docs/-/docs-0.70.23.tgz",
-      "integrity": "sha512-kRk/aza/wQAAgF0fhUhG8bUHhqk3RnjBkZyoRW0fvYs3dLaAArJYX/uVquZixlQnqgizGeGZT986tEFjs5Ly+A==",
-      "dependencies": {
-        "@iconify-json/carbon": "^1.2.8",
-        "@shikijs/vitepress-twoslash": "^3.2.1",
-        "@vite-pwa/assets-generator": "^1.0.0",
-        "@vite-pwa/vitepress": "^1.0.0",
-        "unocss": "^66.0.0",
-        "unplugin-icons": "^22.1.0",
-        "unplugin-vue-components": "^28.4.1",
-        "vite-plugin-pwa": "^1.0.0",
-        "vitepress": "1.6.3"
       }
     },
     "@types/d3@7.4.3": {
