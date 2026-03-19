@@ -10,9 +10,6 @@
     "paths": {
       "bun-router": [
         "./packages/bun-router/src/*"
-      ],
-      "bun-router-dashboard": [
-        "./packages/dashboard/src/*"
       ]
     },
     "resolveJsonModule": true,
@@ -37,7 +34,6 @@
     "**/test/**/*"
   ],
   "exclude": [
-    "**/dashboard/**/*",
     "**/node_modules/**/*",
     "**/dist/**/*",
     "**/pantry/**/*"
