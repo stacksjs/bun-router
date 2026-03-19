@@ -13,3 +13,4 @@ docs/.vitepress/cache
 /docs/.bunpress
 .env
 packages/bun-router/bin/router
+pantry
