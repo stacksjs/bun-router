@@ -205,6 +205,28 @@ export class Router {
   }
 
   /**
+   * Register routes from a package or module file.
+   * Loads the route file within an optional group (prefix + middleware).
+   */
+  async register(routePath: string, options?: { prefix?: string, middleware?: MiddlewareHandler[] }): Promise<Router> {
+    const callback = async () => {
+      await import(routePath)
+    }
+
+    if (options?.prefix || (options?.middleware && options.middleware.length > 0)) {
+      await this.group({
+        prefix: options.prefix,
+        middleware: options.middleware,
+      }, callback)
+    }
+    else {
+      await callback()
+    }
+
+    return this
+  }
+
+  /**
    * Invalidate route caches
    */
   invalidateCache(): void {

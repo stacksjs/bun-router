@@ -129,6 +129,9 @@ declare module './router' {
     addRouteToCompiler: (route: Route) => void
     initializeRouteCompiler: () => void
 
+    // Package route registration
+    register: (routePath: string, options?: { prefix?: string, middleware?: MiddlewareHandler[] }) => Promise<Router>
+
     // Health check method
     health: () => Promise<Router>
 
