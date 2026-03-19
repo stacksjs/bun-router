@@ -2,7 +2,7 @@
   "name": "@stacksjs/bun-router",
   "type": "module",
   "version": "0.0.2",
-  "description": "A",
+  "description": "A fast, type-safe router for Bun.",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/bun-router#readme",
@@ -64,18 +64,14 @@
     "prepublishOnly": "bun --bun run build && bun run compile:all && bun run zip",
     "release": "bun run changelog && bunx bumpp package.json --all",
     "test": "bun test",
-    "dev:docs": "bun --bun vitepress dev docs",
-    "build:docs": "bun --bun vitepress build docs",
-    "preview:docs": "bun --bun vitepress preview docs",
     "typecheck": "bunx --bun tsc --noEmit"
   },
   "dependencies": {
     "@stacksjs/clapp": "^0.2.0",
     "bun-query-builder": "^0.1.13",
-    "openapi-types": "^12.1.3",
     "ts-rate-limiter": "^0.4.0"
   },
   "lint-staged": {
-    "*.{js,ts}": "bunx --bun eslint . --fix"
+    "*.{js,ts}": "bunx --bun pickier . --fix"
   }
 }
