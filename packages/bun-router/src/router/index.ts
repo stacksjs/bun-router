@@ -1,5 +1,6 @@
 import type { ActionHandler, Route } from '../types'
 import { Dependencies, globalMiddlewarePipeline, MiddlewareFactory, MiddlewarePipeline, SkipConditions } from '../middleware/pipeline'
+import { registerApiRoutes } from './api-routes'
 import { registerFileBasedRouting } from './file-based-routing'
 import { registerFileStreaming } from './file-streaming'
 import { FluentRouteBuilder, FluentRouter, RouteFactory, router, RouterUtils } from './fluent-routing'
@@ -30,6 +31,7 @@ registerServerHandling(Router)
 registerRouteBuilding(Router)
 registerModelBinding(Router)
 registerFileBasedRouting(Router)
+registerApiRoutes(Router)
 
 // Export the Router class and fluent routing features
 export { Router }

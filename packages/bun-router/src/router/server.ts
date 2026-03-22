@@ -17,6 +17,11 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           await this._initFileRoutes()
         }
 
+        // Initialize automatic API route discovery (from routes/ directory)
+        if (this._initApiRoutes) {
+          await this._initApiRoutes()
+        }
+
         // Invalidate route cache before starting server
         this.invalidateCache()
 
