@@ -11,7 +11,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create a route group with shared attributes
      */
     group: {
-      async value(options: RouteGroup, callback: () => void): Promise<Router> {
+      value(options: RouteGroup, callback: () => void): Router {
         // Save the current group if there is one
         const previousGroup = this.currentGroup
 
@@ -53,7 +53,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create a route group with a name prefix
      */
     name: {
-      async value(prefix: string, callback: () => void): Promise<Router> {
+      value(prefix: string, callback: () => void): Router {
         // Save previous group
         const previousGroup = this.currentGroup || {}
 
@@ -88,7 +88,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create a route group with a controller
      */
     controller: {
-      async value(controller: string | (new () => any), callback: () => void): Promise<Router> {
+      value(controller: string | (new () => any), callback: () => void): Router {
         // Save previous group
         const previousGroup = this.currentGroup || {}
 
@@ -112,7 +112,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create a route group with a domain
      */
     domain: {
-      async value(domain: string, callback: () => void): Promise<Router> {
+      value(domain: string, callback: () => void): Router {
         // Save previous domain
         const previousDomain = this.currentDomain
 
@@ -135,7 +135,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create a route group with a prefix
      */
     prefix: {
-      async value(prefix: string, callback: () => void): Promise<Router> {
+      value(prefix: string, callback: () => void): Router {
         return this.group({ prefix }, callback)
       },
       writable: true,
@@ -146,11 +146,11 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
      * Create RESTful resource routes
      */
     resource: {
-      async value(
+      value(
         name: string,
         handler: string | { [key: string]: ActionHandler },
         type: 'api' | 'web' = 'api',
-      ): Promise<Router> {
+      ): Router {
         // Normalize the name to build paths
         const pluralName = name.endsWith('s') ? name : `${name}s`
         const singularName = name.endsWith('s') ? name.slice(0, -1) : name
@@ -167,7 +167,7 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
         ]
 
         // Use the name prefix for route names
-        await this.name(singularName, async () => {
+        this.name(singularName, () => {
           for (const route of routes) {
             let routeHandler: ActionHandler
 
@@ -189,16 +189,16 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
             // Register the route with the appropriate HTTP method
             switch (route.method) {
               case 'GET':
-                await this.get(route.path, routeHandler, type, route.name)
+                this.get(route.path, routeHandler, type, route.name)
                 break
               case 'POST':
-                await this.post(route.path, routeHandler, type, route.name)
+                this.post(route.path, routeHandler, type, route.name)
                 break
               case 'PUT':
-                await this.put(route.path, routeHandler, type, route.name)
+                this.put(route.path, routeHandler, type, route.name)
                 break
               case 'DELETE':
-                await this.delete(route.path, routeHandler, type, route.name)
+                this.delete(route.path, routeHandler, type, route.name)
                 break
             }
           }

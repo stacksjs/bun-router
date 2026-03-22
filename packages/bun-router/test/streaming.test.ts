@@ -19,7 +19,7 @@ describe('Laravel-style Streaming APIs', () => {
 
   describe('response()->stream()', () => {
     it('should create a streaming response with generator function', async () => {
-      await router.get('/test-stream', () => {
+      router.get('/test-stream', () => {
         return router.stream(function* () {
           yield 'chunk1\n'
           yield 'chunk2\n'
@@ -38,7 +38,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle binary data in streaming', async () => {
-      await router.get('/binary-stream', () => {
+      router.get('/binary-stream', () => {
         return router.stream(function* () {
           yield new Uint8Array([72, 101, 108, 108, 111]) // "Hello"
           yield new Uint8Array([32, 87, 111, 114, 108, 100]) // " World"
@@ -57,7 +57,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should support custom headers and status', async () => {
-      await router.get('/custom-stream', () => {
+      router.get('/custom-stream', () => {
         return router.stream(function* () {
           yield 'test data'
         }, 202, { 'X-Custom-Header': 'test-value' })
@@ -72,7 +72,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle async generators', async () => {
-      await router.get('/async-stream', () => {
+      router.get('/async-stream', () => {
         return router.stream(async function* () {
           for (let i = 1; i <= 3; i++) {
             await new Promise(resolve => setTimeout(resolve, 10))
@@ -100,7 +100,7 @@ describe('Laravel-style Streaming APIs', () => {
         }
       }
 
-      await router.get('/users.json', () => {
+      router.get('/users.json', () => {
         return router.streamJson({
           users: generateUsers(),
         })
@@ -127,7 +127,7 @@ describe('Laravel-style Streaming APIs', () => {
         yield { message: 'test' }
       }
 
-      await router.get('/custom-json', () => {
+      router.get('/custom-json', () => {
         return router.streamJson({
           data: generateData(),
         }, 201, { 'X-Custom': 'json-test' })
@@ -148,7 +148,7 @@ describe('Laravel-style Streaming APIs', () => {
 
       }
 
-      await router.get('/empty-json', () => {
+      router.get('/empty-json', () => {
         return router.streamJson({
           empty: generateEmpty(),
         })
@@ -168,7 +168,7 @@ describe('Laravel-style Streaming APIs', () => {
 
   describe('response()->eventStream()', () => {
     it('should create Server-Sent Events stream', async () => {
-      await router.get('/events', () => {
+      router.get('/events', () => {
         return router.eventStream(function* () {
           yield { data: 'Hello', event: 'greeting', id: '1' }
           yield { data: { message: 'World' }, event: 'message', id: '2' }
@@ -200,7 +200,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should support custom headers for SSE', async () => {
-      await router.get('/custom-events', () => {
+      router.get('/custom-events', () => {
         return router.eventStream(function* () {
           yield { data: 'test' }
         }, { 'X-Custom-SSE': 'test-value' })
@@ -216,7 +216,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle async generators for SSE', async () => {
-      await router.get('/async-events', () => {
+      router.get('/async-events', () => {
         return router.eventStream(async function* () {
           for (let i = 1; i <= 2; i++) {
             await new Promise(resolve => setTimeout(resolve, 10))
@@ -240,7 +240,7 @@ describe('Laravel-style Streaming APIs', () => {
 
   describe('response()->streamDownload()', () => {
     it('should create a downloadable stream', async () => {
-      await router.get('/download', () => {
+      router.get('/download', () => {
         return router.streamDownload(function* () {
           yield 'Line 1\n'
           yield 'Line 2\n'
@@ -261,7 +261,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should support custom headers for downloads', async () => {
-      await router.get('/custom-download', () => {
+      router.get('/custom-download', () => {
         return router.streamDownload(function* () {
           yield 'id,name\n'
           yield '1,John\n'
@@ -282,7 +282,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle async generators for downloads', async () => {
-      await router.get('/async-download', () => {
+      router.get('/async-download', () => {
         return router.streamDownload(async function* () {
           for (let i = 1; i <= 3; i++) {
             await new Promise(resolve => setTimeout(resolve, 10))
@@ -306,7 +306,7 @@ describe('Laravel-style Streaming APIs', () => {
     // These tests would require actual files, so we'll test with mock implementations
     it('should handle file streaming (integration test)', async () => {
       // Create a simple test file handler
-      await router.get('/file', async (_req: EnhancedRequest) => {
+      router.get('/file', async (_req: EnhancedRequest) => {
         // Mock file streaming - in real use case this would use streamFile()
         return new Response('Mock file content', {
           headers: { 'Content-Type': 'text/plain' },
@@ -325,7 +325,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle range requests (integration test)', async () => {
-      await router.get('/video', async (req: EnhancedRequest) => {
+      router.get('/video', async (req: EnhancedRequest) => {
         // Mock range request handling
         const range = req.headers.get('range')
         if (range) {
@@ -355,7 +355,7 @@ describe('Laravel-style Streaming APIs', () => {
 
   describe('Error handling', () => {
     it('should handle generator errors in stream()', async () => {
-      await router.get('/error-stream', () => {
+      router.get('/error-stream', () => {
         return router.stream(function* () {
           yield 'start\n'
           throw new Error('Generator error')
@@ -376,7 +376,7 @@ describe('Laravel-style Streaming APIs', () => {
         throw new Error('JSON stream error')
       }
 
-      await router.get('/error-json', () => {
+      router.get('/error-json', () => {
         return router.streamJson({
           data: errorGenerator(),
         })
@@ -390,7 +390,7 @@ describe('Laravel-style Streaming APIs', () => {
     })
 
     it('should handle errors in eventStream()', async () => {
-      await router.get('/error-events', () => {
+      router.get('/error-events', () => {
         return router.eventStream(function* () {
           yield { data: 'first event' }
           throw new Error('SSE error')

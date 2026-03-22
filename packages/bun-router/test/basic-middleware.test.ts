@@ -26,14 +26,14 @@ describe('Bun Router - Middleware Tests', () => {
     }
 
     // Create a route that uses the middleware
-    await router.get('/middleware-test', async (req: EnhancedRequest) => {
+    router.get('/middleware-test', async (req: EnhancedRequest) => {
       return new Response(`Request ID: ${req.requestId}`, {
         status: 200,
       })
     }, 'web')
 
     // Apply the middleware to all routes
-    await router.use(loggerMiddleware)
+    router.use(loggerMiddleware)
 
     // Make a request to the route
     const response = await router.handleRequest(new Request('http://localhost/middleware-test'))
@@ -87,11 +87,11 @@ describe('Bun Router - Middleware Tests', () => {
     }
 
     // Register middlewares in the correct order
-    await router.use(middleware1) // This runs first
-    await router.use(middleware2) // This runs second
+    router.use(middleware1) // This runs first
+    router.use(middleware2) // This runs second
 
     // Create a simple route
-    await router.get('/order-test', () => {
+    router.get('/order-test', () => {
       executionOrder.push('handler')
       return new Response('RESPONSE', { status: 200 })
     })
@@ -126,11 +126,11 @@ describe('Bun Router - Middleware Tests', () => {
     }
 
     // Register the middleware
-    await router.use(authMiddleware)
+    router.use(authMiddleware)
 
     // Register routes
-    await router.get('/protected', () => new Response('Secret Data', { status: 200 }))
-    await router.get('/public', () => new Response('Public Data', { status: 200 }))
+    router.get('/protected', () => new Response('Secret Data', { status: 200 }))
+    router.get('/public', () => new Response('Public Data', { status: 200 }))
 
     // Test protected route
     const protectedResponse = await router.handleRequest(new Request('http://localhost/protected'))

@@ -30,7 +30,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(middleware1)
       router.use(middleware2)
-      await router.get('/test', () => new Response('OK'))
+      router.get('/test', () => new Response('OK'))
 
       await router.handleRequest(new Request('http://localhost/test'))
 
@@ -47,7 +47,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(globalMiddleware)
-      await router.get('/test', () => {
+      router.get('/test', () => {
         order.push('handler')
         return new Response('OK')
       })
@@ -69,7 +69,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(authMiddleware)
-      await router.get('/test', (req: EnhancedRequest) => {
+      router.get('/test', (req: EnhancedRequest) => {
         return new Response(JSON.stringify(req.user))
       })
 
@@ -96,7 +96,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(middleware1)
       router.use(middleware2)
-      await router.get('/test', (req: EnhancedRequest) => {
+      router.get('/test', (req: EnhancedRequest) => {
         const r = req as unknown as Record<string, unknown>
         return new Response(JSON.stringify({ step1: r.step1, step2: r.step2 }))
       })
@@ -123,7 +123,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(headerMiddleware)
-      await router.get('/test', () => new Response('OK'))
+      router.get('/test', () => new Response('OK'))
 
       const response = await router.handleRequest(new Request('http://localhost/test'))
 
@@ -138,7 +138,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(cacheMiddleware)
-      await router.get('/test', () => new Response('Fresh'))
+      router.get('/test', () => new Response('Fresh'))
 
       const response = await router.handleRequest(new Request('http://localhost/test'))
       const text = await response.text()
@@ -157,7 +157,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(authMiddleware)
-      await router.get('/test', () => {
+      router.get('/test', () => {
         handlerCalled()
         return new Response('OK')
       })
@@ -183,7 +183,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(middleware1)
       router.use(middleware2)
-      await router.get('/test', () => new Response('OK'))
+      router.get('/test', () => new Response('OK'))
 
       await router.handleRequest(new Request('http://localhost/test'))
 
@@ -200,7 +200,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(errorMiddleware)
-      await router.get('/test', () => new Response('OK'))
+      router.get('/test', () => new Response('OK'))
 
       const response = await router.handleRequest(new Request('http://localhost/test'))
 
@@ -228,7 +228,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(errorMiddleware)
       router.use(throwingMiddleware)
-      await router.get('/test', () => new Response('OK'))
+      router.get('/test', () => new Response('OK'))
 
       const response = await router.handleRequest(new Request('http://localhost/test'))
       const body = await response.json() as { error: string }
@@ -250,7 +250,7 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(asyncMiddleware)
-      await router.get('/test', (req: EnhancedRequest) => {
+      router.get('/test', (req: EnhancedRequest) => {
         const r = req as unknown as Record<string, unknown>
         return new Response(r.asyncData as string)
       })
@@ -278,7 +278,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(syncMiddleware)
       router.use(asyncMiddleware)
-      await router.get('/test', () => {
+      router.get('/test', () => {
         order.push(3)
         return new Response('OK')
       })
@@ -311,8 +311,8 @@ describe('Middleware Pipeline', () => {
 
       router.use(apiMiddleware)
       router.use(webMiddleware)
-      await router.get('/api/users', () => new Response('API'))
-      await router.get('/home', () => new Response('Web'))
+      router.get('/api/users', () => new Response('API'))
+      router.get('/home', () => new Response('Web'))
 
       await router.handleRequest(new Request('http://localhost/api/users'))
       expect(apiCalled).toHaveBeenCalled()
@@ -338,8 +338,8 @@ describe('Middleware Pipeline', () => {
       }
 
       router.use(postOnlyMiddleware)
-      await router.get('/test', () => new Response('GET'))
-      await router.post('/test', () => new Response('POST'))
+      router.get('/test', () => new Response('GET'))
+      router.post('/test', () => new Response('POST'))
 
       await router.handleRequest(new Request('http://localhost/test'))
       expect(postOnlyCalled).not.toHaveBeenCalled()
@@ -371,7 +371,7 @@ describe('Middleware Pipeline', () => {
 
       router.use(setContextMiddleware)
       router.use(useContextMiddleware)
-      await router.get('/test', (req: EnhancedRequest) => {
+      router.get('/test', (req: EnhancedRequest) => {
         const r = req as unknown as Record<string, unknown>
         const ctx = r.ctx as Record<string, unknown>
         return new Response(JSON.stringify(ctx))
@@ -412,8 +412,8 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(corsMiddleware)
-    await router.get('/api/data', () => new Response('Data'))
-    await router.options('/api/data', () => new Response(null))
+    router.get('/api/data', () => new Response('Data'))
+    router.options('/api/data', () => new Response(null))
 
     const preflightResponse = await router.handleRequest(
       new Request('http://localhost/api/data', { method: 'OPTIONS' }),
@@ -442,7 +442,7 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(rateLimitMiddleware)
-    await router.get('/api/limited', () => new Response('OK'))
+    router.get('/api/limited', () => new Response('OK'))
 
     for (let i = 0; i < 3; i++) {
       const response = await router.handleRequest(
@@ -476,7 +476,7 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(loggingMiddleware)
-    await router.get('/test', () => new Response('OK'))
+    router.get('/test', () => new Response('OK'))
 
     await router.handleRequest(new Request('http://localhost/test'))
 
@@ -510,7 +510,7 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(authMiddleware)
-    await router.get('/protected', (req: EnhancedRequest) => {
+    router.get('/protected', (req: EnhancedRequest) => {
       return new Response(JSON.stringify({ user: req.user }))
     })
 
@@ -551,7 +551,7 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(timingMiddleware)
-    await router.get('/test', () => new Response('OK'))
+    router.get('/test', () => new Response('OK'))
 
     const response = await router.handleRequest(new Request('http://localhost/test'))
 
@@ -576,7 +576,7 @@ describe('Middleware - Real World Scenarios', () => {
     }
 
     router.use(requestIdMiddleware)
-    await router.get('/test', () => new Response('OK'))
+    router.get('/test', () => new Response('OK'))
 
     const response1 = await router.handleRequest(new Request('http://localhost/test'))
     const id1 = response1.headers.get('X-Request-ID')

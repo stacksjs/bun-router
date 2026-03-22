@@ -44,11 +44,11 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
      * Register a health check route
      */
     health: {
-      async value(): Promise<Router> {
+      value(): Router {
         const path = '/health'
         const fullPath = this.config.apiPrefix ? `${this.config.apiPrefix}${path}` : path
 
-        await this.get(fullPath, () => {
+        this.get(fullPath, () => {
           return new Response('OK', {
             headers: {
               'Content-Type': 'text/plain',

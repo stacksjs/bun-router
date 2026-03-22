@@ -119,14 +119,14 @@ export function registerViewRendering(RouterClass: typeof Router): void {
      * Register a view route
      */
     view: {
-      async value(
+      value(
         path: string,
         viewOrData: string | Record<string, any>,
         dataOrOptions: Record<string, any> | { layout?: string, status?: number, headers?: Record<string, string> } = {},
         optionsOrType: { layout?: string, status?: number, headers?: Record<string, string> } | 'web' | 'api' = {},
         typeOrName: 'web' | 'api' | string = 'web',
         name?: string,
-      ): Promise<Router> {
+      ): Router {
         let view: string
         let data: Record<string, any> = {}
         let options: { layout?: string, status?: number, headers?: Record<string, string> } = {}
@@ -222,7 +222,7 @@ export function registerViewRendering(RouterClass: typeof Router): void {
         }
 
         // Register the route
-        await this.get(path, handler, type, routeName)
+        this.get(path, handler, type, routeName)
 
         return this
       },

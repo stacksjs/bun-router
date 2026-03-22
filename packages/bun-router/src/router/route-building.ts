@@ -137,7 +137,7 @@ export function registerRouteBuilding(RouterClass: typeof Router): void {
               if (apiRoutes.default && Array.isArray(apiRoutes.default)) {
                 // Register each route
                 for (const route of apiRoutes.default) {
-                  await this.registerRoute(route, 'api')
+                  this.registerRoute(route, 'api')
                 }
               }
             }
@@ -155,7 +155,7 @@ export function registerRouteBuilding(RouterClass: typeof Router): void {
               if (webRoutes.default && Array.isArray(webRoutes.default)) {
                 // Register each route
                 for (const route of webRoutes.default) {
-                  await this.registerRoute(route, 'web')
+                  this.registerRoute(route, 'web')
                 }
               }
             }
@@ -178,28 +178,28 @@ export function registerRouteBuilding(RouterClass: typeof Router): void {
      * Register a route definition
      */
     registerRoute: {
-      async value(route: RouteDefinition, type: 'api' | 'web'): Promise<void> {
+      value(route: RouteDefinition, type: 'api' | 'web'): void {
         const { path, method, handler, middleware = [], name } = route
 
         // Map HTTP method to Router method
         switch (method) {
           case 'GET':
-            await this.get(path, handler, type, name, middleware)
+            this.get(path, handler, type, name, middleware)
             break
           case 'POST':
-            await this.post(path, handler, type, name, middleware)
+            this.post(path, handler, type, name, middleware)
             break
           case 'PUT':
-            await this.put(path, handler, type, name, middleware)
+            this.put(path, handler, type, name, middleware)
             break
           case 'DELETE':
-            await this.delete(path, handler, type, name, middleware)
+            this.delete(path, handler, type, name, middleware)
             break
           case 'PATCH':
-            await this.patch(path, handler, type, name, middleware)
+            this.patch(path, handler, type, name, middleware)
             break
           case 'OPTIONS':
-            await this.options(path, handler, type, name, middleware)
+            this.options(path, handler, type, name, middleware)
             break
           default:
             console.warn(`Unsupported HTTP method: ${method}`)

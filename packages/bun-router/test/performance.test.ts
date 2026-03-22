@@ -15,7 +15,7 @@ describe('Router Performance Optimizations', () => {
       const handleRequestSpy = spyOn(router, 'handleRequest')
 
       // Register a route
-      await router.get('/test-cache', () => new Response('Test Cache'))
+      router.get('/test-cache', () => new Response('Test Cache'))
 
       // First request
       const response1 = await router.handleRequest(new Request('http://localhost/test-cache'))
@@ -33,13 +33,13 @@ describe('Router Performance Optimizations', () => {
 
     it('should invalidate cache when adding new routes', async () => {
       // Create a route
-      await router.get('/cached-route', () => new Response('Original Route'))
+      router.get('/cached-route', () => new Response('Original Route'))
 
       // First request to populate cache
       await router.handleRequest(new Request('http://localhost/cached-route'))
 
       // Add a new route which should invalidate the cache
-      await router.get('/new-route', () => new Response('New Route'))
+      router.get('/new-route', () => new Response('New Route'))
 
       // Make another request to the original route
       const response = await router.handleRequest(new Request('http://localhost/cached-route'))
@@ -51,10 +51,10 @@ describe('Router Performance Optimizations', () => {
   describe('Static Route Fast Path', () => {
     it('should register and match static routes correctly', async () => {
       // Register a static route
-      await router.get('/static-path', () => new Response('Static Route'))
+      router.get('/static-path', () => new Response('Static Route'))
 
       // Register a dynamic route
-      await router.get('/dynamic/{param}', (req: EnhancedRequest) => new Response(`Dynamic Route: ${req.params.param}`))
+      router.get('/dynamic/{param}', (req: EnhancedRequest) => new Response(`Dynamic Route: ${req.params.param}`))
 
       // Check static route works
       const staticResponse = await router.handleRequest(new Request('http://localhost/static-path'))
@@ -71,7 +71,7 @@ describe('Router Performance Optimizations', () => {
   describe('Pattern Compilation Optimization', () => {
     it('should correctly match routes with constraints', async () => {
       // Register a route with a constraint using where
-      const routeWithConstraint = await router.get('/users/{id}', () => new Response('User'))
+      const routeWithConstraint = router.get('/users/{id}', () => new Response('User'))
       // Apply the number constraint
       routeWithConstraint.where({ id: '\\d+' })
 
@@ -100,7 +100,7 @@ describe('Router Performance Optimizations', () => {
       }
 
       // Register route with middleware
-      await router.get('/middleware-chain', (req: EnhancedRequest) => {
+      router.get('/middleware-chain', (req: EnhancedRequest) => {
         return new Response(`Middleware1: ${req.params.middleware1}, Middleware2: ${req.params.middleware2}`)
       }, 'web', 'middleware-test', [middleware1, middleware2])
 
@@ -114,10 +114,10 @@ describe('Router Performance Optimizations', () => {
   describe('Lazy Cookie Parsing', () => {
     it('should parse cookies only when accessed', async () => {
       // Create a route that doesn't access cookies
-      await router.get('/no-cookies', () => new Response('No Cookies Accessed'))
+      router.get('/no-cookies', () => new Response('No Cookies Accessed'))
 
       // Create a route that accesses cookies
-      await router.get('/use-cookies', (req: EnhancedRequest) => {
+      router.get('/use-cookies', (req: EnhancedRequest) => {
         const cookieValue = req.cookies?.get('test-cookie')
         return new Response(`Cookie Value: ${cookieValue}`)
       })
@@ -138,13 +138,13 @@ describe('Router Performance Optimizations', () => {
   describe('Domain Pattern Caching', () => {
     it('should work with domain-specific routes', async () => {
       // Register a domain-specific route
-      await router.domain('test.example.com', async () => {
-        await router.get('/domain-test', () => new Response('Domain Test'))
+      router.domain('test.example.com', async () => {
+        router.get('/domain-test', () => new Response('Domain Test'))
       })
 
       // Register a route with dynamic domain parameters
-      await router.domain('{subdomain}.example.com', async () => {
-        await router.get('/dynamic-domain', (_req: EnhancedRequest) => {
+      router.domain('{subdomain}.example.com', async () => {
+        router.get('/dynamic-domain', (_req: EnhancedRequest) => {
           return new Response('Subdomain Test')
         })
       })
@@ -161,7 +161,7 @@ describe('Router Performance Optimizations', () => {
   describe('Cache Invalidation', () => {
     it('should reset caches when server is restarted', async () => {
       // Register a route
-      await router.get('/invalidate-test', () => new Response('Test'))
+      router.get('/invalidate-test', () => new Response('Test'))
 
       // Make a request to populate cache
       await router.handleRequest(new Request('http://localhost/invalidate-test'))
@@ -184,13 +184,13 @@ describe('Router Performance Optimizations', () => {
 
     it('should work after manual cache reset', async () => {
       // Register a route
-      await router.get('/invalidate-test', () => new Response('Test'))
+      router.get('/invalidate-test', () => new Response('Test'))
 
       // Make a request to populate cache
       await router.handleRequest(new Request('http://localhost/invalidate-test'))
 
       // Manually reset caches by modifying routes
-      await router.get('/another-route', () => new Response('Another'))
+      router.get('/another-route', () => new Response('Another'))
 
       // Make another request
       const response = await router.handleRequest(new Request('http://localhost/invalidate-test'))
@@ -202,7 +202,7 @@ describe('Router Performance Optimizations', () => {
   describe('Performance Impact', () => {
     it('should handle high load efficiently', async () => {
       // Register a test route
-      await router.get('/high-load', () => new Response('High Load Test'))
+      router.get('/high-load', () => new Response('High Load Test'))
 
       // Time execution of multiple requests to the same endpoint
       const startTime = Date.now()

@@ -44,7 +44,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/posts/stream', (req: EnhancedRequest) => {
+      router.get('/users/{user}/posts/stream', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -84,7 +84,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/notifications', (req: EnhancedRequest) => {
+      router.get('/users/{user}/notifications', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -129,7 +129,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/export', (req: EnhancedRequest) => {
+      router.get('/users/{user}/export', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -190,7 +190,7 @@ describe('Laravel-style API Integration Tests', () => {
         post: 'user', // Posts must belong to user
       }))
 
-      await router.get('/users/{user}/posts/{post}/comments/stream', (req: EnhancedRequest) => {
+      router.get('/users/{user}/posts/{post}/comments/stream', (req: EnhancedRequest) => {
         const user = (req as any).user
         const post = (req as any).post
 
@@ -244,13 +244,13 @@ describe('Laravel-style API Integration Tests', () => {
       router.use(router.implicitBinding())
 
       // Create standard resource routes manually for testing
-      await router.get('/posts', () => {
+      router.get('/posts', () => {
         return new Response(JSON.stringify(posts), {
           headers: { 'Content-Type': 'application/json' },
         })
       })
 
-      await router.get('/posts/{post}', (req: EnhancedRequest) => {
+      router.get('/posts/{post}', (req: EnhancedRequest) => {
         const post = (req as any).post
         if (!post) {
           return new Response('Post not found', { status: 404 })
@@ -261,7 +261,7 @@ describe('Laravel-style API Integration Tests', () => {
       })
 
       // Add streaming endpoints for posts
-      await router.get('/posts/stream', () => {
+      router.get('/posts/stream', () => {
         return router.streamJson({
           posts: (async function* () {
             for (const post of posts) {
@@ -271,7 +271,7 @@ describe('Laravel-style API Integration Tests', () => {
         })
       })
 
-      await router.get('/posts/{post}/stream', (req: EnhancedRequest) => {
+      router.get('/posts/{post}/stream', (req: EnhancedRequest) => {
         const post = (req as any).post
 
         if (!post) {
@@ -325,7 +325,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/stream', (req: EnhancedRequest) => {
+      router.get('/users/{user}/stream', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -356,7 +356,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/error-stream', (req: EnhancedRequest) => {
+      router.get('/users/{user}/error-stream', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -391,7 +391,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/activity', (req: EnhancedRequest) => {
+      router.get('/users/{user}/activity', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -452,7 +452,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/large-dataset', (req: EnhancedRequest) => {
+      router.get('/users/{user}/large-dataset', (req: EnhancedRequest) => {
         const user = (req as any).user
 
         if (!user) {
@@ -511,7 +511,7 @@ describe('Laravel-style API Integration Tests', () => {
       router.clearModelCache()
 
       // Operations should still work after cache clear
-      await router.get('/users/{user}/cached', (req: EnhancedRequest) => {
+      router.get('/users/{user}/cached', (req: EnhancedRequest) => {
         const user = (req as any).user
         return new Response(JSON.stringify(user), {
           headers: { 'Content-Type': 'application/json' },
@@ -547,7 +547,7 @@ describe('Laravel-style API Integration Tests', () => {
 
       router.use(router.implicitBinding())
 
-      await router.get('/users/{user}/protected', (req: EnhancedRequest) => {
+      router.get('/users/{user}/protected', (req: EnhancedRequest) => {
         const user = (req as any).user
         const auth = req.auth
 

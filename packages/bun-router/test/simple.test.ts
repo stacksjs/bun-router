@@ -10,7 +10,7 @@ describe('Bun Router', () => {
 
   it('registers and handles a basic route', async () => {
     const router = new Router()
-    await router.get('/hello', () => new Response('Hello World'))
+    router.get('/hello', () => new Response('Hello World'))
 
     const response = await router.handleRequest(new Request('http://localhost/hello'))
     expect(response.status).toBe(200)

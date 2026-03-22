@@ -528,7 +528,7 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
           )
 
           if (!existingRoute) {
-            await this.get(route.routePath, handler, 'web')
+            this.get(route.routePath, handler, 'web')
             this._fileBasedRoutes.push(route)
           }
         }

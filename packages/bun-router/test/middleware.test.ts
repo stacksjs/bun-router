@@ -226,7 +226,7 @@ describe('Route-specific middleware', () => {
     }
 
     // Create a route with direct middleware
-    await router.get('/test', () => new Response('Test route'), 'web', 'test.route', [testMiddleware])
+    router.get('/test', () => new Response('Test route'), 'web', 'test.route', [testMiddleware])
 
     // Test the route
     const response = await router.handleRequest(new Request('http://localhost/test'))
@@ -265,7 +265,7 @@ describe('Route-specific middleware', () => {
       })
     }
 
-    await router.get('/multiple', () => new Response('Multiple middleware'), 'web', undefined, [firstMiddleware, secondMiddleware])
+    router.get('/multiple', () => new Response('Multiple middleware'), 'web', undefined, [firstMiddleware, secondMiddleware])
 
     const response = await router.handleRequest(new Request('http://localhost/multiple'))
     expect(response.status).toBe(200)
@@ -305,7 +305,7 @@ describe('Route-specific middleware', () => {
     }
 
     // Create a route with fluid middleware API
-    const r = await router.get('/fluid', () => new Response('Fluid middleware'))
+    const r = router.get('/fluid', () => new Response('Fluid middleware'))
     // Add middleware using the fluid API
     // @ts-expect-error - Testing fluid API that may not be fully typed
     r.middleware(firstMiddleware, secondMiddleware)

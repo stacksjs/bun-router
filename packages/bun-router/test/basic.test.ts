@@ -10,8 +10,8 @@ describe('Bun Router - Basic Tests', () => {
   })
 
   it('should register and handle routes', async () => {
-    // Register a simple GET route
-    await router.get('/test', () => new Response('Hello World'))
+    // Register a simple GET route — no await needed
+    router.get('/test', () => new Response('Hello World'))
 
     // Make a request to the registered route
     const response = await router.handleRequest(new Request('http://localhost/test'))
@@ -23,7 +23,7 @@ describe('Bun Router - Basic Tests', () => {
 
   it('should handle path parameters', async () => {
     // Register a route with path parameters
-    await router.get('/users/{id}', (req: EnhancedRequest) => {
+    router.get('/users/{id}', (req: EnhancedRequest) => {
       return new Response(`User ID: ${req.params.id}`)
     })
 
@@ -45,8 +45,8 @@ describe('Bun Router - Basic Tests', () => {
 
   it('should support different HTTP methods', async () => {
     // Register routes with different HTTP methods
-    await router.get('/api', () => new Response('GET'))
-    await router.post('/api', () => new Response('POST'))
+    router.get('/api', () => new Response('GET'))
+    router.post('/api', () => new Response('POST'))
 
     // Test GET request
     const getResponse = await router.handleRequest(new Request('http://localhost/api'))
@@ -61,7 +61,7 @@ describe('Bun Router - Basic Tests', () => {
 
   it('should redirect correctly', async () => {
     // Register a redirect route
-    await router.redirectRoute('/old', '/new')
+    router.redirectRoute('/old', '/new')
 
     // Make a request to the redirect route
     const response = await router.handleRequest(new Request('http://localhost/old'))

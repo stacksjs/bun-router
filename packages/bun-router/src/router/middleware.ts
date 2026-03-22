@@ -11,9 +11,9 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Add middleware to the router
      */
     use: {
-      async value(...middleware: (string | MiddlewareHandler)[]): Promise<Router> {
+      value(...middleware: (string | MiddlewareHandler)[]): Router {
         for (const mw of middleware) {
-          const resolvedMiddleware = await this.resolveMiddleware(mw)
+          const resolvedMiddleware = this.resolveMiddleware(mw)
           if (resolvedMiddleware) {
             this.globalMiddleware.push(resolvedMiddleware)
           }
@@ -25,10 +25,13 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
     },
 
     /**
-     * Resolve a middleware string or function to a middleware handler
+     * Resolve a middleware string or function to a middleware handler.
+     * Returns synchronously — for string-based middleware not found in the
+     * named registry, a lazy wrapper is returned that imports the module on
+     * first invocation and caches it for subsequent calls.
      */
     resolveMiddleware: {
-      async value(middleware: string | MiddlewareHandler): Promise<MiddlewareHandler | null> {
+      value(middleware: string | MiddlewareHandler): MiddlewareHandler | null {
         if (typeof middleware === 'function') {
           return middleware
         }
@@ -41,22 +44,35 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
         }
 
         if (typeof middleware === 'string') {
-          try {
-            // Try to import from project middleware directory
-            const importedMiddleware = await import(`../middleware/${middleware}.ts`)
-            if (importedMiddleware.default && typeof importedMiddleware.default === 'function') {
-              return importedMiddleware.default
-            }
+          // Check named middleware registry first (synchronous)
+          const [name, params] = middleware.split(':')
+          const factory = (this as any).namedMiddleware?.get(name)
+          if (factory) {
+            return factory(params)
+          }
 
-            // If it's a class with a handle method, instantiate it
-            if (importedMiddleware.default && typeof importedMiddleware.default.handle === 'function') {
-              return (req: EnhancedRequest, next: NextFunction) => {
-                return importedMiddleware.default.handle(req, next)
+          // Create a lazy wrapper that imports on first request, then caches
+          let cached: MiddlewareHandler | null = null
+          const middlewareName = middleware
+          return async (req: EnhancedRequest, next: NextFunction) => {
+            if (!cached) {
+              try {
+                const importedMiddleware = await import(`../middleware/${middlewareName}.ts`)
+                if (importedMiddleware.default && typeof importedMiddleware.default === 'function') {
+                  cached = importedMiddleware.default
+                }
+                else if (importedMiddleware.default && typeof importedMiddleware.default.handle === 'function') {
+                  cached = (r: EnhancedRequest, n: NextFunction) => importedMiddleware.default.handle(r, n)
+                }
+              }
+              catch (error) {
+                console.error(`Failed to load middleware "${middlewareName}":`, error)
               }
             }
-          }
-          catch (error) {
-            console.error(`Failed to load middleware "${middleware}":`, error)
+            if (cached) {
+              return cached(req, next)
+            }
+            return next()
           }
         }
 
@@ -160,9 +176,9 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Apply middleware to a specific route
      */
     applyMiddlewareToRoute: {
-      async value(route: Route, middleware: (string | MiddlewareHandler)[]): Promise<void> {
+      value(route: Route, middleware: (string | MiddlewareHandler)[]): void {
         for (const mw of middleware) {
-          const resolvedMiddleware = await this.resolveMiddleware(mw)
+          const resolvedMiddleware = this.resolveMiddleware(mw)
           if (resolvedMiddleware) {
             route.middleware.push(resolvedMiddleware)
           }
@@ -204,7 +220,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Register an error handler
      */
     onError: {
-      async value(handler: (error: Error) => Response | Promise<Response>): Promise<Router> {
+      value(handler: (error: Error) => Response | Promise<Response>): Router {
         this.errorHandler = handler
         return this
       },

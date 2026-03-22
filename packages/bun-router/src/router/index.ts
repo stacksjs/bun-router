@@ -132,11 +132,11 @@ declare module './router' {
     initializeRouteCompiler: () => void
 
     // Health check method
-    health: () => Promise<Router>
+    health: () => Router
 
     // View rendering methods
     renderView: (view: string, data?: Record<string, any>, options?: { layout?: string }) => Promise<string>
-    view: (path: string, view: string, data?: Record<string, any>, options?: { layout?: string, status?: number, headers?: Record<string, string> }) => Promise<Router>
+    view: (path: string, view: string, data?: Record<string, any>, options?: { layout?: string, status?: number, headers?: Record<string, string> }) => Router
 
     // Route constraint methods
     where: ((_param: string, _pattern: string | RegExp) => Router) & ((constraints: Record<string, string | RegExp>) => Router)
@@ -147,7 +147,7 @@ declare module './router' {
     whereIn: (param: string, values: string[]) => Router
 
     // Domain routing
-    domain: (domain: string, callback: () => Promise<void> | void) => Promise<Router>
+    domain: (domain: string, callback: () => void) => Router
 
     // RESTful resource routing
     resource: (name: string, handlers: {
@@ -158,7 +158,7 @@ declare module './router' {
       destroy?: ActionHandler
       create?: ActionHandler
       edit?: ActionHandler
-    }) => Promise<Router>
+    }) => Router
 
     // Redirect and utility methods
     onError: (handler: (error: Error) => Response | Promise<Response>) => Router

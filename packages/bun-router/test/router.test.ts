@@ -13,49 +13,49 @@ describe('Router', () => {
 
   describe('Route Registration', () => {
     it('should register a GET route', async () => {
-      await router.get('/test', () => new Response('Test GET'))
+      router.get('/test', () => new Response('Test GET'))
       const response = await router.handleRequest(new Request('http://localhost/test'))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test GET')
     })
 
     it('should register a POST route', async () => {
-      await router.post('/test', () => new Response('Test POST'))
+      router.post('/test', () => new Response('Test POST'))
       const response = await router.handleRequest(new Request('http://localhost/test', { method: 'POST' }))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test POST')
     })
 
     it('should register a PUT route', async () => {
-      await router.put('/test', () => new Response('Test PUT'))
+      router.put('/test', () => new Response('Test PUT'))
       const response = await router.handleRequest(new Request('http://localhost/test', { method: 'PUT' }))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test PUT')
     })
 
     it('should register a PATCH route', async () => {
-      await router.patch('/test', () => new Response('Test PATCH'))
+      router.patch('/test', () => new Response('Test PATCH'))
       const response = await router.handleRequest(new Request('http://localhost/test', { method: 'PATCH' }))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test PATCH')
     })
 
     it('should register a DELETE route', async () => {
-      await router.delete('/test', () => new Response('Test DELETE'))
+      router.delete('/test', () => new Response('Test DELETE'))
       const response = await router.handleRequest(new Request('http://localhost/test', { method: 'DELETE' }))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test DELETE')
     })
 
     it('should register an OPTIONS route', async () => {
-      await router.options('/test', () => new Response('Test OPTIONS'))
+      router.options('/test', () => new Response('Test OPTIONS'))
       const response = await router.handleRequest(new Request('http://localhost/test', { method: 'OPTIONS' }))
       expect(response.status).toBe(200)
       expect(await response.text()).toBe('Test OPTIONS')
     })
 
     it('should match multiple HTTP methods', async () => {
-      await router.match(['GET', 'POST'], '/multi', () => new Response('Multi'))
+      router.match(['GET', 'POST'], '/multi', () => new Response('Multi'))
 
       const getResponse = await router.handleRequest(new Request('http://localhost/multi'))
       expect(getResponse.status).toBe(200)
@@ -70,7 +70,7 @@ describe('Router', () => {
     })
 
     it('should register a route for any HTTP method', async () => {
-      await router.any('/any', () => new Response('Any'))
+      router.any('/any', () => new Response('Any'))
 
       const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
@@ -84,7 +84,7 @@ describe('Router', () => {
 
   describe('Route Parameters', () => {
     it('should handle route parameters', async () => {
-      await router.get('/users/{id}', (req: EnhancedRequest) => {
+      router.get('/users/{id}', (req: EnhancedRequest) => {
         return new Response(`User ID: ${req.params.id}`)
       })
 
@@ -94,7 +94,7 @@ describe('Router', () => {
     })
 
     it('should handle multiple route parameters', async () => {
-      await router.get('/users/{userId}/posts/{postId}', (req: EnhancedRequest) => {
+      router.get('/users/{userId}/posts/{postId}', (req: EnhancedRequest) => {
         return new Response(`User: ${req.params.userId}, Post: ${req.params.postId}`)
       })
 
@@ -104,7 +104,7 @@ describe('Router', () => {
     })
 
     it('should handle optional route parameters with constraints', async () => {
-      await router.get('/products/{category}/{id?}', (req: EnhancedRequest) => {
+      router.get('/products/{category}/{id?}', (req: EnhancedRequest) => {
         if (req.params.id) {
           return new Response(`Category: ${req.params.category}, Product: ${req.params.id}`)
         }
@@ -123,7 +123,7 @@ describe('Router', () => {
 
   describe('Route Groups', () => {
     it('should group routes with shared prefix', async () => {
-      await router.group({ prefix: '/api' }, () => {
+      router.group({ prefix: '/api' }, () => {
         router.get('/users', () => new Response('API Users'))
         router.get('/posts', () => new Response('API Posts'))
       })
@@ -138,7 +138,7 @@ describe('Router', () => {
     })
 
     it('should support nested groups', async () => {
-      await router.group({ prefix: '/api' }, () => {
+      router.group({ prefix: '/api' }, () => {
         router.get('', () => new Response('API Root'))
 
         router.group({ prefix: '/v1' }, () => {
@@ -182,8 +182,8 @@ describe('Router', () => {
       }
 
       // Register the middleware and route
-      await router.use(middleware)
-      await router.get('/middleware-test', () => new Response('Test'))
+      router.use(middleware)
+      router.get('/middleware-test', () => new Response('Test'))
 
       // Make the request
       const response = await router.handleRequest(new Request('http://localhost/middleware-test'))
@@ -209,12 +209,12 @@ describe('Router', () => {
       }
 
       // Register group with middleware
-      await router.group({ prefix: '/api', middleware: [middleware] }, () => {
+      router.group({ prefix: '/api', middleware: [middleware] }, () => {
         router.get('/test', () => new Response('API Test'))
       })
 
       // Register a regular route outside the group
-      await router.get('/test', () => new Response('Regular Test'))
+      router.get('/test', () => new Response('Regular Test'))
 
       // Test API route (should be modified by middleware)
       const apiResponse = await router.handleRequest(new Request('http://localhost/api/test'))
@@ -228,15 +228,15 @@ describe('Router', () => {
     })
 
     it('should halt middleware chain on early response', async () => {
-      await router.use(async (req, next) => {
+      router.use(async (req, next) => {
         if (req.url.includes('protected')) {
           return new Response('Unauthorized', { status: 401 })
         }
         return next()
       })
 
-      await router.get('/protected', () => new Response('Protected Content'))
-      await router.get('/public', () => new Response('Public Content'))
+      router.get('/protected', () => new Response('Protected Content'))
+      router.get('/public', () => new Response('Public Content'))
 
       const protectedResponse = await router.handleRequest(new Request('http://localhost/protected'))
       expect(protectedResponse.status).toBe(401)
@@ -250,7 +250,7 @@ describe('Router', () => {
 
   describe('Route Constraints', () => {
     it('should apply number constraints', async () => {
-      await router.get('/users/{id}', (req: EnhancedRequest) => new Response(`User: ${req.params.id}`))
+      router.get('/users/{id}', (req: EnhancedRequest) => new Response(`User: ${req.params.id}`))
       router.whereNumber('id')
 
       const validResponse = await router.handleRequest(new Request('http://localhost/users/123'))
@@ -262,7 +262,7 @@ describe('Router', () => {
     })
 
     it('should apply custom pattern constraints', async () => {
-      await router.get('/posts/{slug}', (req: EnhancedRequest) => new Response(`Post: ${req.params.slug}`))
+      router.get('/posts/{slug}', (req: EnhancedRequest) => new Response(`Post: ${req.params.slug}`))
       router.where({ slug: '^[a-z0-9-]+$' })
 
       const validResponse = await router.handleRequest(new Request('http://localhost/posts/my-awesome-post-123'))
@@ -276,7 +276,7 @@ describe('Router', () => {
 
   describe('Named Routes', () => {
     it('should register and resolve named routes', async () => {
-      await router.get('/users/{id}', () => new Response('User'), undefined, 'users.show')
+      router.get('/users/{id}', () => new Response('User'), undefined, 'users.show')
 
       const path = router.route('users.show', { id: '123' })
       expect(path).toBe('/users/123')
@@ -307,7 +307,7 @@ describe('Router', () => {
     })
 
     it('should register redirect routes', async () => {
-      await router.redirectRoute('/old-path', '/new-path')
+      router.redirectRoute('/old-path', '/new-path')
 
       const response = await router.handleRequest(new Request('http://localhost/old-path'))
       expect(response.status).toBe(302)
@@ -318,11 +318,11 @@ describe('Router', () => {
   describe('Error Handling', () => {
     it('should handle errors in route handlers', async () => {
       // Register an error handler
-      await router.onError((error) => {
+      router.onError((error) => {
         return new Response(`Error: ${error.message}`, { status: 500 })
       })
 
-      await router.get('/error', () => {
+      router.get('/error', () => {
         throw new Error('Test error')
       })
 
@@ -333,11 +333,11 @@ describe('Router', () => {
 
     it('should handle async errors in route handlers', async () => {
       // Register an error handler
-      await router.onError((error) => {
+      router.onError((error) => {
         return new Response(`Error: ${error.message}`, { status: 500 })
       })
 
-      await router.get('/async-error', async () => {
+      router.get('/async-error', async () => {
         return Promise.reject(new Error('Async error'))
       })
 
@@ -349,7 +349,7 @@ describe('Router', () => {
 
   describe('Cookies', () => {
     it('should parse request cookies', async () => {
-      await router.get('/cookies', (req: EnhancedRequest) => {
+      router.get('/cookies', (req: EnhancedRequest) => {
         const value = req.cookies?.get('test-cookie')
         return new Response(`Cookie: ${value}`)
       })
@@ -363,7 +363,7 @@ describe('Router', () => {
     })
 
     it('should set response cookies', async () => {
-      await router.get('/set-cookie', (req: EnhancedRequest) => {
+      router.get('/set-cookie', (req: EnhancedRequest) => {
         req.cookies?.set('new-cookie', 'new-value', {
           httpOnly: true,
           maxAge: 3600,
@@ -381,7 +381,7 @@ describe('Router', () => {
     })
 
     it('should delete cookies', async () => {
-      await router.get('/delete-cookie', (req: EnhancedRequest) => {
+      router.get('/delete-cookie', (req: EnhancedRequest) => {
         req.cookies?.delete('to-delete')
         return new Response('Cookie deleted')
       })
@@ -493,7 +493,7 @@ describe('Router', () => {
       })
 
       // Register a view route
-      await router.view('/test-page', 'test', {
+      router.view('/test-page', 'test', {
         title: 'Test Page',
         heading: 'Test Heading',
         message: 'Hello from test',
@@ -519,7 +519,7 @@ describe('Router', () => {
       })
 
       // This registers standard RESTful routes: index, show, store, update, destroy
-      await router.resource('users', {
+      router.resource('users', {
         index: () => new Response('List of users'),
         show: (req: any) => new Response(`User ${req.params.id}`),
         store: () => new Response('User created', { status: 201 }),
@@ -566,7 +566,7 @@ describe('Router', () => {
         apiPrefix: '/api',
       })
 
-      await router.get('/users', () => new Response('Users API'), 'api')
+      router.get('/users', () => new Response('Users API'), 'api')
 
       const response = await router.handleRequest(new Request('http://localhost/api/users'))
       expect(response.status).toBe(200)
@@ -578,7 +578,7 @@ describe('Router', () => {
         webPrefix: '/app',
       })
 
-      await router.get('/dashboard', () => new Response('Dashboard'), 'web')
+      router.get('/dashboard', () => new Response('Dashboard'), 'web')
 
       const response = await router.handleRequest(new Request('http://localhost/app/dashboard'))
       expect(response.status).toBe(200)
@@ -594,7 +594,7 @@ describe('Router', () => {
       })
 
       // Register the health route
-      await router.health()
+      router.health()
 
       // Health check should be accessible at /api/health due to the API prefix
       const response = await router.handleRequest(new Request('http://localhost/api/health'))

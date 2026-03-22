@@ -11,14 +11,14 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
   Object.defineProperties(RouterClass.prototype, {
     // Add a route to the router
     addRoute: {
-      async value(
+      value(
         method: string,
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         // Apply current group settings if in a group
         let routePath = path
         let routeMiddleware: MiddlewareHandler[] = []
@@ -39,7 +39,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         // Apply route-specific middleware if provided
         if (middleware && middleware.length > 0) {
           for (const middlewareItem of middleware) {
-            const resolved = await this.resolveMiddleware(middlewareItem)
+            const resolved = this.resolveMiddleware(middlewareItem)
             if (resolved) {
               routeMiddleware.push(resolved)
             }
@@ -150,13 +150,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP GET method
     get: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('GET', path, handler, type, name, middleware)
       },
       writable: true,
@@ -165,13 +165,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP POST method
     post: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('POST', path, handler, type, name, middleware)
       },
       writable: true,
@@ -180,13 +180,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP PUT method
     put: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('PUT', path, handler, type, name, middleware)
       },
       writable: true,
@@ -195,13 +195,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP PATCH method
     patch: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('PATCH', path, handler, type, name, middleware)
       },
       writable: true,
@@ -210,13 +210,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP DELETE method
     delete: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('DELETE', path, handler, type, name, middleware)
       },
       writable: true,
@@ -225,13 +225,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // HTTP OPTIONS method
     options: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         return this.addRoute('OPTIONS', path, handler, type, name, middleware)
       },
       writable: true,
@@ -240,16 +240,16 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // Register a route that responds to multiple HTTP methods
     match: {
-      async value(
+      value(
         methods: string[],
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         for (const method of methods) {
-          await this.addRoute(method, path, handler, type, name, middleware)
+          this.addRoute(method, path, handler, type, name, middleware)
         }
         return this
       },
@@ -259,13 +259,13 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
     // Register a route that responds to ANY HTTP method
     any: {
-      async value(
+      value(
         path: string,
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
         middleware?: (string | MiddlewareHandler)[],
-      ): Promise<Router> {
+      ): Router {
         const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
         return this.match(methods, path, handler, type, name, middleware)
       },
@@ -343,8 +343,8 @@ export function registerRedirectMethods(RouterClass: typeof Router): void {
     },
 
     redirectRoute: {
-      async value(from: string, to: string, status: 301 | 302 | 303 | 307 | 308 = 302): Promise<Router> {
-        await this.get(from, (_req: EnhancedRequest) => {
+      value(from: string, to: string, status: 301 | 302 | 303 | 307 | 308 = 302): Router {
+        this.get(from, (_req: EnhancedRequest) => {
           return this.redirect(to, status)
         })
         return this
@@ -354,7 +354,7 @@ export function registerRedirectMethods(RouterClass: typeof Router): void {
     },
 
     permanentRedirectRoute: {
-      async value(from: string, to: string): Promise<Router> {
+      value(from: string, to: string): Router {
         return this.redirectRoute(from, to, 301)
       },
       writable: true,
