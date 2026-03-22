@@ -36,7 +36,7 @@ router.view(
   optionsOrType: object | 'web' | 'api', // Rendering options or route type
   typeOrName: 'web' | 'api' | string,   // Route type or route name
   name?: string                 // Route name (if not provided in previous parameter)
-): Promise<Router>
+): Router
 ```
 
 ## View Rendering Options

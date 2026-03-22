@@ -23,7 +23,7 @@ import { responseCache } from 'bun-router/middleware'
 const router = new Router()
 
 // Basic response caching
-await router.use(responseCache({
+router.use(responseCache({
   storage: { type: 'memory' },
   ttl: { default: 300000 } // 5 minutes
 }))
@@ -43,7 +43,7 @@ Fast in-memory caching with LRU eviction:
 ```typescript
 import { memoryCache } from 'bun-router/middleware'
 
-await router.use(memoryCache({
+router.use(memoryCache({
   storage: { maxEntries: 1000 },
   ttl: { default: 600000 } // 10 minutes
 }))
@@ -56,7 +56,7 @@ Persistent file-based caching using Bun's optimized file APIs:
 ```typescript
 import { fileCache } from 'bun-router/middleware'
 
-await router.use(fileCache('.cache/responses', {
+router.use(fileCache('.cache/responses', {
   storage: { maxSize: 100 * 1024 * 1024 }, // 100MB
   ttl: { default: 3600000 } // 1 hour
 }))
@@ -69,7 +69,7 @@ Combines memory and file caching for optimal performance:
 ```typescript
 import { hybridCache } from 'bun-router/middleware'
 
-await router.use(hybridCache({
+router.use(hybridCache({
   storage: {
     directory: '.cache/responses',
     maxEntries: 1000, // Memory limit
@@ -83,7 +83,7 @@ await router.use(hybridCache({
 ### TTL Configuration
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   ttl: {
     default: 300000, // 5 minutes default
     routes: {
@@ -104,7 +104,7 @@ await router.use(responseCache({
 Cache different responses based on request headers:
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   varyHeaders: ['Accept', 'Accept-Language', 'Authorization'],
   keyGenerator: (req) => {
     // Custom cache key generation
@@ -118,7 +118,7 @@ await router.use(responseCache({
 ### Cache Invalidation
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   invalidation: {
     methods: ['POST', 'PUT', 'PATCH', 'DELETE'], // Invalidate on mutations
     patterns: ['/api/users/.*', '/api/posts/.*'], // Pattern-based invalidation
@@ -130,7 +130,7 @@ await router.use(responseCache({
 ### ETags and Conditional Requests
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   etag: {
     enabled: true,
     weak: false // Use strong ETags
@@ -143,7 +143,7 @@ await router.use(responseCache({
 ### Stale-While-Revalidate
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   staleWhileRevalidate: {
     enabled: true,
     maxAge: 60000 // Serve stale content for 1 minute while revalidating
@@ -156,7 +156,7 @@ await router.use(responseCache({
 ### Custom Should Cache Function
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   shouldCache: (req, res) => {
     // Don't cache authenticated requests
     if (req.headers.get('Authorization')) return false
@@ -173,7 +173,7 @@ await router.use(responseCache({
 ### Custom Key Generator
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   keyGenerator: (req) => {
     const url = new URL(req.url)
     const userId = req.headers.get('X-User-ID')
@@ -190,7 +190,7 @@ await router.use(responseCache({
 
 ```typescript
 const cache = responseCache({ storage: { type: 'memory' } })
-await router.use(async (req, next) => cache.handle(req, next))
+router.use(async (req, next) => cache.handle(req, next))
 
 // Clear all cache
 await cache.clearCache()
@@ -230,7 +230,7 @@ import { hybridCache } from 'bun-router/middleware'
 const router = new Router()
 
 // Configure caching for API
-await router.use(hybridCache({
+router.use(hybridCache({
   storage: {
     directory: '.cache/api',
     maxEntries: 5000,
@@ -261,7 +261,7 @@ router.get('/api/users/:id', async (req) => {
 ### Static Asset Caching
 
 ```typescript
-await router.use(fileCache('.cache/static', {
+router.use(fileCache('.cache/static', {
   ttl: {
     default: 86400000, // 24 hours
     routes: {
@@ -279,7 +279,7 @@ await router.use(fileCache('.cache/static', {
 ### Conditional Caching
 
 ```typescript
-await router.use(responseCache({
+router.use(responseCache({
   shouldCache: (req, res) => {
     // Don't cache for authenticated users
     if (req.headers.get('Authorization')) return false
@@ -368,9 +368,9 @@ import { responseCache, compression, rateLimit } from 'bun-router/middleware'
 const router = new Router()
 
 // Order matters: rate limiting before caching
-await router.use(rateLimit({ windowMs: 60000, max: 100 }))
-await router.use(responseCache({ storage: { type: 'hybrid' } }))
-await router.use(compression()) // Compression after caching
+router.use(rateLimit({ windowMs: 60000, max: 100 }))
+router.use(responseCache({ storage: { type: 'hybrid' } }))
+router.use(compression()) // Compression after caching
 
 router.get('/api/data', handler)
 ```
