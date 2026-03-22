@@ -1,8 +1,8 @@
 import type { PickierConfig } from 'pickier'
 
 const config: PickierConfig = {
-  verbose: false,
-  ignores: [    '**/node_modules/**',
+  ignores: [
+    '**/node_modules/**',
     '**/dist/**',
     '**/build/**',
     '**/bin/**',
@@ -63,6 +63,8 @@ const config: PickierConfig = {
     'markdown/single-trailing-newline': 'off',
     'markdown/link-image-style': 'off',
   },
+
+  verbose: false,
 }
 
 export default config

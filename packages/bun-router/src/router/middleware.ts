@@ -33,6 +33,13 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
           return middleware
         }
 
+        // Class instance with handle() method (e.g. new JsonBody())
+        if (typeof middleware === 'object' && middleware !== null && 'handle' in middleware && typeof (middleware as any).handle === 'function') {
+          return (req: EnhancedRequest, next: NextFunction) => {
+            return (middleware as any).handle(req, next)
+          }
+        }
+
         if (typeof middleware === 'string') {
           try {
             // Try to import from project middleware directory

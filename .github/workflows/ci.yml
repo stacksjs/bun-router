@@ -94,6 +94,8 @@ jobs:
 
       - name: Setup Pantry
         uses: home-lang/pantry/packages/action@main
+        with:
+          token: ${{ secrets.PANTRY_TOKEN }}
 
       - name: Install Dependencies
         run: bun install
@@ -104,5 +106,3 @@ jobs:
       - name: Publish Commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pantry publish:commit './packages/bun-router'
-        env:
-          PANTRY_REGISTRY_TOKEN: ${{ secrets.PANTRY_TOKEN }}
