@@ -117,7 +117,7 @@ export class FluentRouter {
   /**
    * Register a GET route
    */
-  get(path: string, handler: RouteHandler | string): FluentRouteBuilder {
+  get(path: string, handler: RouteHandler | string | Response): FluentRouteBuilder {
     return this.addRoute('GET', path, handler)
   }
 
@@ -412,9 +412,15 @@ export class FluentRouter {
   // Private Methods
   // ============================================================================
 
-  private addRoute(method: string, path: string, handler: RouteHandler | string): FluentRouteBuilder {
+  private addRoute(method: string, path: string, handler: RouteHandler | string | Response): FluentRouteBuilder {
     const fullPath = this.buildPath(path)
-    const resolvedHandler = this.resolveHandler(handler)
+
+    // If handler is a Response object, register for Bun's native static dispatch
+    if (handler instanceof Response) {
+      this.router.staticResponses.set(fullPath, handler)
+    }
+
+    const resolvedHandler = handler instanceof Response ? handler : this.resolveHandler(handler)
     const middleware = this.buildMiddleware()
 
     const route: Route = {

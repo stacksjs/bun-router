@@ -934,6 +934,7 @@ export type ActionHandler<TPath extends string = string> =
   | TypedRouteHandler<TPath>
   | RouteHandler
   | (new () => ActionHandlerClass)
+  | Response
 
 /**
  * Controller method reference with strict typing
@@ -1088,8 +1089,29 @@ export type Compressor =
   | '128KB'
   | '256KB'
 
-export interface ServerOptions<T extends WebSocketData = WebSocketData> extends Partial<Omit<Server<T>, 'websocket'>> {
+export interface ServerOptions<T extends WebSocketData = WebSocketData> extends Partial<Omit<Server<T>, 'websocket' | 'development'>> {
   websocket?: WebSocketConfig<T>
+  /**
+   * Pre-computed static responses served by Bun's native static dispatch.
+   * These bypass the fetch handler entirely for zero-allocation serving (~15% faster).
+   */
+  static?: Record<string, Response>
+  /**
+   * Development mode options for Bun's dev server.
+   * When true, enables HMR and development features.
+   * When an object, allows fine-grained control over HMR and console streaming.
+   *
+   * @example
+   * // Stream browser console.log/console.error to terminal
+   * development: { console: true }
+   *
+   * // Enable HMR + console streaming
+   * development: { hmr: true, console: true }
+   */
+  development?: boolean | {
+    hmr?: boolean
+    console?: boolean
+  }
 }
 
 /**

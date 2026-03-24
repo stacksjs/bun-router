@@ -67,6 +67,7 @@ export class Router {
   templateCache: Map<string, string> = new Map<string, string>()
   routeCache: Map<string, { route: Route, params: Record<string, string> }> = new Map()
   staticRoutes: Map<string, Map<string, Route>> = new Map()
+  staticResponses: Map<string, Response> = new Map()
   precompiledPatterns: Map<string, RegExp> = new Map()
   domainPatternCache: Map<string, RegExp> = new Map()
   routeCompiler: RouteCompiler | null = null

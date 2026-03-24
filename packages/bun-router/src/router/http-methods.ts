@@ -109,6 +109,12 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
           },
         }
 
+        // If handler is a Response object, register it for Bun's native static dispatch.
+        // Static responses bypass the fetch handler entirely for zero-allocation serving.
+        if (handler instanceof Response) {
+          this.staticResponses.set(routePath, handler)
+        }
+
         // Add to the appropriate collection
         if (domain) {
           if (!this.domains[domain]) {
@@ -120,12 +126,17 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
           this.routes.push(route)
         }
 
-        // Add to static routes map for fast lookup if it's a static route
+        // Add to static routes map for fast lookup if it's a static route.
+        // First registration wins — if a route is already registered (e.g., by user code),
+        // the framework default is skipped so users can override any route.
         if (!routePath.includes('{') && !routePath.includes('*')) {
           if (!this.staticRoutes.has(method.toUpperCase())) {
             this.staticRoutes.set(method.toUpperCase(), new Map())
           }
-          this.staticRoutes.get(method.toUpperCase())!.set(routePath, route)
+          const methodMap = this.staticRoutes.get(method.toUpperCase())!
+          if (!methodMap.has(routePath)) {
+            methodMap.set(routePath, route)
+          }
         }
 
         // Add to named routes if name is provided

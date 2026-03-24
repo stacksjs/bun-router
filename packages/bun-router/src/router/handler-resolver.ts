@@ -150,6 +150,11 @@ export async function resolveHandler(
   req: EnhancedRequest,
   config: RouterConfig,
 ): Promise<Response> {
+  // 0. If it's already a Response (static route), clone and return it directly
+  if (handler instanceof Response) {
+    return handler.clone() as Response
+  }
+
   // 1. If it's a function (not a class with handle method), call it and wrap the result
   if (isCallableHandler(handler)) {
     const result = await handler(req)

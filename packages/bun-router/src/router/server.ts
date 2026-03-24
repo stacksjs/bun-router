@@ -32,6 +32,27 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           fetch: this.handleRequest.bind(this),
         }
 
+        // Build Bun's static option from registered static Response routes.
+        // Static responses use Bun's native zero-allocation dispatch (~15% faster).
+        const staticRouteMap: Record<string, Response> = {}
+        if (this.staticResponses && this.staticResponses.size > 0) {
+          for (const [path, response] of this.staticResponses) {
+            staticRouteMap[path] = response
+          }
+        }
+        // Merge with user-provided static routes (user options take precedence)
+        if (options.static) {
+          Object.assign(staticRouteMap, options.static)
+        }
+        if (Object.keys(staticRouteMap).length > 0) {
+          serverOptions.static = staticRouteMap
+        }
+
+        // Forward development options for HMR and console streaming
+        if (options.development !== undefined) {
+          serverOptions.development = options.development
+        }
+
         // Apply WebSocket configuration if provided
         if (this.wsConfig) {
           serverOptions.websocket = this.wsConfig
