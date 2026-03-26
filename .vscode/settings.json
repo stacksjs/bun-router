@@ -1,0 +1,12 @@
+{
+  // Use pickier as the default formatter
+  "prettier.enable": false,
+  "biome.enabled": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "pickier.pickier-vscode",
+  // Auto fix
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "never"
+  },
+}
