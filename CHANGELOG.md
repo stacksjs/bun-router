@@ -1,3 +1,140 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.2...v0.0.3)
+
+### 🐛 Bug Fixes
+
+- resolve CI failures - typecheck errors, build hang, and workflow ordering ([42425e5](https://github.com/stacksjs/bun-router/commit/42425e5)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.3 ([c87ce70](https://github.com/stacksjs/bun-router/commit/c87ce70)) _(by Chris <chrisbreuer93@gmail.com>)_
+- update vscode config ([420d337](https://github.com/stacksjs/bun-router/commit/420d337)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- update vscode config ([de0900d](https://github.com/stacksjs/bun-router/commit/de0900d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([692c277](https://github.com/stacksjs/bun-router/commit/692c277)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([5dc7504](https://github.com/stacksjs/bun-router/commit/5dc7504)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([40fd129](https://github.com/stacksjs/bun-router/commit/40fd129)) _(by Chris <chrisbreuer93@gmail.com>)_
+- repo cleanup and modernization ([e9e8b8e](https://github.com/stacksjs/bun-router/commit/e9e8b8e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add git-hooks config ([604095a](https://github.com/stacksjs/bun-router/commit/604095a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3d79de6](https://github.com/stacksjs/bun-router/commit/3d79de6)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([8c310cf](https://github.com/stacksjs/bun-router/commit/8c310cf)) _(by Chris <chrisbreuer93@gmail.com>)_
+- use Pantry action for publish-commit and add job dependencies ([59a48ef](https://github.com/stacksjs/bun-router/commit/59a48ef)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([70bf107](https://github.com/stacksjs/bun-router/commit/70bf107)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([30c216d](https://github.com/stacksjs/bun-router/commit/30c216d)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([674f0e7](https://github.com/stacksjs/bun-router/commit/674f0e7)) _(by Chris <chrisbreuer93@gmail.com>)_
+- update lockfiles ([0704ffe](https://github.com/stacksjs/bun-router/commit/0704ffe)) _(by Chris <chrisbreuer93@gmail.com>)_
+- minor updates ([fbebbb0](https://github.com/stacksjs/bun-router/commit/fbebbb0)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: update all non-major dependencies (rebased) (#871) ([3b75049](https://github.com/stacksjs/bun-router/commit/3b75049)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#871](https://github.com/stacksjs/bun-router/issues/871), [#871](https://github.com/stacksjs/bun-router/issues/871))
+- wip ([ae76301](https://github.com/stacksjs/bun-router/commit/ae76301)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- remove file ignores from pickier config ([8365a7a](https://github.com/stacksjs/bun-router/commit/8365a7a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([438d50e](https://github.com/stacksjs/bun-router/commit/438d50e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([4cdfc61](https://github.com/stacksjs/bun-router/commit/4cdfc61)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([d3b839b](https://github.com/stacksjs/bun-router/commit/d3b839b)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- remove .pickierignore ([01b70be](https://github.com/stacksjs/bun-router/commit/01b70be)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- enrich CLAUDE.md with detailed project context from README ([8642c13](https://github.com/stacksjs/bun-router/commit/8642c13)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- update CLAUDE.md with project context and crosswind details ([fa9407f](https://github.com/stacksjs/bun-router/commit/fa9407f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add proper claude code guidelines ([f1b0f2a](https://github.com/stacksjs/bun-router/commit/f1b0f2a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- use pantry monorepo action instead of pantry-setup ([17cc746](https://github.com/stacksjs/bun-router/commit/17cc746)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- ignore claude config in linter ([62cf7cf](https://github.com/stacksjs/bun-router/commit/62cf7cf)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add claude code guidelines ([542dae2](https://github.com/stacksjs/bun-router/commit/542dae2)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **deps**: update github actions (#868) ([6103155](https://github.com/stacksjs/bun-router/commit/6103155)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#868](https://github.com/stacksjs/bun-router/issues/868), [#868](https://github.com/stacksjs/bun-router/issues/868))
+- **deps**: update all non-major dependencies (rebased) (#865) ([e4e64fb](https://github.com/stacksjs/bun-router/commit/e4e64fb)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#865](https://github.com/stacksjs/bun-router/issues/865), [#865](https://github.com/stacksjs/bun-router/issues/865))
+- **deps**: update github actions (rebased) (#867) ([e98152a](https://github.com/stacksjs/bun-router/commit/e98152a)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#867](https://github.com/stacksjs/bun-router/issues/867), [#867](https://github.com/stacksjs/bun-router/issues/867))
+- **deps**: update github actions (rebased) (#863) ([937a8e4](https://github.com/stacksjs/bun-router/commit/937a8e4)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#863](https://github.com/stacksjs/bun-router/issues/863), [#863](https://github.com/stacksjs/bun-router/issues/863))
+- **deps**: update all non-major dependencies (updated) (#864) ([e6ddfd7](https://github.com/stacksjs/bun-router/commit/e6ddfd7)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#864](https://github.com/stacksjs/bun-router/issues/864), [#864](https://github.com/stacksjs/bun-router/issues/864))
+- wip ([bae1979](https://github.com/stacksjs/bun-router/commit/bae1979)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f20a48f](https://github.com/stacksjs/bun-router/commit/f20a48f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([0f010e6](https://github.com/stacksjs/bun-router/commit/0f010e6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3f2ba45](https://github.com/stacksjs/bun-router/commit/3f2ba45)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([79e3b7b](https://github.com/stacksjs/bun-router/commit/79e3b7b)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([cb8fded](https://github.com/stacksjs/bun-router/commit/cb8fded)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([88a97dd](https://github.com/stacksjs/bun-router/commit/88a97dd)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([51d9b9d](https://github.com/stacksjs/bun-router/commit/51d9b9d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([15d102c](https://github.com/stacksjs/bun-router/commit/15d102c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([ef6eaad](https://github.com/stacksjs/bun-router/commit/ef6eaad)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix const assignment error and add STX config options ([37f7b54](https://github.com/stacksjs/bun-router/commit/37f7b54)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f059d80](https://github.com/stacksjs/bun-router/commit/f059d80)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([c220e66](https://github.com/stacksjs/bun-router/commit/c220e66)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([93a1bec](https://github.com/stacksjs/bun-router/commit/93a1bec)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([38157f6](https://github.com/stacksjs/bun-router/commit/38157f6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3406315](https://github.com/stacksjs/bun-router/commit/3406315)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([e81491c](https://github.com/stacksjs/bun-router/commit/e81491c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f3cbd5f](https://github.com/stacksjs/bun-router/commit/f3cbd5f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([0c39c3f](https://github.com/stacksjs/bun-router/commit/0c39c3f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([e09f21c](https://github.com/stacksjs/bun-router/commit/e09f21c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([4cbfc4e](https://github.com/stacksjs/bun-router/commit/4cbfc4e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.2...HEAD)
+
+### 🐛 Bug Fixes
+
+- resolve CI failures - typecheck errors, build hang, and workflow ordering ([42425e5](https://github.com/stacksjs/bun-router/commit/42425e5)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- update vscode config ([420d337](https://github.com/stacksjs/bun-router/commit/420d337)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- update vscode config ([de0900d](https://github.com/stacksjs/bun-router/commit/de0900d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([692c277](https://github.com/stacksjs/bun-router/commit/692c277)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([5dc7504](https://github.com/stacksjs/bun-router/commit/5dc7504)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([40fd129](https://github.com/stacksjs/bun-router/commit/40fd129)) _(by Chris <chrisbreuer93@gmail.com>)_
+- repo cleanup and modernization ([e9e8b8e](https://github.com/stacksjs/bun-router/commit/e9e8b8e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add git-hooks config ([604095a](https://github.com/stacksjs/bun-router/commit/604095a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3d79de6](https://github.com/stacksjs/bun-router/commit/3d79de6)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([8c310cf](https://github.com/stacksjs/bun-router/commit/8c310cf)) _(by Chris <chrisbreuer93@gmail.com>)_
+- use Pantry action for publish-commit and add job dependencies ([59a48ef](https://github.com/stacksjs/bun-router/commit/59a48ef)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([70bf107](https://github.com/stacksjs/bun-router/commit/70bf107)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([30c216d](https://github.com/stacksjs/bun-router/commit/30c216d)) _(by Chris <chrisbreuer93@gmail.com>)_
+- wip ([674f0e7](https://github.com/stacksjs/bun-router/commit/674f0e7)) _(by Chris <chrisbreuer93@gmail.com>)_
+- update lockfiles ([0704ffe](https://github.com/stacksjs/bun-router/commit/0704ffe)) _(by Chris <chrisbreuer93@gmail.com>)_
+- minor updates ([fbebbb0](https://github.com/stacksjs/bun-router/commit/fbebbb0)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: update all non-major dependencies (rebased) (#871) ([3b75049](https://github.com/stacksjs/bun-router/commit/3b75049)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#871](https://github.com/stacksjs/bun-router/issues/871), [#871](https://github.com/stacksjs/bun-router/issues/871))
+- wip ([ae76301](https://github.com/stacksjs/bun-router/commit/ae76301)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- remove file ignores from pickier config ([8365a7a](https://github.com/stacksjs/bun-router/commit/8365a7a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([438d50e](https://github.com/stacksjs/bun-router/commit/438d50e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([4cdfc61](https://github.com/stacksjs/bun-router/commit/4cdfc61)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint warnings ([d3b839b](https://github.com/stacksjs/bun-router/commit/d3b839b)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- remove .pickierignore ([01b70be](https://github.com/stacksjs/bun-router/commit/01b70be)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- enrich CLAUDE.md with detailed project context from README ([8642c13](https://github.com/stacksjs/bun-router/commit/8642c13)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- update CLAUDE.md with project context and crosswind details ([fa9407f](https://github.com/stacksjs/bun-router/commit/fa9407f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add proper claude code guidelines ([f1b0f2a](https://github.com/stacksjs/bun-router/commit/f1b0f2a)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- use pantry monorepo action instead of pantry-setup ([17cc746](https://github.com/stacksjs/bun-router/commit/17cc746)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- ignore claude config in linter ([62cf7cf](https://github.com/stacksjs/bun-router/commit/62cf7cf)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add claude code guidelines ([542dae2](https://github.com/stacksjs/bun-router/commit/542dae2)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **deps**: update github actions (#868) ([6103155](https://github.com/stacksjs/bun-router/commit/6103155)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#868](https://github.com/stacksjs/bun-router/issues/868), [#868](https://github.com/stacksjs/bun-router/issues/868))
+- **deps**: update all non-major dependencies (rebased) (#865) ([e4e64fb](https://github.com/stacksjs/bun-router/commit/e4e64fb)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#865](https://github.com/stacksjs/bun-router/issues/865), [#865](https://github.com/stacksjs/bun-router/issues/865))
+- **deps**: update github actions (rebased) (#867) ([e98152a](https://github.com/stacksjs/bun-router/commit/e98152a)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#867](https://github.com/stacksjs/bun-router/issues/867), [#867](https://github.com/stacksjs/bun-router/issues/867))
+- **deps**: update github actions (rebased) (#863) ([937a8e4](https://github.com/stacksjs/bun-router/commit/937a8e4)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#863](https://github.com/stacksjs/bun-router/issues/863), [#863](https://github.com/stacksjs/bun-router/issues/863))
+- **deps**: update all non-major dependencies (updated) (#864) ([e6ddfd7](https://github.com/stacksjs/bun-router/commit/e6ddfd7)) _(by [github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>](https://github.com/github-actions[bot]))_ ([#864](https://github.com/stacksjs/bun-router/issues/864), [#864](https://github.com/stacksjs/bun-router/issues/864))
+- wip ([bae1979](https://github.com/stacksjs/bun-router/commit/bae1979)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f20a48f](https://github.com/stacksjs/bun-router/commit/f20a48f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([0f010e6](https://github.com/stacksjs/bun-router/commit/0f010e6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3f2ba45](https://github.com/stacksjs/bun-router/commit/3f2ba45)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([79e3b7b](https://github.com/stacksjs/bun-router/commit/79e3b7b)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([cb8fded](https://github.com/stacksjs/bun-router/commit/cb8fded)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([88a97dd](https://github.com/stacksjs/bun-router/commit/88a97dd)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([51d9b9d](https://github.com/stacksjs/bun-router/commit/51d9b9d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([15d102c](https://github.com/stacksjs/bun-router/commit/15d102c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([ef6eaad](https://github.com/stacksjs/bun-router/commit/ef6eaad)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix const assignment error and add STX config options ([37f7b54](https://github.com/stacksjs/bun-router/commit/37f7b54)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f059d80](https://github.com/stacksjs/bun-router/commit/f059d80)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([c220e66](https://github.com/stacksjs/bun-router/commit/c220e66)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([93a1bec](https://github.com/stacksjs/bun-router/commit/93a1bec)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([38157f6](https://github.com/stacksjs/bun-router/commit/38157f6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([3406315](https://github.com/stacksjs/bun-router/commit/3406315)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([e81491c](https://github.com/stacksjs/bun-router/commit/e81491c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([f3cbd5f](https://github.com/stacksjs/bun-router/commit/f3cbd5f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([0c39c3f](https://github.com/stacksjs/bun-router/commit/0c39c3f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([e09f21c](https://github.com/stacksjs/bun-router/commit/e09f21c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([4cbfc4e](https://github.com/stacksjs/bun-router/commit/4cbfc4e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.1...v0.0.2)
 
 ### 🚀 Features
