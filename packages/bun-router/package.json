@@ -71,7 +71,7 @@
   "dependencies": {
     "@stacksjs/clapp": "^0.2.0",
     "bun-query-builder": "^0.1.13",
-    "ts-rate-limiter": "^0.4.0"
+    "ts-rate-limiter": "^0.4.1"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun pickier . --fix"

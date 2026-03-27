@@ -11,7 +11,7 @@
     },
     "packages/bun-router": {
       "name": "@stacksjs/bun-router",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "bin": {
         "bun-router": "./dist/cli.js",
         "router": "./bin/cli.ts",
@@ -19,7 +19,7 @@
       "dependencies": {
         "@stacksjs/clapp": "^0.2.0",
         "bun-query-builder": "^0.1.13",
-        "ts-rate-limiter": "^0.4.0",
+        "ts-rate-limiter": "^0.4.1",
       },
     },
   },
