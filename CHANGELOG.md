@@ -1,3 +1,24 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.3...v0.0.4)
+
+### 🧹 Chores
+
+- release v0.0.4 ([6be9b9f](https://github.com/stacksjs/bun-router/commit/6be9b9f)) _(by Chris <chrisbreuer93@gmail.com>)_
+- update rate limiter ([97777da](https://github.com/stacksjs/bun-router/commit/97777da)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.3...HEAD)
+
+### 🧹 Chores
+
+- update rate limiter ([97777da](https://github.com/stacksjs/bun-router/commit/97777da)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.2...v0.0.3)
 
 ### 🐛 Bug Fixes
