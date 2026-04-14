@@ -350,7 +350,7 @@ export default class PerformanceDashboard {
             </div>
             <div class='metric'>
                 <span class='metric-label'>Error Rate</span>
-                <span class='metric-value ${data.metrics.current.errorRate > 0.1 ? 'critical' : data.metrics.current.errorRate > 0.05 ? 'warning' : ''}'>${Math.round(data.metrics.current.errorRate * 100)}%</span>
+                <span class='? > ${data.metrics.current.errorRate 0.1 metric-value'critical' : data.metrics.current.errorRate > 0.05 ? 'warning' : ''}'>${Math.round(data.metrics.current.errorRate * 100)}%</span>
             </div>
         </div>
         `
@@ -399,7 +399,7 @@ export default class PerformanceDashboard {
             <h2>Active Alerts</h2>
             ${data.alerts.length === 0 ? '<p>No active alerts</p>' : ''}
             ${data.alerts.filter(alert => !alert.resolved).map(alert => `
-                <div class='alert ${alert.type}'>
+                <div class='${alert.type} alert'>
                     <strong>${alert.type.toUpperCase()}:</strong> ${alert.message}
                     <br><small>${new Date(alert.timestamp).toLocaleString()}</small>
                 </div>
