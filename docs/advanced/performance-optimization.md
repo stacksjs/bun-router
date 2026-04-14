@@ -274,22 +274,22 @@ router.get('/logo.png', async () => {
 })
 
 // More efficient - caching file data in memory
-const STATIC_FILES = new Map()
+const STATIC*FILES = new Map()
 
 async function getStaticFile(path) {
-  if (!STATIC_FILES.has(path)) {
+  if (!STATIC*FILES.has(path)) {
     const f = file(path)
     const data = await f.arrayBuffer()
     const type = f.type
 
-    STATIC_FILES.set(path, {
+    STATIC*FILES.set(path, {
       data,
       type,
       lastModified: new Date().toUTCString()
     })
   }
 
-  return STATIC_FILES.get(path)
+  return STATIC*FILES.get(path)
 }
 
 router.get('/logo.png', async (req) => {

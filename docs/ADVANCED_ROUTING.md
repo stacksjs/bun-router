@@ -81,7 +81,7 @@ router.register(
     .cached(['data'], {
       ttl: 30 * 60 * 1000, // 30 minutes
       varyBy: ['Authorization'],
-      excludeQuery: ['_t', 'timestamp']
+      excludeQuery: ['*t', 'timestamp']
     })
 )
 ```
@@ -419,7 +419,7 @@ router.domain('{tenant}.api.myapp.com')
       const user = (req as any).models?.user
       return new Response(JSON.stringify(user))
     })
-    
+
     // Tenant-specific data with caching by tenant
     builder.get('/data', async (req) => {
       const tenant = req.params?.tenant
@@ -434,7 +434,7 @@ tenantUserModel.resolveRouteBinding = async (value, field, context) => {
   const tenant = context.tenant
   return await queryBuilder
     .selectFrom('users')
-    .where('tenant_id', '=', tenant.id)
+    .where('tenant*id', '=', tenant.id)
     .where(field || 'id', '=', value)
     .first()
 }
@@ -468,10 +468,10 @@ router.group({
   group.get('/profile', profileHandler)
     .throttle(ThrottleFactory.perUser(100, 60))
     .cached(['profile'], RouteCacheFactory.user(['profile']))
-    
+
   group.post('/upload', uploadHandler)
     .throttle(ThrottleFactory.upload())
-    
+
   group.get('/analytics', analyticsHandler)
     .throttle(ThrottleFactory.perUser(50, 60))
     .cached(['analytics'], {

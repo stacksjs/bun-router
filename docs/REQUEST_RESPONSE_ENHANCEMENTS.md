@@ -265,13 +265,13 @@ router.post('/api/users', async (req) => {
 ### Path and URL Utilities
 
 ```typescript
-router.get('/admin/*', async (req) => {
+router.get('/admin/_', async (req) => {
   const path = req.path() // '/admin/users'
   const fullUrl = req.fullUrl() // 'https://example.com/admin/users?page=1'
   const root = req.root() // 'https://example.com'
 
   // Pattern matching
-  if (req.is('/admin/users*')) {
+  if (req.is('/admin/users_')) {
     // Handle user admin routes
   }
 
@@ -346,10 +346,10 @@ router.use('/api/users', validationMiddleware)
 import { EnhancementPresets } from 'bun-router'
 
 // API preset with JSON validation and response macros
-router.use('/api/*', ...EnhancementPresets.api())
+router.use('/api/_', ...EnhancementPresets.api())
 
 // Web preset with request enhancements
-router.use('/web/*', ...EnhancementPresets.web())
+router.use('/web/_', ...EnhancementPresets.web())
 
 // Validation preset
 router.use('/admin/*', ...EnhancementPresets.validation({

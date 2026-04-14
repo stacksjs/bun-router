@@ -147,7 +147,7 @@ class CacheServiceProvider extends BaseServiceProvider {
 
     // Production - use Redis cache
     this.forEnvironment(container, 'production')
-      .bind('cache').toFactory((config: ConfigService) => 
+      .bind('cache').toFactory((config: ConfigService) =>
         new RedisCache(config.get('cache.redis'))
       )
   }
@@ -312,7 +312,7 @@ class AuthMiddleware {
 
   async handle(request: Request, next: Function): Promise<Response> {
     const token = request.headers.get('Authorization')
-    
+
     if (!token) {
       return new Response('Unauthorized', { status: 401 })
     }
@@ -541,12 +541,12 @@ class ResilientService {
       return await this.primary.process(data)
     } catch (error) {
       this.logger.error('Primary service failed', error)
-      
+
       if (this.fallback) {
         this.logger.info('Using fallback service')
         return await this.fallback.process(data)
       }
-      
+
       throw error
     }
   }
@@ -563,13 +563,13 @@ describe('UserService', () => {
 
   beforeEach(() => {
     container = createContainer()
-    
+
     // Mock dependencies
     const mockRepository = {
       findById: jest.fn(),
       save: jest.fn()
     }
-    
+
     const mockLogger = {
       log: jest.fn(),
       error: jest.fn()
@@ -588,7 +588,7 @@ describe('UserService', () => {
     mockRepository.findById.mockResolvedValue(mockUser)
 
     const result = await userService.getUser('1')
-    
+
     expect(result).toBe(mockUser)
     expect(mockRepository.findById).toHaveBeenCalledWith('1')
   })
@@ -600,10 +600,10 @@ describe('UserService', () => {
 ### Complete Application Setup
 
 ```typescript
-import { 
-  ContextualContainer, 
+import {
+  ContextualContainer,
   DefaultServiceProviderManager,
-  EnvironmentPresets 
+  EnvironmentPresets
 } from 'bun-router/container'
 
 // Create container and setup environment
@@ -695,7 +695,7 @@ class ApiGatewayService {
     }
 
     const instance = await this.loadBalancer.selectInstance(serviceName)
-    
+
     return this.circuitBreaker.execute(async () => {
       return service.call(instance, endpoint, data)
     })

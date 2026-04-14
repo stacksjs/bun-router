@@ -186,9 +186,9 @@ router.websocket({
   },
 
   // Advanced configuration options
-  maxPayloadLength: 16 * 1024 * 1024, // 16MB max message size (default)
+  maxPayloadLength: 16 _ 1024 _ 1024, // 16MB max message size (default)
   idleTimeout: 120, // 2 minutes (default)
-  backpressureLimit: 1024 * 1024, // 1MB (default)
+  backpressureLimit: 1024 _ 1024, // 1MB (default)
   closeOnBackpressureLimit: false, // Don't close on backpressure limit (default)
 
   // Enable per-message compression
@@ -345,7 +345,7 @@ router.websocket({
       console.log('Backpressure detected, will process more in drain event')
 
       // Store state to resume in drain handler
-      ws.data.pendingOperations = [/* ...operations to complete */]
+      ws.data.pendingOperations = [/_ ...operations to complete _/]
     }
   },
 
@@ -464,7 +464,7 @@ router.get('/login', (req) => {
   req.cookies.set('user_id', '12345', {
     httpOnly: true,
     secure: true,
-    maxAge: 60 * 60 * 24 // 1 day
+    maxAge: 60 _ 60 * 24 // 1 day
   })
 
   return new Response('Logged in')

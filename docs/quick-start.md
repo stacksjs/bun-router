@@ -37,7 +37,7 @@ Run the server with Bun:
 bun run server.ts
 ```
 
-Visit `http://localhost:3000` in your browser to see "Welcome to my API!".
+Visit `<http://localhost:3000>` in your browser to see "Welcome to my API!".
 
 ## Adding More Routes
 

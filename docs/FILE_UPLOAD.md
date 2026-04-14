@@ -209,17 +209,17 @@ The middleware returns appropriate HTTP status codes:
 router.post('/upload', fileUpload(), async (req) => {
   try {
     const files = req.files
-    
+
     // Process files
     for (const file of files) {
       console.log(`Uploaded: ${file.originalName} (${file.size} bytes)`)
     }
-    
+
     return new Response(JSON.stringify({ success: true }))
   } catch (error) {
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: 'Processing failed',
-      details: error.message 
+      details: error.message
     }), { status: 500 })
   }
 })
@@ -346,19 +346,19 @@ describe('File Upload', () => {
   it('should handle file upload', async () => {
     const formData = new FormData()
     formData.append('file', new File(['test'], 'test.txt'))
-    
+
     const request = new Request('http://localhost/upload', {
       method: 'POST',
       body: formData,
     })
-    
+
     const middleware = fileUpload({ destination: './test-uploads' })
     const response = await middleware.handle(request, async () => {
       expect(request.files).toHaveLength(1)
       expect(request.files[0].originalName).toBe('test.txt')
       return new Response('OK')
     })
-    
+
     expect(response.status).toBe(200)
   })
 })

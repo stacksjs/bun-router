@@ -29,5 +29,3 @@ features:
     icon: "🧩"
     details: "Intuitive API with powerful features that make building APIs and web applications a breeze."
 ---
-
-<Home />

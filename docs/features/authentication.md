@@ -829,7 +829,7 @@ router.post('/auth/email', async (req) => {
   )
 
   // Create magic link
-  const magicLink = `http://localhost:3000/auth/email/verify?token=${token}`
+  const magicLink = `<http://localhost:3000/auth/email/verify?token=${token}>`
 
   // Send email with magic link (example)
   await sendEmail({
@@ -1029,7 +1029,7 @@ const router = new Router()
 router.use(session({
   secret: process.env.SESSION_SECRET,
   // Default session lifetime: 1 day
-  maxAge: 24 * 60 * 60 * 1000
+  maxAge: 24 _ 60 _ 60 _ 1000
 }))
 
 router.post('/login', async (req) => {
@@ -1050,7 +1050,7 @@ router.post('/login', async (req) => {
     // Set a long session lifetime (30 days)
     req.session.cookie = {
       ...req.session.cookie,
-      maxAge: 30 * 24 * 60 * 60 * 1000
+      maxAge: 30 _ 24 _ 60 _ 60 _ 1000
     }
   }
 
@@ -1068,7 +1068,7 @@ import { Router, session } from 'bun-router'
 
 const router = new Router()
 const MAX_FAILED_ATTEMPTS = 5
-const LOCKOUT_TIME = 15 * 60 // 15 minutes (in seconds)
+const LOCKOUT_TIME = 15 _ 60 // 15 minutes (in seconds)
 
 router.use(session({
   secret: process.env.SESSION_SECRET
@@ -1103,7 +1103,7 @@ router.post('/login', async (req) => {
 
     // Set expiry on attempts key if not already set
     if (newAttempts === 1) {
-      await redis.expire(attemptsKey, 24 * 60 * 60) // 24 hours
+      await redis.expire(attemptsKey, 24 _ 60 _ 60) // 24 hours
     }
 
     // Lock account if max attempts reached

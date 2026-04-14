@@ -39,7 +39,7 @@ All utilities use Bun's native `mock()` and `spyOn()` functions for optimal perf
 The testing utilities are included with bun-router:
 
 ```typescript
-import { 
+import {
   createTestClient,
   testRequest,
   testMiddleware,
@@ -325,10 +325,10 @@ const permissionMiddleware = authMocks.permissionMiddleware(['read', 'write'])
 Test route model binding with mock models and constraints.
 
 ```typescript
-import { 
-  createModelBindingTester, 
-  modelMocks, 
-  constraintHelpers 
+import {
+  createModelBindingTester,
+  modelMocks,
+  constraintHelpers
 } from 'bun-router/testing'
 
 // Mock models
@@ -364,8 +364,8 @@ test('post belongs to user constraint', async () => {
 Test file upload functionality with various scenarios.
 
 ```typescript
-import { 
-  createFileUploadTester, 
+import {
+  createFileUploadTester,
   fileUploadMocks,
   fileUploadScenarios,
   testFiles
@@ -411,10 +411,10 @@ test('file size validation', async () => {
 Test WebSocket connections and message handling.
 
 ```typescript
-import { 
-  createWebSocketTester, 
+import {
+  createWebSocketTester,
   wsHandlerMocks,
-  wsTestScenarios 
+  wsTestScenarios
 } from 'bun-router/testing'
 
 test('WebSocket connection and messaging', async () => {
@@ -455,7 +455,7 @@ test('message broadcasting', async () => {
 Load testing and performance benchmarking utilities.
 
 ```typescript
-import { 
+import {
   createPerformanceTester,
   createLoadTester,
   benchmarkTests,
@@ -585,7 +585,7 @@ describe('Blog API', () => {
     client = createTestClient(router)
     user = authMocks.user({ id: 1, name: 'John' })
     admin = authMocks.adminUser({ id: 2, name: 'Admin' })
-    
+
     // Setup routes
     router.get('/posts', async (req) => {
       return new Response(JSON.stringify([
@@ -593,7 +593,7 @@ describe('Blog API', () => {
         { id: 2, title: 'Post 2', userId: 2 }
       ]))
     })
-    
+
     router.post('/posts', async (req) => {
       const body = await req.json()
       return new Response(JSON.stringify({
@@ -606,7 +606,7 @@ describe('Blog API', () => {
 
   test('GET /posts returns all posts', async () => {
     const response = await client.get('/posts')
-    
+
     response
       .expectStatus(200)
       .expectJsonStructure([
@@ -621,7 +621,7 @@ describe('Blog API', () => {
         body: { title: 'New Post', content: 'Content' },
         user: user
       })
-    
+
     response
       .expectStatus(201)
       .expectJsonContains({ title: 'New Post', userId: 1 })
