@@ -33,6 +33,19 @@
       "import": "./dist/*"
     }
   },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "bun": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./*": {
+        "bun": "./dist/*",
+        "import": "./dist/*"
+      }
+    }
+  },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
