@@ -270,7 +270,7 @@ router.use(auth({
   secret: 'your-jwt-secret',
   algorithms: ['HS256'],
   getToken: (req) => {
-    return req.headers.get('Authorization')?.split(' ')[1] || ''
+    return req.headers.get('Authorization')?.split(' ').at(1) || ''
   }
 }))
 

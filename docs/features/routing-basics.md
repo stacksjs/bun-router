@@ -153,7 +153,7 @@ To match any path after a certain prefix, you can use the `*` wildcard:
 ```typescript
 // Match anything under /files/
 router.get('/files/*', (req) => {
-  const path = req.url.split('/files/')[1]
+  const path = req.url.split('/files/').at(1)
   return new Response(`You requested the file: ${path}`)
 })
 ```

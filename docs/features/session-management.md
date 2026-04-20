@@ -587,7 +587,7 @@ router.post('/login', async (req) => {
 // API routes with JWT authentication
 router.get('/api/protected', (req) => {
   const authHeader = req.headers.get('Authorization')
-  const token = authHeader && authHeader.split(' ')[1]
+  const token = authHeader && authHeader.split(' ').at(1)
 
   if (!token) {
     return Response.json({ error: 'No token provided' }, { status: 401 })

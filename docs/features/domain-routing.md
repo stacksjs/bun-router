@@ -150,7 +150,7 @@ router.get('/', {
 }, (req) => {
   // Get the actual subdomain from request
   const host = req.headers.get('host')
-  const subdomain = host.split('.')[0]
+  const subdomain = host.split('.').at(0)
 
   return new Response(`Subdomain: ${subdomain}`)
 })
@@ -179,7 +179,7 @@ function domainMiddleware(domains) {
     const host = req.headers.get('host')
 
     // Remove port if present
-    const domain = host.split(':')[0]
+    const domain = host.split(':').at(0)
 
     if (domains.includes(domain)) {
       return next(req)
