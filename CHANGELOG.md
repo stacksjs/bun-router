@@ -1,3 +1,46 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.4...v0.0.5)
+
+### 🐛 Bug Fixes
+
+- repair garbled ternary in performance dashboard template ([643ba27](https://github.com/stacksjs/bun-router/commit/643ba27)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- resolve typecheck errors ([3a4e3ba](https://github.com/stacksjs/bun-router/commit/3a4e3ba)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.5 ([92aed01](https://github.com/stacksjs/bun-router/commit/92aed01)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([d977fdf](https://github.com/stacksjs/bun-router/commit/d977fdf)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up pickier 0.1.21 ([7f4fa63](https://github.com/stacksjs/bun-router/commit/7f4fa63)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([3419db5](https://github.com/stacksjs/bun-router/commit/3419db5)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add publishConfig so "bun" condition resolves on npm installs ([c33161f](https://github.com/stacksjs/bun-router/commit/c33161f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([0e2838c](https://github.com/stacksjs/bun-router/commit/0e2838c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- auto-fix lint errors ([38bc50e](https://github.com/stacksjs/bun-router/commit/38bc50e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- include md in pickier lint extensions ([ae41aa4](https://github.com/stacksjs/bun-router/commit/ae41aa4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _glennmichael123 <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.4...HEAD)
+
+### 🐛 Bug Fixes
+
+- repair garbled ternary in performance dashboard template ([643ba27](https://github.com/stacksjs/bun-router/commit/643ba27)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- resolve typecheck errors ([3a4e3ba](https://github.com/stacksjs/bun-router/commit/3a4e3ba)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- wip ([d977fdf](https://github.com/stacksjs/bun-router/commit/d977fdf)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up pickier 0.1.21 ([7f4fa63](https://github.com/stacksjs/bun-router/commit/7f4fa63)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([3419db5](https://github.com/stacksjs/bun-router/commit/3419db5)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add publishConfig so "bun" condition resolves on npm installs ([c33161f](https://github.com/stacksjs/bun-router/commit/c33161f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([0e2838c](https://github.com/stacksjs/bun-router/commit/0e2838c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- auto-fix lint errors ([38bc50e](https://github.com/stacksjs/bun-router/commit/38bc50e)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- include md in pickier lint extensions ([ae41aa4](https://github.com/stacksjs/bun-router/commit/ae41aa4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.3...v0.0.4)
 
 ### 🧹 Chores
