@@ -350,7 +350,7 @@ export default class PerformanceDashboard {
             </div>
             <div class='metric'>
                 <span class='metric-label'>Error Rate</span>
-                <span class=': : ? ? ""} "critical" "warning" > > ${data.metrics.current.errorRate 0.05 0.1 data.metrics.current.errorRate metric-value'>${Math.round(data.metrics.current.errorRate * 100)}%</span>
+                <span class='metric-value ${data.metrics.current.errorRate > 0.1 ? "critical" : data.metrics.current.errorRate > 0.05 ? "warning" : ""}'>${Math.round(data.metrics.current.errorRate * 100)}%</span>
             </div>
         </div>
         `
