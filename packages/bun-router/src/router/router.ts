@@ -1115,6 +1115,27 @@ export class Router {
       return value !== undefined && value !== null ? [value as T] : []
     }
 
+    ;(enhancedReq as any).bearerToken = (): string | null => {
+      const authHeader
+        = req.headers.get('authorization')
+        || req.headers.get('Authorization')
+        || ''
+      if (authHeader.startsWith('Bearer '))
+        return authHeader.substring(7)
+      return null
+    }
+
+    ;(enhancedReq as any).header = (name: string): string | null => {
+      return req.headers.get(name) || req.headers.get(name.toLowerCase()) || null
+    }
+
+    ;(enhancedReq as any).getParam = <T = string>(name: string, defaultValue?: T): T | undefined => {
+      const value = params?.[name] as T | undefined
+      return value !== undefined ? value : defaultValue
+    }
+
+    ;(enhancedReq as any).params = params || {}
+
     return enhancedReq as EnhancedRequest
   }
 
