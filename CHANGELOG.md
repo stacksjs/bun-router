@@ -1,3 +1,24 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.5...v0.0.6)
+
+### 🚀 Features
+
+- add request context (AsyncLocalStorage) and named-route url() helper ([aefe808](https://github.com/stacksjs/bun-router/commit/aefe808)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **router**: expose bearerToken, header, getParam, params on EnhancedRequest ([fdb51e2](https://github.com/stacksjs/bun-router/commit/fdb51e2)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.6 ([6b54b75](https://github.com/stacksjs/bun-router/commit/6b54b75)) _(by Chris <chrisbreuer93@gmail.com>)_
+- ship src/ + add release:patch/minor/major scripts ([0da27fa](https://github.com/stacksjs/bun-router/commit/0da27fa)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 📄 Miscellaneous
+
+- Merge remote-tracking branch 'origin/main' ([711a0ca](https://github.com/stacksjs/bun-router/commit/711a0ca)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.4...v0.0.5)
 
 ### 🐛 Bug Fixes
