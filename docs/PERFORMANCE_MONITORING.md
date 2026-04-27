@@ -28,11 +28,11 @@ The performance monitoring system consists of four main components:
 
 ```typescript
 import { Router } from 'bun-router'
-import { 
-  performanceMonitor, 
-  requestTracer, 
+import {
+  performanceMonitor,
+  requestTracer,
   performanceDashboard,
-  performanceAlerting 
+  performanceAlerting
 } from 'bun-router/middleware'
 
 const router = new Router()
@@ -53,7 +53,7 @@ router.use(requestTracer({
   sampleRate: 0.05, // Sample 5% of requests
   exporters: [
     { type: 'console' },
-    { 
+    {
       type: 'jaeger',
       endpoint: 'http://jaeger:14268'
     }
@@ -130,7 +130,7 @@ const monitor = new PerformanceMonitor({
     thresholds: {
       responseTime: 1000, // Alert if response time > 1s
       errorRate: 0.05,    // Alert if error rate > 5%
-      memoryUsage: 512 * 1024 * 1024 // Alert if memory > 512MB
+      memoryUsage: 512 _ 1024 _ 1024 // Alert if memory > 512MB
     }
   }
 })
@@ -146,6 +146,7 @@ const profiles = monitor.getProfiles()
 ```
 
 **Collected Metrics:**
+
 - Response time (ms)
 - Memory usage (bytes)
 - CPU usage (percentage)
@@ -197,12 +198,12 @@ router.get('/users/:id', async (req) => {
   if (childSpanId) {
     tracer.addTag(childSpanId, 'db.table', 'users')
     tracer.addTag(childSpanId, 'user.id', req.params.id)
-    
+
     try {
       const user = await getUserById(req.params.id)
       tracer.addLog(childSpanId, 'info', 'User found')
       tracer.finish(childSpanId, 'ok')
-      
+
       return Response.json(user)
     } catch (error) {
       tracer.addLog(childSpanId, 'error', 'Database error', { error: error.message })
@@ -214,6 +215,7 @@ router.get('/users/:id', async (req) => {
 ```
 
 **Supported Exporters:**
+
 - Console (development)
 - Jaeger (production tracing)
 - Zipkin (alternative tracing)
@@ -306,7 +308,7 @@ alerting.addRule({
   enabled: true,
   metric: 'memoryUsage',
   condition: 'gt',
-  threshold: 1024 * 1024 * 1024, // 1GB
+  threshold: 1024 _ 1024 _ 1024, // 1GB
   severity: 'warning'
 })
 
@@ -357,7 +359,7 @@ dashboard.addAlert('critical', 'Service is experiencing errors')
 // Update metrics history (usually done automatically)
 dashboard.updateMetricsHistory({
   responseTime: 150,
-  memoryUsage: 256 * 1024 * 1024,
+  memoryUsage: 256 _ 1024 _ 1024,
   requestCount: 1,
   errorCount: 0
 })
@@ -386,7 +388,7 @@ export const config = {
           thresholds: {
             responseTime: 1000,
             errorRate: 0.05,
-            memoryUsage: 512 * 1024 * 1024
+            memoryUsage: 512 _ 1024 _ 1024
           }
         },
         profiling: {
@@ -496,23 +498,23 @@ router.get('/api/users/:id', async (req) => {
   if (dbSpanId) {
     tracer.addTag(dbSpanId, 'db.operation', 'select')
     tracer.addTag(dbSpanId, 'db.table', 'users')
-    
+
     try {
       const user = await db.users.findUnique({
         where: { id: req.params.id }
       })
-      
+
       tracer.addLog(dbSpanId, 'info', 'User query completed')
       tracer.finish(dbSpanId, 'ok')
-      
+
       if (!user) {
         return new Response('Not Found', { status: 404 })
       }
-      
+
       return Response.json(user)
     } catch (error) {
-      tracer.addLog(dbSpanId, 'error', 'Database error', { 
-        error: error.message 
+      tracer.addLog(dbSpanId, 'error', 'Database error', {
+        error: error.message
       })
       tracer.finish(dbSpanId, 'error', error.message)
       throw error
@@ -539,7 +541,7 @@ const alerting = new PerformanceAlerting({
       threshold: 0,
       severity: 'critical',
       customEvaluator: (metrics) => {
-        const paymentErrors = metrics.filter(m => 
+        const paymentErrors = metrics.filter(m =>
           m.path.includes('/payment') && m.statusCode >= 400
         ).length
         return paymentErrors > 5 // Alert if more than 5 payment errors
@@ -555,15 +557,15 @@ const alerting = new PerformanceAlerting({
       threshold: 0,
       severity: 'warning',
       customEvaluator: (metrics) => {
-        const regionalMetrics = metrics.filter(m => 
+        const regionalMetrics = metrics.filter(m =>
           m.userAgent?.includes('Region=US-WEST')
         )
         if (regionalMetrics.length === 0) return false
-        
-        const avgLatency = regionalMetrics.reduce((sum, m) => 
+
+        const avgLatency = regionalMetrics.reduce((sum, m) =>
           sum + m.responseTime, 0
         ) / regionalMetrics.length
-        
+
         return avgLatency > 2000 // Alert if US-WEST avg > 2s
       }
     }

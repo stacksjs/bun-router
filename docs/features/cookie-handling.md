@@ -178,7 +178,7 @@ router.post('/login', async (req) => {
   response.signedCookie('userId', user.id.toString(), {
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 1 day
-    secure: process.env.NODE_ENV === 'production'
+    secure: process.env.NODE*ENV === 'production'
   })
 
   return response
@@ -217,7 +217,7 @@ Restrict cookies to HTTPS connections in production:
 
 ```typescript
 response.cookie('session', token, {
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.NODE*ENV === 'production',
   httpOnly: true
 })
 ```
@@ -328,9 +328,9 @@ router.get('/theme', (req) => {
 
 Browsers impose limits on cookie size (usually 4KB per cookie). For larger data, consider:
 
-1. **Split data across multiple cookies**
-2. **Store only an identifier in the cookie and keep the data server-side** (e.g., in a session)
-3. **Use client-side storage alternatives for non-sensitive data** (e.g., localStorage)
+1. __Split data across multiple cookies__
+2. __Store only an identifier in the cookie and keep the data server-side__ (e.g., in a session)
+3. __Use client-side storage alternatives for non-sensitive data__ (e.g., localStorage)
 
 ```typescript
 // Better approach for large data

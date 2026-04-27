@@ -73,7 +73,7 @@ async function authMiddleware(req, next) {
 
   try {
     // Extract token from header
-    const token = authHeader.split(' ')[1]
+    const token = authHeader.split(' ').at(1)
 
     // Verify token (async operation)
     const user = await verifyToken(token)

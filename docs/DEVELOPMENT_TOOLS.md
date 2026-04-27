@@ -201,7 +201,7 @@ import { PerformanceProfilingHelpers } from 'bun-router'
 
 const handler = async (req: EnhancedRequest) => {
   // Start timing operation
-  const timingId = PerformanceProfilingHelpers.startTiming(req, 'handlerExecution', 'database_query')
+  const timingId = PerformanceProfilingHelpers.startTiming(req, 'handlerExecution', 'database*query')
   
   // Perform database operation
   const result = await db.query('SELECT * FROM users')
@@ -237,7 +237,7 @@ console.log(report)
 
 // Output:
 // # Performance Profile Report
-// 
+//
 // ## Summary
 // - Total Profiles: 150
 // - Average Response Time: 45.23ms
@@ -246,11 +246,11 @@ console.log(report)
 // - Requests/Second: 25.4
 // - Average Memory Usage: 45.67MB
 // - Peak Memory Usage: 89.23MB
-// 
+//
 // ## Slowest Routes
 // 1. GET /api/reports - 234.56ms (12 requests)
 // 2. POST /api/uploads - 156.78ms (8 requests)
-// 
+//
 // ## Warnings
 // ### GET /api/slow-endpoint
 // - Slow query detected: 150.20ms
@@ -270,13 +270,13 @@ console.log(types)
 
 // Output:
 // import type { EnhancedRequest } from '../types'
-// 
+//
 // export interface GetUsersIdParams {
 //   id: string
 // }
-// 
+//
 // export type GetUsersIdHandler = (req: EnhancedRequest & { params: GetUsersIdParams }) => Promise<User>
-// 
+//
 // export interface RouteRegistry {
 //   'GET /users/{id}': GetUsersIdHandler
 // }
@@ -291,7 +291,7 @@ console.log(schemas)
 
 // Output:
 // {
-//   "GET:/users/{id}_params": {
+//   "GET:/users/{id}*params": {
 //     "type": "object",
 //     "properties": {
 //       "id": { "type": "string" }
@@ -579,21 +579,25 @@ await Bun.write('generated-types.ts', types)
 ### Common Issues
 
 **Debug logs not appearing**
+
 - Check that debugging is enabled
 - Verify log level configuration
 - Ensure middleware is properly registered
 
 **Profiling not working**
+
 - Check sample rate (may be too low)
 - Verify profiler is enabled
 - Ensure middleware order is correct
 
 **Type generation issues**
+
 - Verify route types are registered
 - Check TypeScript configuration
 - Ensure proper import paths
 
 **Performance overhead**
+
 - Reduce sample rate in production
 - Disable unnecessary features
 - Use production preset

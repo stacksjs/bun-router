@@ -36,7 +36,7 @@ import { createBasicResolver, createQueryBuilderIntegration } from 'bun-router'
 import { createQueryBuilder } from 'bun-query-builder'
 
 // Initialize query builder
-const qb = createQueryBuilder(/* your database config */)
+const qb = createQueryBuilder(/_ your database config _/)
 const qbIntegration = createQueryBuilderIntegration(qb)
 
 // Create resolvers
@@ -205,7 +205,7 @@ router.resource('users', {
   update: async (req) => {
     const user = req.models.user as User
     const data = await req.json()
-    
+
     // Update using query builder
     const updatedUser = await qb
       .update('users')
@@ -213,18 +213,18 @@ router.resource('users', {
       .where('id', '=', user.id)
       .returning('*')
       .first()
-    
+
     return Response.json({ user: updatedUser })
   },
   
   destroy: async (req) => {
     const user = req.models.user as User
-    
+
     await qb
       .delete()
       .from('users')
       .where('id', '=', user.id)
-    
+
     return new Response(null, { status: 204 })
   }
 })
@@ -269,9 +269,9 @@ describe('User Model Binding', () => {
     const mockQB = createMockQueryBuilder()
     const integration = createQueryBuilderIntegration(mockQB)
     const resolver = createBasicResolver<User>('users')
-    
+
     integration.registerResolver('user', resolver)
-    
+
     const user = await integration.resolveModel<User>('user', 1)
     expect(user).toEqual({
       id: 1,

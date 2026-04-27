@@ -204,7 +204,7 @@ You can manually upgrade an HTTP request to a WebSocket connection:
 ```typescript
 router.get('/custom-ws', (req) => {
   // Check for authentication headers
-  const token = req.headers.get('Authorization')?.split(' ')[1]
+  const token = req.headers.get('Authorization')?.split(' ').at(1)
 
   if (!token || !validateToken(token)) {
     return new Response('Unauthorized', { status: 401 })

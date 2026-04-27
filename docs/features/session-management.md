@@ -42,7 +42,7 @@ router.use(session({
   name: 'my_app_session',
 
   // Session lifetime in milliseconds (default: 1 day)
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+  maxAge: 7 _ 24 _ 60 _ 60 _ 1000, // 1 week
 
   // Cookie options
   cookie: {
@@ -313,7 +313,7 @@ Rolling sessions extend the expiration time on each request:
 ```typescript
 router.use(session({
   secret: 'your-secret',
-  maxAge: 30 * 60 * 1000, // 30 minutes
+  maxAge: 30 _ 60 _ 1000, // 30 minutes
   rolling: true // Extend session expiration on each request
 }))
 ```
@@ -326,7 +326,7 @@ For security, you can periodically regenerate the session ID while preserving se
 router.use(session({
   secret: 'your-secret',
   renew: true, // Periodically regenerate session ID
-  renewAfter: 60 * 60 * 1000 // Renew after 1 hour of activity
+  renewAfter: 60 _ 60 _ 1000 // Renew after 1 hour of activity
 }))
 ```
 
@@ -401,7 +401,7 @@ const router = new Router()
 // Add session middleware
 router.use(session({
   secret: process.env.SESSION_SECRET || 'your-secure-secret',
-  maxAge: 24 * 60 * 60 * 1000, // 1 day
+  maxAge: 24 _ 60 _ 60 * 1000, // 1 day
   cookie: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -587,7 +587,7 @@ router.post('/login', async (req) => {
 // API routes with JWT authentication
 router.get('/api/protected', (req) => {
   const authHeader = req.headers.get('Authorization')
-  const token = authHeader && authHeader.split(' ')[1]
+  const token = authHeader && authHeader.split(' ').at(1)
 
   if (!token) {
     return Response.json({ error: 'No token provided' }, { status: 401 })

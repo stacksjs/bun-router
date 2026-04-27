@@ -55,7 +55,7 @@ router.use(csrfProtection({
     sameSite: 'lax',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    maxAge: 24 _ 60 _ 60 _ 1000 // 1 day
   },
 
   // Where to check for the token in the request
@@ -241,7 +241,7 @@ async function makeApiRequest() {
       'Content-Type': 'application/json',
       'X-CSRF-Token': csrfToken
     },
-    body: JSON.stringify({ /* data */ })
+    body: JSON.stringify({ /_ data */ })
   })
 }
 ```

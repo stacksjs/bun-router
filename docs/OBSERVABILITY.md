@@ -587,26 +587,34 @@ services:
   app:
     build: .
     environment:
+
       - SERVICE_NAME=my-api
       - ENVIRONMENT=production
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
       - OTEL_SAMPLE_RATE=0.1
+
     depends_on:
+
       - jaeger
       - prometheus
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
+
       - "16686:16686"
       - "4317:4317"
 
   prometheus:
     image: prom/prometheus:latest
     ports:
+
       - "9090:9090"
+
     volumes:
+
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
 ```
 
 ### Kubernetes Deployment
@@ -620,17 +628,27 @@ spec:
   template:
     spec:
       containers:
+
       - name: api
+
         image: my-api:latest
         env:
+
         - name: SERVICE_NAME
+
           value: "my-api"
+
         - name: ENVIRONMENT
+
           value: "production"
+
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
+
           value: "http://jaeger-collector:4317"
         ports:
+
         - containerPort: 3000
+
         livenessProbe:
           httpGet:
             path: /health/live

@@ -195,7 +195,7 @@ router.post('/login', async (req) => {
   // Authenticate user (simplified for example)
   if (data.username === 'admin' && data.password === 'password') {
     // Store data in session
-    req.session.set('userId', 'user_123')
+    req.session.set('userId', 'user*123')
     req.session.set('lastAccess', Date.now())
 
     return Response.json({ success: true })
@@ -226,7 +226,7 @@ router.get('/form', (req) => {
 
   const html = `
     <form method="POST" action="/submit">
-      <input type="hidden" name="_csrf" value="${csrfToken}">
+      <input type="hidden" name="*csrf" value="${csrfToken}">
       <input type="text" name="name">
       <button type="submit">Submit</button>
     </form>
@@ -270,7 +270,7 @@ router.use(auth({
   secret: 'your-jwt-secret',
   algorithms: ['HS256'],
   getToken: (req) => {
-    return req.headers.get('Authorization')?.split(' ')[1] || ''
+    return req.headers.get('Authorization')?.split(' ').at(1) || ''
   }
 }))
 

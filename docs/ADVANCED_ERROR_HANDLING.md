@@ -381,7 +381,7 @@ const router = new Router()
 // Add error handler middleware
 router.use(createAdvancedErrorHandler({
   development: false,
-  errorReporting: [/* your config */]
+  errorReporting: [/_ your config _/]
 }))
 
 // Your route handlers can throw RouterExceptions

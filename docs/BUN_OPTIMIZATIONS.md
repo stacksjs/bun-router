@@ -97,9 +97,9 @@ clusterManager.destroyRoom('game-lobby')
 
 // Room events
 clusterManager.onRoomJoin((roomId, connectionId, metadata) => {
-  clusterManager.sendToRoom(roomId, 'user-joined', { 
-    userId: connectionId, 
-    ...metadata 
+  clusterManager.sendToRoom(roomId, 'user-joined', {
+    userId: connectionId,
+    ...metadata
   })
 })
 ```
@@ -348,7 +348,7 @@ class UserService {
     if (this.cache.has(id)) {
       return this.cache.get(id)
     }
-    
+
     const user = await fetchUser(id)
     this.cache.set(id, user)
     return user
@@ -627,7 +627,7 @@ setInterval(() => {
   
   if (memoryUsage > 400) { // 400MB threshold
     console.warn(`High memory usage: ${memoryUsage}MB`)
-    
+
     // Trigger cleanup
     if (global.gc) {
       global.gc()

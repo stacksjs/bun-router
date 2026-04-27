@@ -160,10 +160,10 @@ router.use(responseCache({
   shouldCache: (req, res) => {
     // Don't cache authenticated requests
     if (req.headers.get('Authorization')) return false
-    
+
     // Don't cache large responses
     if (res.headers.get('Content-Length') > '1048576') return false
-    
+
     // Only cache successful responses
     return res.status >= 200 && res.status < 300
   }
@@ -178,7 +178,7 @@ router.use(responseCache({
     const url = new URL(req.url)
     const userId = req.headers.get('X-User-ID')
     const version = req.headers.get('API-Version') || 'v1'
-    
+
     return `${req.method}:${url.pathname}:${userId}:${version}`
   }
 }))
@@ -283,22 +283,22 @@ router.use(responseCache({
   shouldCache: (req, res) => {
     // Don't cache for authenticated users
     if (req.headers.get('Authorization')) return false
-    
+
     // Don't cache POST/PUT/DELETE
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return false
-    
+
     // Don't cache error responses
     if (res.status >= 400) return false
-    
+
     // Don't cache responses with Set-Cookie
     if (res.headers.get('Set-Cookie')) return false
-    
+
     // Check Cache-Control header
     const cacheControl = res.headers.get('Cache-Control')
     if (cacheControl?.includes('no-cache') || cacheControl?.includes('no-store')) {
       return false
     }
-    
+
     return true
   }
 }))

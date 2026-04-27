@@ -2,7 +2,7 @@
 
 <p align="center"><img src="https://github.com/stacksjs/bun-router/blob/main/.github/art/cover.jpg?raw=true" alt="bun-router"></p>
 
-## What is bun-router?
+## What is bun-router
 
 bun-router is a high-performance, feature-rich router designed specifically for Bun applications. Built from the ground up to take advantage of Bun's speed and features, it provides an intuitive and powerful API for handling HTTP routing in your web applications.
 
@@ -16,7 +16,7 @@ bun-router is a high-performance, feature-rich router designed specifically for 
 - **Type Safety**: First-class TypeScript support with type inference
 - **Developer Experience**: Intuitive API that makes development a joy
 
-## Why Choose bun-router?
+## Why Choose bun-router
 
 ### Performance
 

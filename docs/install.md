@@ -64,7 +64,7 @@ Run this file with Bun:
 bun run server.ts
 ```
 
-Visit `http://localhost:3000` in your browser and you should see "Hello from bun-router!".
+Visit `<http://localhost:3000>` in your browser and you should see "Hello from bun-router!".
 
 ## Next Steps
 

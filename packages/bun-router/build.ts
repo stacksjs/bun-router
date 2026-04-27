@@ -1,12 +1,12 @@
-import { dts } from 'bun-plugin-dtsx'
+import { $ } from 'bun'
 
-await Bun.build({
-  entrypoints: ['src/index.ts', 'src/cli.ts'],
-  outdir: './dist',
-  splitting: true,
-  target: 'bun',
-  format: 'esm',
-  plugins: [dts({
-    entrypoints: ['index.ts', 'cli.ts'],
-  })],
-})
+await Promise.all([
+  Bun.build({
+    entrypoints: ['src/index.ts', 'src/cli.ts'],
+    outdir: './dist',
+    splitting: true,
+    target: 'bun',
+    format: 'esm',
+  }),
+  $`bunx --bun tsc -p tsconfig.build.json`,
+])

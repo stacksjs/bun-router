@@ -356,9 +356,9 @@ route.streamBuffered('/buffered-data', async ({ write, flush, end }) => {
     await new Promise(resolve => setTimeout(resolve, 100))
   }
   end()
-}, { 
+}, {
   highWaterMark: 512 * 1024, // 512KB buffer
-  asUint8Array: true 
+  asUint8Array: true
 })
 
 // Mix streaming with middleware and route groups

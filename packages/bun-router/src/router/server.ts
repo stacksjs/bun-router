@@ -1,6 +1,7 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, ServerOptions } from '../types'
 import type { Router } from './router'
+import { runWithRequest, setCurrentRequest } from '../request/context'
 
 /**
  * Server handling extension for Router class
@@ -113,6 +114,20 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     handleRequest: {
       async value(req: Request): Promise<Response> {
+        // The prototype is mutated via defineProperties; the static type doesn't see
+        // handleRequestImpl as a public method, so we cast through unknown.
+        const self = this as unknown as { handleRequestImpl: (r: Request) => Promise<Response> }
+        return runWithRequest(req as EnhancedRequest, () => self.handleRequestImpl(req))
+      },
+      writable: true,
+      configurable: true,
+    },
+
+    /**
+     * Internal: actual request handling, executed inside the request context scope.
+     */
+    handleRequestImpl: {
+      async value(req: Request): Promise<Response> {
         try {
           // Create URL for route matching
           const url = new URL(req.url)
@@ -146,6 +161,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
 
           // Enhance the request with params and other utilities
           const enhancedReq = this.enhanceRequest(req, match?.params || {})
+          setCurrentRequest(enhancedReq)
 
           if (match) {
             // Add the matched route to the request

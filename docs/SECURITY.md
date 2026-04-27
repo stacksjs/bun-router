@@ -184,9 +184,9 @@ router.use(new InputValidation({
       age: { type: 'number', min: 18, max: 120 },
     },
     headers: {
-      'content-type': { 
-        type: 'string', 
-        enum: ['application/json', 'application/x-www-form-urlencoded'] 
+      'content-type': {
+        type: 'string',
+        enum: ['application/json', 'application/x-www-form-urlencoded']
       },
     },
   },
@@ -410,24 +410,24 @@ import { inputValidation } from 'bun-router/middleware'
 router.use(inputValidation({
   schemas: {
     query: {
-      page: { 
-        type: 'number', 
-        min: 1, 
-        transform: (val) => parseInt(val, 10) 
+      page: {
+        type: 'number',
+        min: 1,
+        transform: (val) => parseInt(val, 10)
       },
-      sort: { 
-        type: 'string', 
-        enum: ['name', 'date', 'popularity'] 
+      sort: {
+        type: 'string',
+        enum: ['name', 'date', 'popularity']
       },
     },
     body: {
       user: {
         email: { type: 'email', required: true },
-        password: { 
-          type: 'string', 
-          min: 8, 
-          pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 
-          required: true 
+        password: {
+          type: 'string',
+          min: 8,
+          pattern: /^(?=._[a-z])(?=._[A-Z])(?=.*\d)/,
+          required: true
         },
         profile: {
           name: { type: 'string', min: 2, max: 50 },

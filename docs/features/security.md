@@ -54,7 +54,7 @@ router.get('/set-cookie', (req) => {
     sameSite: 'lax', // Or 'strict' for maximum security
 
     // Set an expiration
-    maxAge: 3600 * 1000, // 1 hour
+    maxAge: 3600 _ 1000, // 1 hour
 
     // Limit to specific path
     path: '/'
@@ -182,7 +182,7 @@ import { Router, session } from 'bun-router'
 const router = new Router()
 
 // Rate limiting middleware using Bun's Redis client
-function rateLimit({ windowMs = 60 * 1000, maxRequests = 100, message = 'Too many requests' } = {}) {
+function rateLimit({ windowMs = 60 _ 1000, maxRequests = 100, message = 'Too many requests' } = {}) {
   return async (req, next) => {
     // Get client IP or a unique identifier
     const identifier = req.headers.get('x-forwarded-for') || 'unknown'
@@ -221,12 +221,12 @@ function rateLimit({ windowMs = 60 * 1000, maxRequests = 100, message = 'Too man
 }
 
 // Apply rate limiting to specific routes
-router.post('/login', rateLimit({ maxRequests: 5, windowMs: 15 * 60 * 1000 }), async (req) => {
+router.post('/login', rateLimit({ maxRequests: 5, windowMs: 15 _ 60 _ 1000 }), async (req) => {
   // Login logic here
 })
 
 // Or apply globally with higher limits
-router.use(rateLimit({ maxRequests: 100, windowMs: 60 * 1000 }))
+router.use(rateLimit({ maxRequests: 100, windowMs: 60 _ 1000 }))
 ```
 
 ## Input Validation
@@ -377,7 +377,7 @@ router.get('/users/:id', (req) => {
   const { id } = req.params
 
   // SAFE: Use prepared statements with parameters
-  const stmt = db.prepare('SELECT * FROM users WHERE id = ?')
+  const stmt = db.prepare('SELECT _ FROM users WHERE id = ?')
   const user = stmt.get(id)
 
   if (!user) {
@@ -388,7 +388,7 @@ router.get('/users/:id', (req) => {
 })
 
 // AVOID: Never do this (vulnerable to SQL injection)
-// const query = `SELECT * FROM users WHERE id = ${id}`
+// const query = `SELECT _ FROM users WHERE id = ${id}`
 // const user = db.query(query).get()
 ```
 
@@ -403,7 +403,7 @@ const router = new Router()
 
 router.use(session({
   secret: process.env.SESSION_SECRET,
-  maxAge: 30 * 60 * 1000, // 30 minutes
+  maxAge: 30 _ 60 _ 1000, // 30 minutes
   rolling: true, // Extend session on activity
   cookie: {
     httpOnly: true,
@@ -445,7 +445,7 @@ router.post('/upload', async (req) => {
   }
 
   // Validate file size
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  const maxSize = 5 _ 1024 * 1024 // 5MB
   if (file.size > maxSize) {
     return Response.json({ error: 'File too large' }, { status: 400 })
   }
