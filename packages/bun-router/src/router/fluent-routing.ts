@@ -6,6 +6,7 @@ import { createModelBindingMiddleware } from '../model-binding'
 import { createRouteCacheMiddleware, RouteCacheFactory } from '../routing/route-caching'
 import { createRateLimitMiddleware, parseThrottleString, ThrottleFactory } from '../routing/route-throttling'
 import { DomainGroup, DomainMatcher, SubdomainRouter } from '../routing/subdomain-routing'
+import { registerNamedRoute } from '../url'
 
 /**
  * Fluent route builder with chainable API
@@ -413,6 +414,8 @@ export class FluentRouter {
   register(builder: FluentRouteBuilder): this {
     const route = builder.build()
     this.routes.push(route)
+    if (route.name)
+      registerNamedRoute(route.name, route.path)
     return this
   }
 
@@ -504,6 +507,8 @@ export class FluentRouter {
       }
       else {
         this.routes.push(groupedRoute)
+        if (groupedRoute.name)
+          registerNamedRoute(groupedRoute.name, groupedRoute.path)
       }
     }
 

@@ -1,5 +1,6 @@
 import type { ActionHandler, EnhancedRequest, MiddlewareHandler, Route } from '../types'
 import type { Router } from './router'
+import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
 
 /**
@@ -143,6 +144,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         if (name) {
           route.name = name
           this.namedRoutes.set(name, route)
+          registerNamedRoute(name, route.path)
         }
 
         // Add to optimized route compiler if available

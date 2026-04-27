@@ -12,6 +12,7 @@ import type {
   RouteHandler,
 } from '../types'
 import type { Router } from './router'
+import { registerNamedRoute } from '../url'
 import { matchPath } from '../utils'
 
 // ============================================================================
@@ -221,6 +222,7 @@ export class FluentRouter {
         this.router.routes.push(route)
         if (route.name) {
           this.router.namedRoutes.set(route.name, route)
+          registerNamedRoute(route.name, route.path)
         }
       }
     }
@@ -273,6 +275,7 @@ export class FluentRouter {
         this.router.routes.push(route)
         if (route.name) {
           this.router.namedRoutes.set(route.name, route)
+          registerNamedRoute(route.name, route.path)
         }
       }
     }
@@ -436,6 +439,7 @@ export class FluentRouter {
     this.router.routes.push(route)
     if (route.name) {
       this.router.namedRoutes.set(route.name, route)
+      registerNamedRoute(route.name, route.path)
     }
     return new FluentRouteBuilder(this.router, fullPath, method)
   }
@@ -575,6 +579,7 @@ export class FluentRouteBuilder implements FluentRoute {
     if (route) {
       route.name = name
       this.router.namedRoutes.set(name, route)
+      registerNamedRoute(name, route.path)
     }
     return this
   }

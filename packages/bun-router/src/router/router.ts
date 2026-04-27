@@ -16,6 +16,7 @@ import type {
   WebSocketData,
 } from '../types'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
+import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
 
 /**
@@ -359,6 +360,7 @@ export class Router {
     if (name) {
       route.name = name
       this.namedRoutes.set(name, route)
+      registerNamedRoute(name, route.path)
     }
 
     // Clear route cache when new routes are added
@@ -1324,6 +1326,7 @@ export class Router {
     this.routes.push(route)
     if (route.name) {
       this.namedRoutes.set(route.name, route)
+      registerNamedRoute(route.name, route.path)
     }
     return this
   }
