@@ -1,6 +1,7 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, ServerOptions } from '../types'
 import type { Router } from './router'
+import { RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
 
 /**
@@ -333,7 +334,13 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           _cookiesToDelete: [],
         }) as unknown as EnhancedRequest
 
-        // Add cookie methods to the request
+        // Attach registered request macros (input, has, bearerToken, etc.) so
+        // they're available in middleware and handlers without manual setup.
+        // Applied *before* the cookie utility so the cookies macro doesn't
+        // overwrite the get/set/delete object form consumers depend on.
+        RequestWithMacros.applyMacros(enhancedReq)
+
+        // Add cookie methods to the request (overrides any macro named `cookies`).
         Object.assign(enhancedReq, { cookies: { ...getCookies(), ...cookies } })
 
         return enhancedReq
