@@ -53,7 +53,7 @@ export interface ResponseCookieOptions {
 // ============================================================================
 
 export interface ResponseFactory {
-  json: <T>(data: T, options?: JsonResponseOptions) => Response
+  json: <T>(data: T, options?: JsonResponseOptions | ResponseStatus) => Response
   noContent: (headers?: Record<string, string>) => Response
   download: (filePath: string, filename?: string, headers?: Record<string, string>) => Promise<Response>
   file: (filePath: string, headers?: Record<string, string>) => Promise<Response>
@@ -89,10 +89,18 @@ export interface ResponseFactory {
  */
 export const response: ResponseFactory = {
   /**
-   * Create a JSON response with proper typing
+   * Create a JSON response with proper typing.
+   *
+   * The second argument may be either a status code (Hono/Express style) or
+   * a `JsonResponseOptions` bag. The number form exists because passing a
+   * status as the second arg is the most common pattern in other web
+   * frameworks, and the silent `response.json(data, 401)` → HTTP 200 trap
+   * (the number was being interpreted as `options` and discarded) caused
+   * real bugs.
    */
-  json: <T>(data: T, options: JsonResponseOptions = {}): Response => {
-    const { status = 200, headers = {}, pretty = false } = options
+  json: <T>(data: T, options: JsonResponseOptions | ResponseStatus = {}): Response => {
+    const opts: JsonResponseOptions = typeof options === 'number' ? { status: options } : options
+    const { status = 200, headers = {}, pretty = false } = opts
     const body = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data)
 
     return new Response(body, {
