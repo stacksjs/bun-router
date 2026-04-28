@@ -1,3 +1,27 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.6...v0.0.7)
+
+### 🐛 Bug Fixes
+
+- **router**: enrich 404/405 + run global middleware on unmatched routes ([73c205c](https://github.com/stacksjs/bun-router/commit/73c205c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.7 ([dcef8ac](https://github.com/stacksjs/bun-router/commit/dcef8ac)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.6...HEAD)
+
+### 🐛 Bug Fixes
+
+- **router**: enrich 404/405 + run global middleware on unmatched routes ([73c205c](https://github.com/stacksjs/bun-router/commit/73c205c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.5...v0.0.6)
 
 ### 🚀 Features
