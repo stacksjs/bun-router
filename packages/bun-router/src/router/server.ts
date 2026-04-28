@@ -195,21 +195,38 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             return new Response('No response from middleware chain', { status: 500 })
           }
 
-          // No route found - check if the path exists with a different method (405 vs 404)
+          // No route found - check if the path exists with a different method (405 vs 404).
+          // The 404/405 responses below now (a) include path + method in the body so client
+          // debugging is one grep away, and (b) flow through globalMiddleware so cross-cutting
+          // concerns (X-Request-ID, Server-Timing, audit logging, custom CORS) can observe
+          // them. Previously these paths short-circuited entirely.
           const allowedMethods = this.getAllowedMethods(url.pathname, hostname)
+          const corsHeaders = {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+          }
 
-          // If there are allowed methods, return 405 Method Not Allowed
           if (allowedMethods.length > 0) {
-            return new Response(JSON.stringify({ success: false, message: 'Method Not Allowed' }), {
-              status: 405,
-              headers: {
-                'Content-Type': 'application/json',
-                'Allow': allowedMethods.join(', '),
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-              },
-            })
+            const methodNotAllowedHandler = async (_req: EnhancedRequest, _next: any) => {
+              return new Response(JSON.stringify({
+                success: false,
+                message: 'Method Not Allowed',
+                path: url.pathname,
+                method: req.method,
+                allowed: allowedMethods,
+              }), {
+                status: 405,
+                headers: { ...corsHeaders, Allow: allowedMethods.join(', ') },
+              })
+            }
+            if (this.globalMiddleware.length > 0) {
+              const stack = [...this.globalMiddleware, methodNotAllowedHandler]
+              const response = await this.runMiddleware(enhancedReq, stack)
+              if (response) return this.applyModifiedCookies(response, enhancedReq)
+            }
+            return await methodNotAllowedHandler(enhancedReq, async () => null as any)
           }
 
           // No route found, try the fallback handler
@@ -218,16 +235,22 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             return this.applyModifiedCookies(response, enhancedReq)
           }
 
-          // No fallback handler, return a 404 with CORS headers
-          return new Response(JSON.stringify({ success: false, message: 'Not Found' }), {
-            status: 404,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-            },
-          })
+          // No fallback — emit a 404 enriched with path + method, also through
+          // globalMiddleware so user middleware sees it.
+          const notFoundHandler = async (_req: EnhancedRequest, _next: any) => {
+            return new Response(JSON.stringify({
+              success: false,
+              message: 'Not Found',
+              path: url.pathname,
+              method: req.method,
+            }), { status: 404, headers: corsHeaders })
+          }
+          if (this.globalMiddleware.length > 0) {
+            const stack = [...this.globalMiddleware, notFoundHandler]
+            const response = await this.runMiddleware(enhancedReq, stack)
+            if (response) return this.applyModifiedCookies(response, enhancedReq)
+          }
+          return await notFoundHandler(enhancedReq, async () => null as any)
         }
         catch (error) {
           console.error('Error handling request:', error)

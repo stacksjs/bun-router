@@ -611,13 +611,21 @@ export class Router {
         return new Response('No response from middleware chain', { status: 500 })
       }
 
-      // No route found - check if the path exists with a different method (405 vs 404)
+      // No route found - check if the path exists with a different method (405 vs 404).
+      // 404/405 bodies now include path + method so client-side debugging (typo'd
+      // endpoint, stale SPA cache, missing route registration) is one grep away.
+      // Both responses still flow through globalMiddleware so user middleware
+      // (X-Request-ID, audit, custom CORS) sees them.
       const allowedMethods = this.getAllowedMethods(url.pathname, hostname)
 
-      // If there are allowed methods, return 405 Method Not Allowed
       if (allowedMethods.length > 0) {
         const methodNotAllowedHandler = async (_req: EnhancedRequest, _next: NextFunction) => {
-          return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+          return new Response(JSON.stringify({
+            error: 'Method Not Allowed',
+            path: url.pathname,
+            method: req.method,
+            allowed: allowedMethods,
+          }), {
             status: 405,
             headers: {
               'Content-Type': 'application/json',
@@ -643,7 +651,11 @@ export class Router {
           if (this.fallbackHandler) {
             return await this.resolveHandler(this.fallbackHandler, enhancedReq)
           }
-          return new Response(JSON.stringify({ error: 'Not Found' }), {
+          return new Response(JSON.stringify({
+            error: 'Not Found',
+            path: url.pathname,
+            method: req.method,
+          }), {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
           })
@@ -661,8 +673,12 @@ export class Router {
         return this.applyModifiedCookies(response, enhancedReq)
       }
 
-      // No fallback handler, return a 404
-      return new Response(JSON.stringify({ error: 'Not Found' }), {
+      // No fallback handler, return a 404 with path context
+      return new Response(JSON.stringify({
+        error: 'Not Found',
+        path: url.pathname,
+        method: req.method,
+      }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },
       })
