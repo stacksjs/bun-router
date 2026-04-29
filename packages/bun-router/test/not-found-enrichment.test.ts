@@ -14,7 +14,7 @@ describe('Router 404/405 enrichment', () => {
 
     const r = await router.handleRequest(new Request('http://localhost/missing'))
     expect(r.status).toBe(404)
-    const body = await r.json()
+    const body = await r.json() as Record<string, unknown>
     expect(body.path).toBe('/missing')
     expect(body.method).toBe('GET')
     // The active handleRequest path (defined via defineProperties in
@@ -31,7 +31,7 @@ describe('Router 404/405 enrichment', () => {
     const r = await router.handleRequest(new Request('http://localhost/users', { method: 'DELETE' }))
     expect(r.status).toBe(405)
     expect(r.headers.get('allow')).toMatch(/GET|POST/)
-    const body = await r.json()
+    const body = await r.json() as Record<string, unknown>
     expect(body.path).toBe('/users')
     expect(body.method).toBe('DELETE')
     expect(Array.isArray(body.allowed)).toBe(true)
