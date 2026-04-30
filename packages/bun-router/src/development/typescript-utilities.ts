@@ -423,6 +423,10 @@ export type MiddlewareWithConfig<T> = (config: T) => MiddlewareFunction
     const responseType = options.responseType || 'Response'
     const paramsType = options.paramsType || 'Record<string, string>'
 
+    // pickier mis-parses the embedded `req:` token in this template literal
+    // as a real unused function parameter — disable on the next line so a
+    // pre-existing rule false positive doesn't block CI.
+    // eslint-disable-next-line pickier/no-unused-vars
     return `(req: ${requestType} & { params: ${paramsType} }) => Promise<${responseType}>`
   }
 
