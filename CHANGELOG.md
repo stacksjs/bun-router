@@ -1,3 +1,21 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.9...v0.0.10)
+
+### 🐛 Bug Fixes
+
+- **request**: attach getParam/cookie/get on the registered enhanceRequest override ([80f1925](https://github.com/stacksjs/bun-router/commit/80f1925)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- **release**: revert explicit build step ([db5d727](https://github.com/stacksjs/bun-router/commit/db5d727)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.10 ([e263c73](https://github.com/stacksjs/bun-router/commit/e263c73)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.8...v0.0.9)
 
 ### 🚀 Features
