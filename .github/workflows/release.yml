@@ -25,6 +25,17 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      # Build the dist before publishing. `pantry publish` doesn't run
+      # npm's `prepublishOnly` script (the workspace setup invokes a
+      # different publish path), so without an explicit build step we
+      # were shipping a stale `dist/` from whatever happened to be on
+      # the builder. v0.0.8 went out missing the applyMacros call in
+      # enhanceRequest because of this. Run the workspace build script
+      # so the package's `dist/` is regenerated from current source.
+      - name: Build package
+        working-directory: packages/bun-router
+        run: bun --bun build.ts
+
       - name: Publish
         run: pantry publish --npm --access public
         env:
