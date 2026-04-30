@@ -794,6 +794,12 @@ export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip'
    */
   params: Record<string, string>
   /**
+   * Lookup a single route param. Equivalent to `request.params[name]` but
+   * with optional default-value handling, matching the Laravel-style
+   * `$request->route('name')` ergonomics.
+   */
+  getParam: <T = string>(name: string, defaultValue?: T) => T | undefined
+  /**
    * Query parameters from the URL
    */
   query: Record<string, string | string[]>

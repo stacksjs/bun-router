@@ -33,8 +33,10 @@ registerModelBinding(Router)
 registerFileBasedRouting(Router)
 registerApiRoutes(Router)
 
-// Export the Router class and fluent routing features
+// Export the Router class, the standalone request-enhancement helper, and
+// fluent routing features.
 export { Router }
+export { applyRequestEnhancements } from './router'
 
 // Type augmentation for Laravel-style methods
 declare module './router' {
