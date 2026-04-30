@@ -1,3 +1,35 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.8...v0.0.9)
+
+### 🚀 Features
+
+- **request**: add cookie() helper + applyRequestEnhancements export ([e8561de](https://github.com/stacksjs/bun-router/commit/e8561de)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🐛 Bug Fixes
+
+- type json() response in not-found enrichment tests ([8329698](https://github.com/stacksjs/bun-router/commit/8329698)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- add setup-bun to publish-commit job ([dd3ecc3](https://github.com/stacksjs/bun-router/commit/dd3ecc3)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **response**: accept status number as 2nd arg to response.json() ([79c6066](https://github.com/stacksjs/bun-router/commit/79c6066)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- apply request macros to every incoming request in `enhanceRequest` ([3a9e0a2](https://github.com/stacksjs/bun-router/commit/3a9e0a2)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- **release**: rebuild dist before publishing ([f23eebd](https://github.com/stacksjs/bun-router/commit/f23eebd)) _(by Chris <chrisbreuer93@gmail.com>)_
+- drop redundant setup-bun (pantry installs bun via deps.yaml) ([16f152c](https://github.com/stacksjs/bun-router/commit/16f152c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.9 ([947e60c](https://github.com/stacksjs/bun-router/commit/947e60c)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **lint**: silence pickier false positive in template literal ([9c19c76](https://github.com/stacksjs/bun-router/commit/9c19c76)) _(by Chris <chrisbreuer93@gmail.com>)_
+- release v0.0.8 ([7dfb277](https://github.com/stacksjs/bun-router/commit/7dfb277)) _(by Chris <chrisbreuer93@gmail.com>)_
+- lint:fix ([4a3b0e4](https://github.com/stacksjs/bun-router/commit/4a3b0e4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock to pick up latest pickier ([ce11cd4](https://github.com/stacksjs/bun-router/commit/ce11cd4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up dtsx 0.9.14 and bunfig 0.15.9 ([2cdc04c](https://github.com/stacksjs/bun-router/commit/2cdc04c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.7...v0.0.8)
 
 ### 🚀 Features
