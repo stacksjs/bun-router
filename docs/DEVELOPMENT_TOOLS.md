@@ -578,25 +578,25 @@ await Bun.write('generated-types.ts', types)
 
 ### Common Issues
 
-**Debug logs not appearing**
+#### Debug logs not appearing
 
 - Check that debugging is enabled
 - Verify log level configuration
 - Ensure middleware is properly registered
 
-**Profiling not working**
+#### Profiling not working
 
 - Check sample rate (may be too low)
 - Verify profiler is enabled
 - Ensure middleware order is correct
 
-**Type generation issues**
+#### Type generation issues
 
 - Verify route types are registered
 - Check TypeScript configuration
 - Ensure proper import paths
 
-**Performance overhead**
+#### Performance overhead
 
 - Reduce sample rate in production
 - Disable unnecessary features
