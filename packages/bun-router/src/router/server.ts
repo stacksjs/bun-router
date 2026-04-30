@@ -340,6 +340,32 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // overwrite the get/set/delete object form consumers depend on.
         RequestWithMacros.applyMacros(enhancedReq)
 
+        // Attach the helpers consumers reach for that aren't shaped as
+        // generic input macros — `getParam`, the function-form `cookie`,
+        // the parsed-query `get` shorthand. These mirror the methods the
+        // bare `Router.enhanceRequest` (router.ts) attaches; without them
+        // here, requests that flow through the registered server.ts
+        // override are missing exactly the helpers that frameworks
+        // layered on bun-router (Stacks, etc.) treat as guaranteed.
+        ;(enhancedReq as any).getParam = <T = string>(name: string, defaultValue?: T): T | undefined => {
+          const value = params?.[name] as T | undefined
+          return value !== undefined ? value : defaultValue
+        }
+        ;(enhancedReq as any).cookie = (name: string, defaultValue?: string): string | null => {
+          const value = getCookies()[name]
+          return value !== undefined ? value : (defaultValue ?? null)
+        }
+        // `get(key)` — read query params (and only query params; the full
+        // input merge with body etc. is provided by the `input` macro).
+        // Skip if a macro already registered it under the same name.
+        if (typeof (enhancedReq as any).get !== 'function') {
+          ;(enhancedReq as any).get = <T = unknown>(key: string, defaultValue?: T): T | undefined => {
+            const url = new URL(req.url)
+            const value = url.searchParams.get(key) as T | null
+            return value !== null && value !== undefined ? value : defaultValue
+          }
+        }
+
         // Add cookie methods to the request (overrides any macro named `cookies`).
         Object.assign(enhancedReq, { cookies: { ...getCookies(), ...cookies } })
 
