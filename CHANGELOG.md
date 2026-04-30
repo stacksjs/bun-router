@@ -1,3 +1,27 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.7...v0.0.8)
+
+### 🚀 Features
+
+- **request**: add cookie() helper + applyRequestEnhancements export ([1cb8953](https://github.com/stacksjs/bun-router/commit/1cb8953)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.8 ([44c06f6](https://github.com/stacksjs/bun-router/commit/44c06f6)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.7...HEAD)
+
+### 🚀 Features
+
+- **request**: add cookie() helper + applyRequestEnhancements export ([1cb8953](https://github.com/stacksjs/bun-router/commit/1cb8953)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.6...v0.0.7)
 
 ### 🐛 Bug Fixes
