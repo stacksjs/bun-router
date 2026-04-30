@@ -1147,6 +1147,15 @@ export class Router {
       return req.headers.get(name) || req.headers.get(name.toLowerCase()) || null
     }
 
+    // Convenience cookie reader. The full `enhancedReq.cookies.get(name)` API
+    // is also available below — `cookie(name)` is the shorter form callers
+    // (and the Laravel-style macros) reach for first, so it deserves a
+    // direct method on the enhanced request, not just on the macros class.
+    ;(enhancedReq as any).cookie = (name: string, defaultValue?: string): string | null => {
+      const value = getCookies()[name]
+      return value !== undefined ? value : (defaultValue ?? null)
+    }
+
     ;(enhancedReq as any).getParam = <T = string>(name: string, defaultValue?: T): T | undefined => {
       const value = params?.[name] as T | undefined
       return value !== undefined ? value : defaultValue
@@ -1521,4 +1530,52 @@ export class RouteGroupBuilder {
   delete(_path: string, _handler: RouteHandler): this {
     return this
   }
+}
+
+// ---------------------------------------------------------------------------
+// Standalone enhancement helper
+// ---------------------------------------------------------------------------
+
+// Singleton scratch Router used to expose `enhanceRequest` as a standalone
+// function. Downstream consumers (frameworks layered on bun-router) often
+// need to attach the request macros to a request that was created outside
+// of `route.serve()` — for instance, when a higher-level router wraps
+// each handler with its own middleware chain. Without an exported function,
+// those consumers either spin up their own `new Router()` per call or
+// duplicate the attachment logic in user code.
+//
+// We share one instance because `enhanceRequest` does not depend on any
+// per-router state (route table, middleware groups, etc.) — it only reads
+// from the request and the supplied params.
+let _enhancementHost: Router | null = null
+
+function getEnhancementHost(): Router {
+  if (_enhancementHost === null) _enhancementHost = new Router()
+  return _enhancementHost
+}
+
+/**
+ * Attach bun-router's request macros (`bearerToken`, `getParam`, `cookie`,
+ * `cookies`, `header`, `params`, plus the Laravel-style input helpers
+ * `get`, `input`, `string`, `integer`, `float`, `boolean`, `array`, `has`,
+ * `filled`, etc.) to a request.
+ *
+ * Idempotent: calling on an already-enhanced request returns it unchanged.
+ * We sniff `req.bearerToken` as the marker — cheap and reliable since no
+ * native Request has it.
+ *
+ * @example
+ * import { applyRequestEnhancements } from '@stacksjs/bun-router'
+ *
+ * const enhanced = applyRequestEnhancements(req, { id: '42' })
+ * enhanced.bearerToken()  // → string | null
+ * enhanced.getParam('id') // → '42'
+ */
+export function applyRequestEnhancements(
+  req: Request | EnhancedRequest,
+  params: Record<string, string> = {},
+): EnhancedRequest {
+  if (typeof (req as any).bearerToken === 'function')
+    return req as EnhancedRequest
+  return getEnhancementHost().enhanceRequest(req as Request, params)
 }
