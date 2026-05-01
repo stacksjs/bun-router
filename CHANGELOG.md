@@ -1,3 +1,24 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.11...v0.0.12)
+
+### 🧹 Chores
+
+- release v0.0.12 ([dc11c1f](https://github.com/stacksjs/bun-router/commit/dc11c1f)) _(by Chris <chrisbreuer93@gmail.com>)_
+- split cross-platform compile out of prepublishOnly ([9a8de7f](https://github.com/stacksjs/bun-router/commit/9a8de7f)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.11...HEAD)
+
+### 🧹 Chores
+
+- split cross-platform compile out of prepublishOnly ([9a8de7f](https://github.com/stacksjs/bun-router/commit/9a8de7f)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.10...v0.0.11)
 
 ### 🧹 Chores
