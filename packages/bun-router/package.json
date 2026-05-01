@@ -77,7 +77,8 @@
     "lint:fix": "bunx --bun eslint . --fix",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
     "changelog": "bunx changelogen --output CHANGELOG.md",
-    "prepublishOnly": "bun --bun run build && bun run compile:all && bun run zip",
+    "prepublishOnly": "bun --bun run build",
+    "package:bin": "bun run compile:all && bun run zip",
     "release": "bun run changelog && bunx bumpp package.json --all",
     "test": "bun test",
     "typecheck": "bunx --bun tsc --noEmit"
