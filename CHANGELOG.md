@@ -1,3 +1,30 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.10...v0.0.11)
+
+### 🧹 Chores
+
+- release v0.0.11 ([3f89d29](https://github.com/stacksjs/bun-router/commit/3f89d29)) _(by Chris <chrisbreuer93@gmail.com>)_
+- bump ts-rate-limiter to ^0.4.2 ([ebb015a](https://github.com/stacksjs/bun-router/commit/ebb015a)) _(by Chris <chrisbreuer93@gmail.com>)_
+- refresh bun.lock and apply pickier --fix ([be38c6f](https://github.com/stacksjs/bun-router/commit/be38c6f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock ([f76a362](https://github.com/stacksjs/bun-router/commit/f76a362)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.10...HEAD)
+
+### 🧹 Chores
+
+- bump ts-rate-limiter to ^0.4.2 ([ebb015a](https://github.com/stacksjs/bun-router/commit/ebb015a)) _(by Chris <chrisbreuer93@gmail.com>)_
+- refresh bun.lock and apply pickier --fix ([be38c6f](https://github.com/stacksjs/bun-router/commit/be38c6f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock ([f76a362](https://github.com/stacksjs/bun-router/commit/f76a362)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.9...v0.0.10)
 
 ### 🐛 Bug Fixes
