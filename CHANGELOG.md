@@ -1,3 +1,32 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.12...v0.0.13)
+
+### 🐛 Bug Fixes
+
+- remove unused query builder dependency ([16d678c](https://github.com/stacksjs/bun-router/commit/16d678c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.13 ([d61e456](https://github.com/stacksjs/bun-router/commit/d61e456)) _(by Chris <chrisbreuer93@gmail.com>)_
+- add cloud patch publish script ([3298c0a](https://github.com/stacksjs/bun-router/commit/3298c0a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.12...HEAD)
+
+### 🐛 Bug Fixes
+
+- remove unused query builder dependency ([16d678c](https://github.com/stacksjs/bun-router/commit/16d678c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🧹 Chores
+
+- add cloud patch publish script ([3298c0a](https://github.com/stacksjs/bun-router/commit/3298c0a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.11...v0.0.12)
 
 ### 🧹 Chores
