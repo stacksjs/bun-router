@@ -280,7 +280,7 @@ describe('CLI Commands', () => {
       expect(commands).toBeDefined()
       expect(Array.isArray(commands)).toBe(true)
 
-      const commandNames = commands.map((cmd: any) => cmd.name)
+      const commandNames = commands.map((cmd: any) => cmd.rawName.split(' ')[0])
 
       expect(commandNames).toContain('route:list')
       expect(commandNames).toContain('route:types')
