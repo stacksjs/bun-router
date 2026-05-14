@@ -488,6 +488,16 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
       async value(): Promise<void> {
         if (this._fileRoutesInitialized) return
 
+        // Ensure each Router instance gets its OWN routes array. The
+        // `_fileBasedRoutes: { value: [] }` declaration on the prototype
+        // means every instance shares a single array reference until
+        // someone reassigns. Without this lazy-init, calls like
+        // `instanceA.getFileRoutes()` leak routes registered by
+        // `instanceB._initFileRoutes()` — cross-instance contamination.
+        if (!Object.prototype.hasOwnProperty.call(this, '_fileBasedRoutes')) {
+          this._fileBasedRoutes = []
+        }
+
         // Auto-detect views directory if not configured
         const viewsDir = this._viewsDir || detectViewsDirectory()
         if (!viewsDir) {
@@ -496,6 +506,16 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
         }
 
         const config = this._fileRoutingConfig || {}
+
+        // Honour the opt-out flag set by `router.disableFileRouting()` and by
+        // anyone passing `{ enabled: false }` to `router.views(...)`. Before
+        // this check the flag was stored but never read, so the public
+        // `disableFileRouting()` API silently did nothing.
+        if (config.enabled === false) {
+          this._fileRoutesInitialized = true
+          return
+        }
+
         const extensions = config.extensions || DEFAULT_EXTENSIONS
         const exclude = config.exclude || DEFAULT_EXCLUDES
 
