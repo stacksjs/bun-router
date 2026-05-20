@@ -1959,6 +1959,18 @@ export interface RequestMacroMethods {
   cookies: () => Record<string, string>
 
   // Files
+  /**
+   * Lookup a single uploaded file by form field name. Returns the
+   * matching `FileInfo` (structurally an `UploadedFile`) or `null` when
+   * no field with that name was uploaded. Populated by the multipart
+   * file-upload middleware alongside `files: UploadedFile[]`. Mirrors
+   * Laravel's `$request->file('avatar')`:
+   *
+   * ```ts
+   * const avatar = req.file('avatar')
+   * if (!avatar) return new Response('Missing avatar', { status: 400 })
+   * ```
+   */
   file: (name: string) => FileInfo | null
   hasFile: (name: string) => boolean
 

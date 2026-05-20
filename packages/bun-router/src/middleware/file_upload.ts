@@ -162,6 +162,17 @@ export default class FileUpload {
         configurable: true,
       })
 
+      // Typed lookup by form field name. Mirrors Laravel's
+      // `$request->file('avatar')` ergonomics: returns the matching
+      // UploadedFile or null. See stacksjs/stacks#1856.
+      Object.defineProperty(req, 'file', {
+        value: (fieldName: string): UploadedFile | null =>
+          uploadedFiles.find(f => f.fieldName === fieldName) ?? null,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      })
+
       Object.defineProperty(req, 'formBody', {
         value: fields,
         writable: true,
