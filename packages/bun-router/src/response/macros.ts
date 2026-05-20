@@ -125,6 +125,44 @@ export class ResponseWithMacros extends Response {
 }
 
 /**
+ * Reconcile the second argument of `Response.<method>(body, statusOrInit, headers?)`.
+ * Accepts either a positional status number (legacy bun-router shape) or a
+ * `ResponseInit` object (native WHATWG shape `{ status?, headers?, statusText? }`).
+ * When a `ResponseInit` provides `headers`, those replace the positional `headers`
+ * arg entirely — matching the principle that the more-explicit form wins.
+ *
+ * Headers normalize to a plain string map so downstream spread works uniformly.
+ */
+function resolveResponseInit(
+  statusOrInit: number | ResponseInit,
+  headers: Record<string, string>,
+): { status: number, mergedHeaders: Record<string, string> } {
+  if (typeof statusOrInit === 'number')
+    return { status: statusOrInit, mergedHeaders: headers }
+
+  if (statusOrInit && typeof statusOrInit === 'object') {
+    const status = typeof statusOrInit.status === 'number' ? statusOrInit.status : 200
+    let mergedHeaders = headers
+    if (statusOrInit.headers) {
+      mergedHeaders = {}
+      if (statusOrInit.headers instanceof Headers) {
+        statusOrInit.headers.forEach((value, key) => { mergedHeaders[key] = value })
+      }
+      else if (Array.isArray(statusOrInit.headers)) {
+        for (const [key, value] of statusOrInit.headers)
+          mergedHeaders[key] = value
+      }
+      else {
+        Object.assign(mergedHeaders, statusOrInit.headers as Record<string, string>)
+      }
+    }
+    return { status, mergedHeaders }
+  }
+
+  return { status: 200, mergedHeaders: headers }
+}
+
+/**
  * Built-in response macros
  */
 export const BuiltInResponseMacros = {
@@ -274,53 +312,68 @@ export const BuiltInResponseMacros = {
   },
 
   /**
-   * JSON response with custom headers
+   * JSON response with custom headers. Accepts BOTH the native
+   * `Response.json(data, init?)` shape (where `init` is a
+   * `ResponseInit` object) AND the legacy positional
+   * `Response.json(data, status, headers)` shape. Required for
+   * backwards-compatibility with framework + third-party code that
+   * calls `Response.json(data, { status: 422 })` — the standard WHATWG
+   * signature that Bun's native `Response.json` ships with.
+   *
+   * See stacksjs/stacks#1857.
    */
-  json: (data: any, status = 200, headers: Record<string, string> = {}): Response => {
+  json: (data: any, statusOrInit: number | ResponseInit = 200, headers: Record<string, string> = {}): Response => {
+    const { status, mergedHeaders } = resolveResponseInit(statusOrInit, headers)
     return new Response(JSON.stringify(data), {
       status,
       headers: {
         'Content-Type': 'application/json',
-        ...headers,
+        ...mergedHeaders,
       },
     })
   },
 
   /**
-   * HTML response
+   * HTML response. Dual-shape: native `(content, init?)` or positional
+   * `(content, status, headers)`.
    */
-  html: (content: string, status = 200, headers: Record<string, string> = {}): Response => {
+  html: (content: string, statusOrInit: number | ResponseInit = 200, headers: Record<string, string> = {}): Response => {
+    const { status, mergedHeaders } = resolveResponseInit(statusOrInit, headers)
     return new Response(content, {
       status,
       headers: {
         'Content-Type': 'text/html',
-        ...headers,
+        ...mergedHeaders,
       },
     })
   },
 
   /**
-   * Plain text response
+   * Plain text response. Dual-shape: native `(content, init?)` or
+   * positional `(content, status, headers)`.
    */
-  text: (content: string, status = 200, headers: Record<string, string> = {}): Response => {
+  text: (content: string, statusOrInit: number | ResponseInit = 200, headers: Record<string, string> = {}): Response => {
+    const { status, mergedHeaders } = resolveResponseInit(statusOrInit, headers)
     return new Response(content, {
       status,
       headers: {
         'Content-Type': 'text/plain',
-        ...headers,
+        ...mergedHeaders,
       },
     })
   },
 
   /**
-   * XML response
+   * XML response. Dual-shape: native `(content, init?)` or positional
+   * `(content, status, headers)`.
    */
-  xml: (content: string, status = 200, headers: Record<string, string> = {}): Response => {
+  xml: (content: string, statusOrInit: number | ResponseInit = 200, headers: Record<string, string> = {}): Response => {
+    const { status, mergedHeaders } = resolveResponseInit(statusOrInit, headers)
     return new Response(content, {
       status,
       headers: {
         'Content-Type': 'application/xml',
-        ...headers,
+        ...mergedHeaders,
       },
     })
   },
