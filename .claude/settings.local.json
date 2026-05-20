@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run lint:*)",
+      "Bash(bun run typecheck:*)",
+      "Bash(timeout 30 bun test:*)",
+      "Bash(bun install:*)",
+      "Bash(bun test:*)",
+      "Bash(timeout 10 bun test:*)",
+      "Bash(echo:*)",
+      "Bash(timeout 60 bun test:*)",
+      "Bash(ls:*)",
+      "Bash(bun run build:*)",
+      "Bash(bun run test)",
+      "Bash(find:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,3 +1,52 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.13...v0.0.14)
+
+### 🚀 Features
+
+- typed request.file(name) accessor on EnhancedRequest ([999cea6](https://github.com/stacksjs/bun-router/commit/999cea6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **router**: thread TPath through route methods for inline-handler param narrowing (stacksjs/stacks#1851) ([469128f](https://github.com/stacksjs/bun-router/commit/469128f)) _(by glennmichael123 <gtorregosa@gmail.com>)_ ([#1851](https://github.com/stacksjs/bun-router/issues/1851), [#1851](https://github.com/stacksjs/bun-router/issues/1851))
+
+### 🐛 Bug Fixes
+
+- response macros accept both ResponseInit and positional args ([efa36e9](https://github.com/stacksjs/bun-router/commit/efa36e9)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **file-based-routing**: honor disableFileRouting() and isolate per-instance routes ([1dd04d6](https://github.com/stacksjs/bun-router/commit/1dd04d6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **test**: use cmd.rawName to read namespaced command names ([ee6187f](https://github.com/stacksjs/bun-router/commit/ee6187f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.14 ([56bb0b8](https://github.com/stacksjs/bun-router/commit/56bb0b8)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- switch lint scripts from eslint to pickier ([67e9d97](https://github.com/stacksjs/bun-router/commit/67e9d97)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([9ee0607](https://github.com/stacksjs/bun-router/commit/9ee0607)) _(by Chris <chrisbreuer93@gmail.com>)_
+- refresh bun.lock to pick up bun-plugin-dtsx@0.9.18 ([e487e34](https://github.com/stacksjs/bun-router/commit/e487e34)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.13...HEAD)
+
+### 🚀 Features
+
+- typed request.file(name) accessor on EnhancedRequest ([999cea6](https://github.com/stacksjs/bun-router/commit/999cea6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **router**: thread TPath through route methods for inline-handler param narrowing (stacksjs/stacks#1851) ([469128f](https://github.com/stacksjs/bun-router/commit/469128f)) _(by glennmichael123 <gtorregosa@gmail.com>)_ ([#1851](https://github.com/stacksjs/bun-router/issues/1851), [#1851](https://github.com/stacksjs/bun-router/issues/1851))
+
+### 🐛 Bug Fixes
+
+- response macros accept both ResponseInit and positional args ([efa36e9](https://github.com/stacksjs/bun-router/commit/efa36e9)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **file-based-routing**: honor disableFileRouting() and isolate per-instance routes ([1dd04d6](https://github.com/stacksjs/bun-router/commit/1dd04d6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **test**: use cmd.rawName to read namespaced command names ([ee6187f](https://github.com/stacksjs/bun-router/commit/ee6187f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- switch lint scripts from eslint to pickier ([67e9d97](https://github.com/stacksjs/bun-router/commit/67e9d97)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- wip ([9ee0607](https://github.com/stacksjs/bun-router/commit/9ee0607)) _(by Chris <chrisbreuer93@gmail.com>)_
+- refresh bun.lock to pick up bun-plugin-dtsx@0.9.18 ([e487e34](https://github.com/stacksjs/bun-router/commit/e487e34)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.12...v0.0.13)
 
 ### 🐛 Bug Fixes

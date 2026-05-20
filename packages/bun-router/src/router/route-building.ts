@@ -64,18 +64,26 @@ export function registerRouteBuilding(RouterClass: typeof Router): void {
               matchPath(path, url.pathname, params, constraintsRecord)
               const enhancedReq = this.enhanceRequest(req, params)
 
-              // Run middleware
-              const middlewareResult = await this.runMiddleware(
+              // Treat the route handler as the terminal middleware so the
+              // chain reaches it. Previously this code called
+              // `runMiddleware(stack)` without the handler and then only
+              // called `resolveHandler()` if middlewareResult was falsy.
+              // The chain in `buildMiddlewareChain` bottoms out in
+              // `return result || new Response(null, { status: 200 })` —
+              // so any user middleware that does `await next()` (cors,
+              // request-id, auth gates, etc.) gets a truthy empty Response
+              // back from the bottom of the chain, returns it, and the
+              // outer `if (middlewareResult)` short-circuits before the
+              // handler runs. Visible symptom: every route returns
+              // `200 OK` with `Content-Length: 0`.
+              const routeHandlerMiddleware = async (req2: any, _next: any) =>
+                await this.resolveHandler(route.handler, req2)
+              const middlewareStack = [...this.globalMiddleware, ...route.middleware, routeHandlerMiddleware]
+              const response = await this.runMiddleware(enhancedReq, middlewareStack)
+              return this.applyModifiedCookies(
+                response ?? new Response('No response from middleware chain', { status: 500 }),
                 enhancedReq,
-                [...this.globalMiddleware, ...route.middleware],
               )
-              if (middlewareResult) {
-                return this.applyModifiedCookies(middlewareResult, enhancedReq)
-              }
-
-              // Run route handler
-              const response = await this.resolveHandler(route.handler, enhancedReq)
-              return this.applyModifiedCookies(response, enhancedReq)
             }
           }
           else {
@@ -95,18 +103,19 @@ export function registerRouteBuilding(RouterClass: typeof Router): void {
                 matchPath(path, url.pathname, params, constraintsRecord)
                 const enhancedReq = this.enhanceRequest(req, params)
 
-                // Run middleware
-                const middlewareResult = await this.runMiddleware(
+                // See the long comment above the single-method branch:
+                // include the route handler as the terminal middleware so
+                // the chain reaches it. Without this, any user middleware
+                // (cors, request-id) short-circuits to a 200-empty default
+                // and the handler never runs.
+                const routeHandlerMiddleware = async (req2: any, _next: any) =>
+                  await this.resolveHandler(route.handler, req2)
+                const middlewareStack = [...this.globalMiddleware, ...route.middleware, routeHandlerMiddleware]
+                const response = await this.runMiddleware(enhancedReq, middlewareStack)
+                return this.applyModifiedCookies(
+                  response ?? new Response('No response from middleware chain', { status: 500 }),
                   enhancedReq,
-                  [...this.globalMiddleware, ...route.middleware],
                 )
-                if (middlewareResult) {
-                  return this.applyModifiedCookies(middlewareResult, enhancedReq)
-                }
-
-                // Run route handler
-                const response = await this.resolveHandler(route.handler, enhancedReq)
-                return this.applyModifiedCookies(response, enhancedReq)
               }
             }
 
