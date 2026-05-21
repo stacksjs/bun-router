@@ -58,7 +58,8 @@ export function extractBasicAuth(authHeader: string): { username: string, passwo
     return { username, password }
   }
   catch (error) {
-    console.error(error)
+    void error
+
     return null
   }
 }
