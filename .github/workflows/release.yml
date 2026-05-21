@@ -26,7 +26,7 @@ jobs:
         run: bun install
 
       - name: Publish
-        run: pantry publish --npm --access public
+        run: pantry publish --npm --access public './packages/bun-router'
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

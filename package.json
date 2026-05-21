@@ -1,5 +1,5 @@
 {
-  "name": "@stacksjs/bun-router",
+  "name": "bun-router-workspace",
   "type": "module",
   "version": "0.0.14",
   "private": true,
@@ -53,7 +53,7 @@
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
     "prepublishOnly": "bun --bun run build",
     "package:bin": "bun run compile:all && bun run zip",
-    "test": "bun test",
+    "test": "bun test packages/bun-router/test",
     "lint": "bunx --bun pickier .",
     "lint:fix": "bunx --bun pickier . --fix",
     "format": "bunx --bun pickier . --format",
