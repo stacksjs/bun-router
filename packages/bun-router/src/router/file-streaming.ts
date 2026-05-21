@@ -5,6 +5,17 @@ import type {
 import type { Router } from './router'
 import { FileStreamHandler, StreamHandler } from '../streaming/stream-handler'
 
+function closeReadableStreamAfterError(controller: ReadableStreamDefaultController, error: unknown): void {
+  void error
+
+  try {
+    controller.close()
+  }
+  catch {
+    // The stream may already be closed or errored by the runtime.
+  }
+}
+
 /**
  * File streaming extension for Router class
  */
@@ -169,7 +180,7 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
               controller.close()
             }
             catch (error) {
-              controller.error(error)
+              closeReadableStreamAfterError(controller, error)
             }
           },
         })
@@ -233,7 +244,7 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
               controller.close()
             }
             catch (error) {
-              controller.error(error)
+              closeReadableStreamAfterError(controller, error)
             }
           },
         })
@@ -294,7 +305,7 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
               controller.close()
             }
             catch (error) {
-              controller.error(error)
+              closeReadableStreamAfterError(controller, error)
             }
           },
         })
@@ -340,7 +351,7 @@ export function registerFileStreaming(RouterClass: typeof Router): void {
               controller.close()
             }
             catch (error) {
-              controller.error(error)
+              closeReadableStreamAfterError(controller, error)
             }
           },
         })
