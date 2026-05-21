@@ -1,3 +1,44 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.14...v0.0.15)
+
+### 🐛 Bug Fixes
+
+- **streaming**: close errored response streams gracefully ([f172676](https://github.com/stacksjs/bun-router/commit/f172676)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **release**: publish bun-router package workspace ([3a4f31c](https://github.com/stacksjs/bun-router/commit/3a4f31c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- **buddy-bot**: regenerate workflow from current template ([50d41ab](https://github.com/stacksjs/bun-router/commit/50d41ab)) _(by Glenn Michael Torregosa <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.15 ([8181792](https://github.com/stacksjs/bun-router/commit/8181792)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **auth**: keep invalid basic auth quiet ([f219d38](https://github.com/stacksjs/bun-router/commit/f219d38)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _Glenn Michael Torregosa <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.14...HEAD)
+
+### 🐛 Bug Fixes
+
+- **streaming**: close errored response streams gracefully ([f172676](https://github.com/stacksjs/bun-router/commit/f172676)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **release**: publish bun-router package workspace ([3a4f31c](https://github.com/stacksjs/bun-router/commit/3a4f31c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- **buddy-bot**: regenerate workflow from current template ([50d41ab](https://github.com/stacksjs/bun-router/commit/50d41ab)) _(by Glenn Michael Torregosa <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- **auth**: keep invalid basic auth quiet ([f219d38](https://github.com/stacksjs/bun-router/commit/f219d38)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _Glenn Michael Torregosa <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.13...v0.0.14)
 
 ### 🚀 Features
