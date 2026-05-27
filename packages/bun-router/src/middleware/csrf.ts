@@ -60,6 +60,16 @@ export default class Csrf {
       })
     }
 
+    // Bearer-authed requests can't be CSRF'd — the token doesn't
+    // ride on cookies, so a hostile origin can't trick a browser into
+    // sending it. Mirrors Laravel Sanctum / Django REST framework /
+    // express-csurf semantics. Filed against stacksjs/stacks#1922.
+    const authHeader = req.headers.get('authorization') ?? req.headers.get('Authorization')
+    if (authHeader && /^Bearer\s+\S/i.test(authHeader)) {
+      const response = await next()
+      return response || new Response('Not Found', { status: 404 })
+    }
+
     // For unsafe methods, verify the CSRF token
     // Check for token in headers or in the request body
     const token = req.headers.get('X-CSRF-TOKEN')
