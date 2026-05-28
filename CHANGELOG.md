@@ -1,3 +1,31 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.15...v0.0.16)
+
+### 🐛 Bug Fixes
+
+- **csrf**: auto-skip CSRF on bearer-authed requests ([7db9cad](https://github.com/stacksjs/bun-router/commit/7db9cad)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **scripts**: stop double-generating CHANGELOG on release ([9eb32ef](https://github.com/stacksjs/bun-router/commit/9eb32ef)) _(by Glenn Michael Torregosa <gtorregosa@gmail.com>)_
+- **release**: publish bun-router from package directory ([713e095](https://github.com/stacksjs/bun-router/commit/713e095)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### ⚡ Performance Improvements
+
+- **router**: precompile route patterns to speed up matchPath ~3x ([a05895a](https://github.com/stacksjs/bun-router/commit/a05895a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- **buddy-bot**: add daily cleanup cron to workflow ([29a4d2b](https://github.com/stacksjs/bun-router/commit/29a4d2b)) _(by Glenn Michael Torregosa <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.0.16 ([c649bfc](https://github.com/stacksjs/bun-router/commit/c649bfc)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: refresh bun.lock to pick up @stacksjs/logsmith 0.2.3 ([7ad425f](https://github.com/stacksjs/bun-router/commit/7ad425f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **deps**: refresh bun.lock to pick up buddy-bot 0.9.20 ([09ee4bf](https://github.com/stacksjs/bun-router/commit/09ee4bf)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _Glenn Michael Torregosa <gtorregosa@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.14...v0.0.15)
 
 ### 🐛 Bug Fixes
