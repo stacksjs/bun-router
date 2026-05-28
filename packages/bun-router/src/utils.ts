@@ -84,6 +84,83 @@ export function createPathRegex(pattern: string): RegExp {
 }
 
 /**
+ * Per-pattern matching data. A route's pattern never changes, so the
+ * segment split, param-name extraction, and optional-param count are derived
+ * once and cached — turning `matchPath` from "regex + split on every request"
+ * into a tight array walk. Only the incoming `path` is processed per call.
+ */
+interface CompiledSegment {
+  isParam: boolean
+  paramName: string
+  isOptional: boolean
+  literal: string
+}
+
+interface CompiledPattern {
+  isWildcard: boolean
+  wildcardBase: string
+  segments: CompiledSegment[]
+  optionalCount: number
+}
+
+const PARAM_SEGMENT_RE = /\{([^}:]+)(?::[^}]+)?(\?)?\}/
+const OPTIONAL_SEGMENT_RE = /\{[^}]+\?\}/
+
+const compiledPatternCache = new Map<string, CompiledPattern>()
+// Cached compiled constraint regexes; `null` marks an invalid pattern so we
+// don't re-attempt construction on every request.
+const constraintRegexCache = new Map<string, RegExp | null>()
+
+function compilePattern(pattern: string): CompiledPattern {
+  const cached = compiledPatternCache.get(pattern)
+  if (cached)
+    return cached
+
+  const isWildcard = pattern.endsWith('/*')
+  const normalizedPattern = normalizePath(pattern)
+  let optionalCount = 0
+  const segments: CompiledSegment[] = normalizedPattern
+    .split('/')
+    .filter(Boolean)
+    .map((seg) => {
+      const isOptional = OPTIONAL_SEGMENT_RE.test(seg)
+      if (isOptional)
+        optionalCount++
+      const paramMatch = seg.match(PARAM_SEGMENT_RE)
+      return {
+        isParam: !!paramMatch,
+        paramName: paramMatch ? paramMatch[1].replace('?', '') : '',
+        isOptional,
+        literal: seg,
+      }
+    })
+
+  const compiled: CompiledPattern = {
+    isWildcard,
+    wildcardBase: isWildcard ? pattern.slice(0, -2) : '',
+    segments,
+    optionalCount,
+  }
+  compiledPatternCache.set(pattern, compiled)
+  return compiled
+}
+
+function getConstraintRegex(constraint: string): RegExp | null {
+  const cached = constraintRegexCache.get(constraint)
+  if (cached !== undefined)
+    return cached
+  let regex: RegExp | null
+  try {
+    regex = new RegExp(`^${constraint}$`)
+  }
+  catch {
+    regex = null
+  }
+  constraintRegexCache.set(constraint, regex)
+  return regex
+}
+
+/**
  * Matches a path against a pattern and extracts parameters
  * @param pattern The path pattern (e.g., '/users/{id}')
  * @param path The actual path (e.g., '/users/123')
@@ -97,71 +174,59 @@ export function matchPath(
   params: Record<string, string>,
   constraints?: Record<string, string>,
 ): boolean {
-  // Both paths should be normalized
-  const normalizedPattern = normalizePath(pattern)
-  const normalizedPath = normalizePath(path)
+  const compiled = compilePattern(pattern)
 
-  // Special case for wildcard patterns
-  if (pattern.endsWith('/*')) {
-    const basePattern = pattern.slice(0, -2)
-    if (path.startsWith(basePattern)) {
-      return true
-    }
+  // Special case for wildcard patterns. Matches the original semantics:
+  // a prefix hit short-circuits to true, otherwise we fall through to the
+  // per-segment match below.
+  if (compiled.isWildcard && path.startsWith(compiled.wildcardBase)) {
+    return true
   }
 
-  // Handle patterns with parameters
-  const patternSegments = normalizedPattern.split('/').filter(Boolean)
-  const pathSegments = normalizedPath.split('/').filter(Boolean)
+  const patternSegments = compiled.segments
+  const pathSegments = normalizePath(path).split('/').filter(Boolean)
 
   // Quick check - if segments don't match (accounting for optional params) then no match
   // For mandatory parameters, the pattern and path must have same number of segments
-  const optionalParamCount = (normalizedPattern.match(/\{[^}]+\?\}/g) || []).length
-
-  if (pathSegments.length < patternSegments.length - optionalParamCount
+  if (pathSegments.length < patternSegments.length - compiled.optionalCount
     || pathSegments.length > patternSegments.length) {
     return false
   }
 
   // Match each segment
   for (let i = 0; i < patternSegments.length; i++) {
-    const patternSegment = patternSegments[i]
+    const seg = patternSegments[i]
     const pathSegment = pathSegments[i]
 
     // If we've run out of path segments and this is not an optional parameter
     if (pathSegment === undefined) {
-      if (patternSegment.match(/\{[^}]+\?\}/)) {
+      if (seg.isOptional) {
         // This is an optional parameter and we have no path segment for it
         continue
       }
-      else {
-        // Required parameter or static segment with no matching path segment
-        return false
-      }
+      // Required parameter or static segment with no matching path segment
+      return false
     }
 
-    // Check if this segment is a parameter
-    const paramMatch = patternSegment.match(/\{([^}:]+)(?::[^}]+)?(\?)?\}/)
-    if (paramMatch) {
-      // This is a parameter segment, extract param name
-      const paramName = paramMatch[1].replace('?', '')
+    if (seg.isParam) {
       // Store the parameter value
-      params[paramName] = pathSegment
+      params[seg.paramName] = pathSegment
 
       // Check constraints if they exist
-      if (constraints && constraints[paramName]) {
-        try {
-          const regex = new RegExp(`^${constraints[paramName]}$`)
+      if (constraints && constraints[seg.paramName]) {
+        const regex = getConstraintRegex(constraints[seg.paramName])
+        if (regex) {
           if (!regex.test(pathSegment)) {
             return false
           }
         }
-        catch {
+        else {
           // If regex is invalid, treat as no constraint
-          console.warn(`Invalid constraint regex for parameter ${paramName}: ${constraints[paramName]}`)
+          console.warn(`Invalid constraint regex for parameter ${seg.paramName}: ${constraints[seg.paramName]}`)
         }
       }
     }
-    else if (patternSegment !== pathSegment) {
+    else if (seg.literal !== pathSegment) {
       // Static segment doesn't match
       return false
     }
