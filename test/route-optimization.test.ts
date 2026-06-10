@@ -9,7 +9,8 @@ describe('Route Optimization', () => {
 
   beforeEach(() => {
     trie = new RouteTrie()
-    compiler = new RouteCompiler()
+    // enableProfiling so timing stats (averageMatchTime) are recorded
+    compiler = new RouteCompiler({ enableProfiling: true })
   })
 
   describe('RouteTrie', () => {

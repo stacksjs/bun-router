@@ -9,7 +9,8 @@ describe('Route Optimization - Core Functionality', () => {
 
   beforeEach(() => {
     trie = new RouteTrie()
-    compiler = new RouteCompiler({ precompilePatterns: false }) // Disable URLPattern usage
+    // Disable URLPattern usage; enable profiling so timing stats are recorded
+    compiler = new RouteCompiler({ precompilePatterns: false, enableProfiling: true })
   })
 
   describe('RouteTrie Basic Functionality', () => {

@@ -290,7 +290,13 @@ export class RouteTrie {
   }
 
   /**
-   * Recursively match path segments
+   * Recursively match path segments.
+   *
+   * Candidates are tried in specificity order — static, then parameter,
+   * then wildcard — and the first full match wins. This both fixes the
+   * old behavior (where a wildcard sibling could shadow a static route)
+   * and avoids allocating candidate arrays and params copies per segment:
+   * `params` is mutated in place and rolled back on backtrack.
    */
   private matchSegments(
     node: TrieNode,
@@ -313,65 +319,45 @@ export class RouteTrie {
     }
 
     const segment = segments[segmentIndex]
-    const candidates: Array<{ node: TrieNode, newParams: Record<string, string> }> = []
 
     // Try static match first (highest priority)
-    if (node.children.has(segment)) {
-      candidates.push({
-        node: node.children.get(segment)!,
-        newParams: { ...params },
-      })
-    }
-
-    // Try parameter match
-    if (node.paramChild) {
-      const paramNode = node.paramChild
-      let matches = true
-
-      if (paramNode.pattern) {
-        matches = paramNode.pattern.test(segment)
-      }
-
-      if (matches && paramNode.paramName) {
-        candidates.push({
-          node: paramNode,
-          newParams: { ...params, [paramNode.paramName]: segment },
-        })
-      }
-    }
-
-    // Try wildcard match (lowest priority)
-    if (node.wildcardChild) {
-      const remainingPath = segments.slice(segmentIndex).join('/')
-      const match = this.matchSegments(
-        node.wildcardChild,
-        [], // Empty segments for wildcard - it matches everything
-        0,
-        { ...params, wildcard: remainingPath },
-        method,
-      )
+    const staticChild = node.children.get(segment)
+    if (staticChild) {
+      const match = this.matchSegments(staticChild, segments, segmentIndex + 1, params, method)
       if (match)
         return match
     }
 
-    // Try all candidates and return the best match
-    let bestMatch: RouteMatch | null = null
+    // Try parameter match
+    const paramNode = node.paramChild
+    if (paramNode && paramNode.paramName
+      && (!paramNode.pattern || paramNode.pattern.test(segment))) {
+      const previous = params[paramNode.paramName]
+      params[paramNode.paramName] = segment
+      const match = this.matchSegments(paramNode, segments, segmentIndex + 1, params, method)
+      if (match)
+        return match
+      // Backtrack: restore params before trying lower-priority branches
+      if (previous === undefined)
+        delete params[paramNode.paramName]
+      else
+        params[paramNode.paramName] = previous
+    }
 
-    for (const candidate of candidates) {
-      const match = this.matchSegments(
-        candidate.node,
-        segments,
-        segmentIndex + 1,
-        candidate.newParams,
-        method,
-      )
-
-      if (match && (!bestMatch || match.score > bestMatch.score)) {
-        bestMatch = match
+    // Try wildcard match (lowest priority) — consumes all remaining segments
+    if (node.wildcardChild) {
+      const compiled = node.wildcardChild.getRoute(method)
+      if (compiled) {
+        params.wildcard = segments.slice(segmentIndex).join('/')
+        return {
+          route: compiled.route,
+          params,
+          score: compiled.priority,
+        }
       }
     }
 
-    return bestMatch
+    return null
   }
 
   /**

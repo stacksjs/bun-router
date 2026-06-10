@@ -11,6 +11,12 @@ export interface RouteCompilerOptions {
   enablePriorityOptimization: boolean
   cacheSize: number
   precompilePatterns: boolean
+  /**
+   * Record per-match timing via `performance.now()`. Off by default —
+   * timing every request costs two clock reads per match on the hot path.
+   * Match/hit/miss counters are always collected (they're just integers).
+   */
+  enableProfiling: boolean
 }
 
 /**
@@ -30,8 +36,16 @@ export interface RouteMatchStats {
  */
 export class RouteCompiler {
   private trie: RouteTrie
+  // Bounded match cache with FIFO eviction (oldest key in Map iteration
+  // order). Cache hits are pure reads — refreshing recency on every hit
+  // (true LRU) costs a delete+set per request and buys almost nothing
+  // for route tables, where the hot set is small and stable. The old
+  // implementation kept a `cacheKeys` array whose indexOf/splice
+  // bookkeeping cost O(cacheSize) on every request.
   private matchCache: Map<string, MatchResult | null> = new Map()
-  private cacheKeys: string[] = [] // For LRU tracking
+  // O(1) duplicate detection by `method:path` (the old approach scanned
+  // every compiled route on each addRoute call — O(n²) registration).
+  private routeKeys: Set<string> = new Set()
   private stats: RouteMatchStats = {
     totalMatches: 0,
     cacheHits: 0,
@@ -50,6 +64,7 @@ export class RouteCompiler {
       enablePriorityOptimization: true,
       cacheSize: 1000,
       precompilePatterns: true,
+      enableProfiling: false,
       ...options,
     }
 
@@ -66,11 +81,12 @@ export class RouteCompiler {
       this.precompileRoutePattern(route)
     }
 
-    // Check for exact duplicates before adding
-    const isDuplicate = this.checkForDuplicateRoute(route)
-    if (isDuplicate) {
+    // Check for exact duplicates before adding — O(1) set lookup
+    const routeKey = `${route.method}:${route.path}`
+    if (this.routeKeys.has(routeKey)) {
       return false
     }
+    this.routeKeys.add(routeKey)
 
     // Add to trie for fast matching
     this.trie.addRoute(route)
@@ -85,24 +101,6 @@ export class RouteCompiler {
     this.stats.methodDistribution[method] = (this.stats.methodDistribution[method] || 0) + 1
 
     return true
-  }
-
-  /**
-   * Check if a route is an exact duplicate of an existing route
-   */
-  private checkForDuplicateRoute(route: Route): boolean {
-    const routes = this.trie.getAllRoutes()
-
-    for (const existingRoute of routes) {
-      if (
-        existingRoute.route.path === route.path
-        && existingRoute.route.method === route.method
-      ) {
-        return true
-      }
-    }
-
-    return false
   }
 
   /**
@@ -191,24 +189,33 @@ export class RouteCompiler {
     path: string,
     constraints?: Record<string, string>,
   ): { exec: (pathname: string) => { groups?: Record<string, string> } | null } {
-    // Convert {param} to named capture groups and {param:pattern} to constrained capture groups
-    let regexPattern = path.replace(/\{([^}:]+)(?::([^}]+))?\}/g, (_match, name, ..._args) => {
-      const pattern = _args[0]
-      // If there's a constraint for this parameter, use it instead of the default pattern
-      if (constraints && constraints[name]) {
-        return `(?<${name}>${constraints[name]})`
-      }
-      // If there's an inline pattern in the route path, use it
-      else if (pattern) {
-        return `(?<${name}>${pattern})`
-      }
-      // Default pattern for parameters without constraints
-      return `(?<${name}>[^/]+)`
+    // Pull params out as placeholder tokens so the static text can be
+    // regex-escaped safely — without this, a literal dot in a path like
+    // `/api/v1.0/users` would match any character.
+    const paramTokens: string[] = []
+    const withTokens = path.replace(/\{([^}]+)\}/g, (_m, inner: string) => {
+      paramTokens.push(inner)
+      return `\u0000${paramTokens.length - 1}\u0000`
     })
 
-    // Escape forward slashes and add anchors
-    regexPattern = `^${regexPattern.replace(/\//g, '\\/')}$`
-    const regex = new RegExp(regexPattern)
+    let regexPattern = withTokens.replace(/[.+*?^${}()|[\]\\]/g, '\\$&')
+
+    // Convert placeholder tokens to named capture groups. Optional params
+    // (`{id?}`) make both the parameter and its leading slash optional.
+    regexPattern = regexPattern.replace(/\/?\u0000(\d+)\u0000/g, (token, idx: string) => {
+      const inner = paramTokens[Number(idx)]
+      const isOptional = inner.endsWith('?')
+      const core = isOptional ? inner.slice(0, -1) : inner
+      const colonIndex = core.indexOf(':')
+      const name = colonIndex === -1 ? core : core.slice(0, colonIndex)
+      const inlinePattern = colonIndex === -1 ? undefined : core.slice(colonIndex + 1)
+      const pattern = constraints?.[name] ?? inlinePattern ?? '[^/]+'
+      const group = `(?<${name}>${pattern})`
+      const leadingSlash = token.startsWith('/') ? '/' : ''
+      return isOptional ? `(?:${leadingSlash}${group})?` : `${leadingSlash}${group}`
+    })
+
+    const regex = new RegExp(`^${regexPattern}$`)
 
     return {
       exec: (pathname: string) => {
@@ -227,21 +234,20 @@ export class RouteCompiler {
    * Match a request path and method to a route
    */
   match(path: string, method: HTTPMethod): MatchResult | null {
-    const startTime = performance.now()
+    const startTime = this.options.enableProfiling ? performance.now() : 0
     this.stats.totalMatches++
 
     // Check cache first if enabled
     if (this.options.enableCaching) {
       const cacheKey = `${method}:${path}`
-      if (this.matchCache.has(cacheKey)) {
+      const cached = this.matchCache.get(cacheKey)
+      if (cached !== undefined || this.matchCache.has(cacheKey)) {
         this.stats.cacheHits++
-
-        // Update LRU order - move this key to the end (most recently used)
-        this.updateCacheLRU(cacheKey)
-
-        const cached = this.matchCache.get(cacheKey)
-        this.updateMatchTime(startTime)
-        return cached || null
+        if (startTime)
+          this.updateMatchTime(startTime)
+        // Hand each request its own params object — cached results are
+        // shared, and handlers are allowed to mutate `req.params`.
+        return cached ? { route: cached.route, params: { ...cached.params } } : null
       }
       this.stats.cacheMisses++
     }
@@ -263,46 +269,29 @@ export class RouteCompiler {
       this.addToCache(cacheKey, result)
     }
 
-    this.updateMatchTime(startTime)
-    return result
+    if (startTime)
+      this.updateMatchTime(startTime)
+    return result ? { route: result.route, params: { ...result.params } } : null
   }
 
   /**
    * Add an entry to the cache with LRU eviction if needed
    */
   private addToCache(key: string, value: MatchResult | null): void {
-    // If cache is full, evict least recently used item
+    // If cache is full, evict the least recently used entry (oldest key
+    // in Map iteration order)
     if (this.matchCache.size >= this.options.cacheSize && !this.matchCache.has(key)) {
-      // Remove least recently used item (first in array)
-      if (this.cacheKeys.length > 0) {
-        const lruKey = this.cacheKeys.shift()!
+      const lruKey = this.matchCache.keys().next().value
+      if (lruKey !== undefined) {
         this.matchCache.delete(lruKey)
       }
     }
 
-    // Add new item to cache
     this.matchCache.set(key, value)
-
-    // Update LRU tracking
-    this.updateCacheLRU(key)
   }
 
   /**
-   * Update LRU tracking for a cache key
-   */
-  private updateCacheLRU(key: string): void {
-    // Remove key from current position if it exists
-    const index = this.cacheKeys.indexOf(key)
-    if (index !== -1) {
-      this.cacheKeys.splice(index, 1)
-    }
-
-    // Add key to end of array (most recently used)
-    this.cacheKeys.push(key)
-  }
-
-  /**
-   * Update average match time statistics
+   * Update average match time statistics (only when profiling is enabled)
    */
   private updateMatchTime(startTime: number): void {
     const matchTime = performance.now() - startTime
@@ -419,7 +408,7 @@ export class RouteCompiler {
   clear(): void {
     this.trie.clear()
     this.matchCache.clear()
-    this.cacheKeys = []
+    this.routeKeys.clear()
     this.stats = {
       totalMatches: 0,
       cacheHits: 0,
