@@ -6,12 +6,15 @@
 
 import type { RouteHandler, TypedRequest } from './route-inference'
 
-// Base middleware interface with generic constraints
+// Base middleware interface with generic constraints. The defaults are
+// the narrowest types that hold for every middleware (`Request` in,
+// `Response` out via an async `next`) — `any` defaults let unconstrained
+// middleware slip through composition unchecked.
 export interface TypedMiddleware<
-  TInput = any,
-  TOutput = TInput,
+  TInput = Request,
+  TOutput = Response,
   _TContext = object,
-  TNext = any,
+  TNext = () => Promise<TOutput>,
 > {
   (
     request: TInput,

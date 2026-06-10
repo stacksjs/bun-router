@@ -4,16 +4,29 @@
  * Advanced TypeScript utilities for inferring route parameter types from URL patterns
  */
 
-// Base types for route parameter extraction
-export type ExtractRouteParams<T extends string> = T extends `${infer _Start}:${infer Param}/${infer Rest}`
-  ? { [K in Param]: string } & ExtractRouteParams<`/${Rest}`>
-  : T extends `${infer _Start}:${infer Param}?${infer Rest}`
-    ? { [K in Param]?: string } & ExtractRouteParams<Rest>
-    : T extends `${infer _Start}:${infer Param}`
-      ? { [K in Param]: string }
-      : T extends `${infer _Start}*${infer Rest}`
-        ? { '*': string } & ExtractRouteParams<Rest>
-        : Record<string, never>
+/** Strip an inline constraint from a brace parameter: `id:[0-9]+` → `id` */
+type StripInlineConstraint<T extends string> = T extends `${infer Name}:${string}` ? Name : T
+
+// Base types for route parameter extraction.
+//
+// The router's canonical parameter syntax is `{param}` (with `{param?}` for
+// optional and `{param:regex}` for constrained parameters) — that form is
+// handled first. The legacy Express-style `:param` clauses are kept for
+// backward compatibility with code written against the colon syntax.
+export type ExtractRouteParams<T extends string> =
+  T extends `${string}{${infer Param}}${infer Rest}`
+    ? (Param extends `${infer Inner}?`
+        ? { [K in StripInlineConstraint<Inner>]?: string }
+        : { [K in StripInlineConstraint<Param>]: string }) & ExtractRouteParams<Rest>
+    : T extends `${infer _Start}:${infer Param}/${infer Rest}`
+      ? { [K in Param]: string } & ExtractRouteParams<`/${Rest}`>
+      : T extends `${infer _Start}:${infer Param}?${infer Rest}`
+        ? { [K in Param]?: string } & ExtractRouteParams<Rest>
+        : T extends `${infer _Start}:${infer Param}`
+          ? { [K in Param]: string }
+          : T extends `${infer _Start}*${infer Rest}`
+            ? { '*': string } & ExtractRouteParams<Rest>
+            : Record<string, never>
 
 // Advanced parameter extraction with type constraints
 export type ExtractTypedParams<T extends string> = T extends `${infer _Start}:${infer Param}<${infer Type}>${infer Rest}`
@@ -214,11 +227,13 @@ export interface RouteGroup<TPrefix extends string = '', TContext = object> {
   routes: TypedRoute<any, any, any, TContext>[]
 }
 
-// Middleware type (forward declaration - will be defined in middleware types)
+// Middleware type (forward declaration — the canonical definition lives in
+// middleware-types.ts; this one mirrors its narrow defaults so the two
+// can't drift apart silently)
 export interface TypedMiddleware<
-  TRequest = any,
-  TResponse = any,
-  TNext = any,
+  TRequest = Request,
+  TResponse = Response,
+  TNext = () => Promise<TResponse>,
   _TContext = Record<string, never>,
 > {
   (request: TRequest, next: TNext): Promise<TResponse> | TResponse

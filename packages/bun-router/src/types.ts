@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import type { Router } from './router/router'
+import type { SessionManager } from './session/index'
 import type { QueryPreservationConfig } from './utils/query-preservation'
 import type {
   AuthContext,
@@ -816,9 +817,11 @@ export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip'
    */
   files?: UploadedFile[]
   /**
-   * Session data (if session middleware is used)
+   * Session for the current request. The built-in session middleware
+   * attaches a `SessionManager` (with `get`/`set`/`flash`/… methods);
+   * testing utilities may attach plain `SessionData`.
    */
-  session?: SessionData
+  session?: SessionManager | SessionData
   /**
    * User data (if authentication middleware is used)
    */
@@ -1273,12 +1276,33 @@ export type MiddlewareWithParams<T extends string = string> =
 export type RouteParam<T extends string> = T extends `{${infer P}}` ? P : never
 
 /**
- * Extract parameters from route path
+ * Strip an inline constraint from a parameter token:
+ * `id:[0-9]+` → `id`, `slug` → `slug`
+ */
+export type ExtractParamName<T extends string> =
+  T extends `${infer Name}:${string}` ? Name : T
+
+/**
+ * Extract parameters from a route path into a narrowly-typed object.
+ *
+ * Handles the full parameter grammar:
+ * - `{id}` → `{ id: string }`
+ * - `{id?}` (optional) → `{ id?: string }`
+ * - `{id:[0-9]+}` (inline constraint) → `{ id: string }`
+ * - trailing `*` wildcard → `{ wildcard: string }`
+ *
+ * @example
+ * type P = ExtractRouteParams<'/users/{userId}/posts/{slug?}'>
+ * //   ^? { userId: string } & { slug?: string }
  */
 export type ExtractRouteParams<T extends string> =
   T extends `${string}{${infer Param}}${infer Rest}`
-    ? { [K in Param]: string } & ExtractRouteParams<Rest>
-    : object
+    ? (Param extends `${infer Inner}?`
+        ? { [K in ExtractParamName<Inner>]?: string }
+        : { [K in ExtractParamName<Param>]: string }) & ExtractRouteParams<Rest>
+    : T extends `${string}*${string}`
+      ? { wildcard: string }
+      : object
 
 /**
  * Route method constraints
@@ -1735,8 +1759,8 @@ export interface StreamingOptions {
 /**
  * SSE (Server-Sent Events) data structure
  */
-export interface SSEData {
-  data: any
+export interface SSEData<T = unknown> {
+  data: T
   event?: string
   id?: string
   retry?: number
