@@ -4,6 +4,26 @@ import type { Router } from './router'
 import { RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
 
+// Helpers that frameworks layered on bun-router treat as guaranteed but
+// that aren't shaped as built-in macros. Registered once at module load —
+// they ride the shared macro prototype instead of being closure-assigned
+// per request. (`cookie` is already a built-in macro.)
+if (!RequestWithMacros.hasMacro('getParam')) {
+  RequestWithMacros.macro('getParam', function (this: EnhancedRequest, name: string, defaultValue?: unknown) {
+    const value = this.params?.[name]
+    return value !== undefined ? value : defaultValue
+  })
+}
+// `get(key)` — read query params (and only query params; the full input
+// merge with body etc. is provided by the `input` macro). Only registered
+// when no macro already claimed the name.
+if (!RequestWithMacros.hasMacro('get')) {
+  RequestWithMacros.macro('get', function (this: EnhancedRequest, key: string, defaultValue?: unknown) {
+    const value = new URL(this.url).searchParams.get(key)
+    return value !== null && value !== undefined ? value : defaultValue
+  })
+}
+
 /**
  * Server handling extension for Router class
  */
@@ -356,49 +376,21 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           getAll: () => ({ ...getCookies() }),
         }
 
-        // Create enhanced request
-        const enhancedReq = Object.assign(req, {
-          params,
-          _cookiesToSet: [],
-          _cookiesToDelete: [],
-        }) as unknown as EnhancedRequest
+        // Create enhanced request. `_cookiesToSet`/`_cookiesToDelete` are
+        // created lazily by the cookie methods — most requests never set
+        // a cookie, so the empty arrays were wasted allocations.
+        const enhancedReq = Object.assign(req, { params }) as unknown as EnhancedRequest
 
-        // Attach registered request macros (input, has, bearerToken, etc.) so
-        // they're available in middleware and handlers without manual setup.
-        // Applied *before* the cookie utility so the cookies macro doesn't
-        // overwrite the get/set/delete object form consumers depend on.
+        // Attach registered request macros (input, has, bearerToken, cookie,
+        // getParam, get, etc.) via the shared macro prototype — one
+        // setPrototypeOf instead of per-request closure assignment.
         RequestWithMacros.applyMacros(enhancedReq)
-
-        // Attach the helpers consumers reach for that aren't shaped as
-        // generic input macros — `getParam`, the function-form `cookie`,
-        // the parsed-query `get` shorthand. These mirror the methods the
-        // bare `Router.enhanceRequest` (router.ts) attaches; without them
-        // here, requests that flow through the registered server.ts
-        // override are missing exactly the helpers that frameworks
-        // layered on bun-router (Stacks, etc.) treat as guaranteed.
-        ;(enhancedReq as any).getParam = <T = string>(name: string, defaultValue?: T): T | undefined => {
-          const value = params?.[name] as T | undefined
-          return value !== undefined ? value : defaultValue
-        }
-        ;(enhancedReq as any).cookie = (name: string, defaultValue?: string): string | null => {
-          const value = getCookies()[name]
-          return value !== undefined ? value : (defaultValue ?? null)
-        }
-        // `get(key)` — read query params (and only query params; the full
-        // input merge with body etc. is provided by the `input` macro).
-        // Skip if a macro already registered it under the same name.
-        if (typeof (enhancedReq as any).get !== 'function') {
-          ;(enhancedReq as any).get = <T = unknown>(key: string, defaultValue?: T): T | undefined => {
-            const url = new URL(req.url)
-            const value = url.searchParams.get(key) as T | null
-            return value !== null && value !== undefined ? value : defaultValue
-          }
-        }
 
         // `cookies` is both a plain name→value map (direct access) and the
         // get/set/delete/getAll utility. The merged object is materialized
         // lazily on first access so requests that never touch cookies skip
-        // header parsing entirely.
+        // header parsing entirely. Defined as an own property so it shadows
+        // the `cookies` macro on the prototype.
         // Name→value map merged with the get/set/delete/getAll helpers; the
         // function-valued keys make a strict Record<string, string> impossible
         let cookiesObject: Record<string, unknown> | null = null

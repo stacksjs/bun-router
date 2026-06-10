@@ -62,12 +62,15 @@ function getParsedCookies(req: EnhancedRequest): Record<string, string> {
  */
 class RequestMacroRegistry {
   private macros: Map<string, RequestMacro> = new Map()
+  // Bumped on every mutation so cached macro prototypes can be rebuilt
+  private epoch = 0
 
   /**
    * Register a request macro
    */
   register(name: string, handler: (this: EnhancedRequest, ...args: any[]) => any): void {
     this.macros.set(name, { name, handler })
+    this.epoch++
   }
 
   /**
@@ -95,7 +98,10 @@ class RequestMacroRegistry {
    * Remove a macro
    */
   remove(name: string): boolean {
-    return this.macros.delete(name)
+    const removed = this.macros.delete(name)
+    if (removed)
+      this.epoch++
+    return removed
   }
 
   /**
@@ -103,6 +109,14 @@ class RequestMacroRegistry {
    */
   clear(): void {
     this.macros.clear()
+    this.epoch++
+  }
+
+  /**
+   * Monotonic registry version (see `RequestWithMacros.applyMacros`)
+   */
+  getEpoch(): number {
+    return this.epoch
   }
 }
 
@@ -110,6 +124,15 @@ class RequestMacroRegistry {
  * Global request macro registry
  */
 export const requestMacroRegistry: RequestMacroRegistry = new RequestMacroRegistry()
+
+// Marker symbols for prototype-based macro attachment
+const MACRO_PROTO = Symbol('bunRouterMacroProto')
+const MACRO_BASE = Symbol('bunRouterMacroBase')
+
+// Cache of generated macro prototypes, keyed by the request's original
+// prototype. Rebuilt whenever the registry epoch moves.
+let macroProtoCache = new WeakMap<object, Record<PropertyKey, unknown>>()
+let macroProtoEpoch = -1
 
 /**
  * Request class with macro support
@@ -123,15 +146,44 @@ export class RequestWithMacros {
   }
 
   /**
-   * Apply macros to a request object
+   * Apply macros to a request object.
+   *
+   * Macros are attached via a shared prototype inserted between the
+   * request and its original prototype — one `setPrototypeOf` per
+   * request. The previous implementation looped over every macro and
+   * `bind`-assigned it, costing ~40 property writes and closures per
+   * request on the dispatch hot path. Macro handlers receive the
+   * request as `this`, so no per-request binding is needed.
    */
   static applyMacros(request: EnhancedRequest): EnhancedRequest {
-    const macros = requestMacroRegistry.all()
+    const epoch = requestMacroRegistry.getEpoch()
+    if (epoch !== macroProtoEpoch) {
+      macroProtoCache = new WeakMap()
+      macroProtoEpoch = epoch
+    }
 
-    macros.forEach((macro) => {
-      ;(request as any)[macro.name] = macro.handler.bind(request)
-    })
+    let base = (Object.getPrototypeOf(request) ?? Object.prototype) as Record<PropertyKey, unknown>
+    if (base[MACRO_PROTO]) {
+      // Request was already enhanced. Current generation: nothing to do.
+      if (macroProtoCache.get(base[MACRO_BASE] as object) === base) {
+        return request
+      }
+      // Stale generation: rebuild on top of the original prototype
+      base = base[MACRO_BASE] as Record<PropertyKey, unknown>
+    }
 
+    let proto = macroProtoCache.get(base)
+    if (!proto) {
+      proto = Object.create(base) as Record<PropertyKey, unknown>
+      for (const macro of requestMacroRegistry.all()) {
+        proto[macro.name] = macro.handler
+      }
+      Object.defineProperty(proto, MACRO_PROTO, { value: true })
+      Object.defineProperty(proto, MACRO_BASE, { value: base })
+      macroProtoCache.set(base, proto)
+    }
+
+    Object.setPrototypeOf(request, proto)
     return request
   }
 
