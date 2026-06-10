@@ -7,6 +7,12 @@
 import type { EnhancedRequest, NextFunction } from '../types'
 import { ValidationException } from '../errors/exceptions'
 
+// Hoisted email check. Pragmatic RFC 5322 approximation: requires one `@`,
+// a non-empty local part without surrounding/consecutive dots, and a domain
+// with at least one label dot and a 2+ char TLD. The previous regex
+// accepted addresses like `a@.com` and consecutive dots.
+const EMAIL_REGEX = /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)*\.[A-Z]{2,}$/i
+
 export interface ValidationRule {
   name: string
   validate: (value: any, parameters: string[], field: string, data: Record<string, any>) => Promise<boolean> | boolean
@@ -74,10 +80,7 @@ export const BuiltInRules: Record<string, ValidationRule> = {
 
   email: {
     name: 'email',
-    validate: (value) => {
-      const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
-      return typeof value === 'string' && emailRegex.test(value)
-    },
+    validate: value => typeof value === 'string' && EMAIL_REGEX.test(value),
     message: 'The :field field must be a valid email address.',
   },
 

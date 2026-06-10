@@ -1,6 +1,10 @@
 import type { EnhancedRequest, NextFunction } from '../types'
 import { config } from '../config'
 
+// Hoisted format regexes — previously compiled on every validation call
+const EMAIL_REGEX = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export interface ValidationRule {
   type: 'string' | 'number' | 'boolean' | 'email' | 'url' | 'uuid' | 'date' | 'regex' | 'custom'
   required?: boolean
@@ -148,8 +152,7 @@ export default class InputValidation {
         break
 
       case 'email': {
-        const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
-        if (typeof value === 'string' && !emailRegex.test(value)) {
+        if (typeof value === 'string' && !EMAIL_REGEX.test(value)) {
           errors.push({
             field: fieldPath,
             message: 'Must be a valid email address',
@@ -174,8 +177,7 @@ export default class InputValidation {
         break
 
       case 'uuid': {
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-        if (typeof value === 'string' && !uuidRegex.test(value)) {
+        if (typeof value === 'string' && !UUID_REGEX.test(value)) {
           errors.push({
             field: fieldPath,
             message: 'Must be a valid UUID',
@@ -233,8 +235,10 @@ export default class InputValidation {
       })
     }
 
-    // Pattern validation
-    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+    // Pattern validation — skipped for type 'regex', which already
+    // validated the pattern above (running it twice produced duplicate
+    // errors for the same field)
+    if (rule.type !== 'regex' && rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
       errors.push({
         field: fieldPath,
         message: 'Does not match required pattern',
