@@ -38,7 +38,23 @@ export function registerGroupOrganization(RouterClass: typeof Router): void {
         this.currentGroup = newGroup
 
         // Execute the callback to register routes in this group
-        callback()
+        const result = callback() as unknown
+
+        // Async callbacks (e.g. `register()`'s dynamic import) register
+        // their routes after this call returns — the group must stay
+        // active until the promise settles, and callers must await.
+        if (result instanceof Promise) {
+          return result.then(
+            () => {
+              this.currentGroup = previousGroup
+              return this
+            },
+            (error: unknown) => {
+              this.currentGroup = previousGroup
+              throw error
+            },
+          ) as unknown as Router
+        }
 
         // Restore the previous group
         this.currentGroup = previousGroup

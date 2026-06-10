@@ -1350,9 +1350,16 @@ export class Router {
   }
 
   /**
-   * Create a route group with prefix and middleware
+   * Create a route group with prefix and middleware.
+   *
+   * Synchronous callbacks return the router for chaining. Asynchronous
+   * callbacks return a promise that resolves once the callback (and any
+   * routes it registers) has finished — await it, or routes registered
+   * after an `await` inside the callback would lose the group prefix.
    */
-  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => void | Promise<void>): Router {
+  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => Promise<void>): Promise<Router>
+  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => void): Router
+  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => void | Promise<void>): Router | Promise<Router> {
     // Save current group state
     const previousGroup = this.currentGroup
 
@@ -1374,16 +1381,22 @@ export class Router {
     // Execute callback
     const result = callback()
 
-    // Handle async callbacks
+    // Async callbacks keep the group active until they settle
     if (result instanceof Promise) {
-      result.then(() => {
-        this.currentGroup = previousGroup
-      })
+      return result.then(
+        () => {
+          this.currentGroup = previousGroup
+          return this
+        },
+        (error: unknown) => {
+          this.currentGroup = previousGroup
+          throw error
+        },
+      )
     }
-    else {
-      // Restore previous group state
-      this.currentGroup = previousGroup
-    }
+
+    // Restore previous group state
+    this.currentGroup = previousGroup
 
     return this
   }
