@@ -1,3 +1,4 @@
+import type { StorageProvider } from 'ts-rate-limiter'
 import type { EnhancedRequest, Middleware, MiddlewareHandler, NextFunction } from '../types'
 import { createRateLimiter } from 'ts-rate-limiter'
 import { config } from '../config'
@@ -11,7 +12,12 @@ export interface RateLimitOptions {
   keyGenerator?: (request: Request) => string | Promise<string>
   handler?: (request: Request, limit: { remaining: number, limit: number, resetTime: number }) => Response | Promise<Response>
   skip?: (request: Request) => boolean | Promise<boolean>
-  storage?: any
+  /**
+   * Custom storage backend (ts-rate-limiter `StorageProvider`), or the
+   * string `'redis'` to use the built-in Redis store configured via
+   * the `redis` option.
+   */
+  storage?: StorageProvider | 'redis'
   algorithm?: 'fixed-window' | 'sliding-window' | 'token-bucket'
   draftMode?: boolean
   redis?: {

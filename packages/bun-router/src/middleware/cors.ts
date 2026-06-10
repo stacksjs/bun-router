@@ -59,7 +59,7 @@ export default class Cors {
   }
 
   private getCorsHeaders(req: EnhancedRequest): Record<string, string> {
-    const corsConfig = (config.server as any)?.cors
+    const corsConfig = config.server?.cors
     const requestOrigin = req.headers.get('origin')
 
     if (corsConfig && corsConfig.enabled) {

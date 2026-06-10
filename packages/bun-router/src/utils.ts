@@ -319,7 +319,7 @@ export async function resolveViewPath(
  * @param template The HTML template string
  * @param data The data to inject into the template
  */
-export function processHtmlTemplate(template: string, data: Record<string, any>): string {
+export function processHtmlTemplate(template: string, data: Record<string, unknown>): string {
   // Process general variables {{ varName }}
   let result = template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
     const trimmedKey = key.trim()
@@ -339,7 +339,7 @@ export function processHtmlTemplate(template: string, data: Record<string, any>)
 /**
  * Process conditional statements in templates
  */
-function processConditionals(template: string, data: Record<string, any>): string {
+function processConditionals(template: string, data: Record<string, unknown>): string {
   // Match {{#if condition}} content {{/if}} or {{#if condition}} content {{else}} alternative {{/if}}
   return template.replace(
     /\{\{#if ([^}]+)\}\}([\s\S]*?)(?:\{\{else\}\}([\s\S]*?))?\{\{\/if\}\}/g,
@@ -355,7 +355,7 @@ function processConditionals(template: string, data: Record<string, any>): strin
 /**
  * Process loop statements in templates
  */
-function processLoops(template: string, data: Record<string, any>): string {
+function processLoops(template: string, data: Record<string, unknown>): string {
   // Match {{#each items}} content {{/each}}
   return template.replace(
     /\{\{#each ([^}]+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
@@ -385,8 +385,11 @@ function processLoops(template: string, data: Record<string, any>): string {
  * @param obj The object to extract value from
  * @param path The path to the value (e.g., 'user.profile.name')
  */
-function getNestedValue(obj: Record<string, any>, path: string): any {
-  return path.split('.').reduce((prev, curr) => {
-    return prev && prev[curr] !== undefined ? prev[curr] : undefined
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce<unknown>((prev, curr) => {
+    if (prev && typeof prev === 'object' && curr in prev) {
+      return (prev as Record<string, unknown>)[curr]
+    }
+    return undefined
   }, obj)
 }

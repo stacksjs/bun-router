@@ -1,4 +1,4 @@
-import type { EnhancedRequest, NextFunction } from '../types'
+import type { CookieOptions, EnhancedRequest, NextFunction } from '../types'
 import type { SessionStore, SessionData } from '../types/core'
 import { config } from '../config'
 import { MemorySessionStore } from '../session/memory-store'
@@ -49,7 +49,7 @@ export default class Session {
 
     // Create session manager and attach to request
     const manager = new SessionManager(sessionId, sessionData, this.store)
-    req.session = manager as any
+    req.session = manager
 
     // Continue to next middleware/handler
     const response = await next()
@@ -58,7 +58,7 @@ export default class Session {
     await manager.save()
 
     // Set session cookie on the response
-    const cookieOptions: any = {
+    const cookieOptions: CookieOptions = {
       maxAge: sessionConfig?.cookie?.maxAge || 86400000,
       path: sessionConfig?.cookie?.path || '/',
     }

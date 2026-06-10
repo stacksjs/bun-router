@@ -11,17 +11,17 @@ export interface ResponseMacro {
   handler: (...args: any[]) => Response
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   message?: string
   error?: string
   errors?: Record<string, string[]>
-  meta?: Record<string, any>
+  meta?: Record<string, unknown>
   links?: Record<string, string>
   timestamp?: string
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T[]> {
   meta: {
     current_page: number
     per_page: number
