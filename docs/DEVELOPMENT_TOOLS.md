@@ -14,7 +14,7 @@ The development tools provide four main capabilities:
 ## Quick Start
 
 ```typescript
-import { DevelopmentTools, DevelopmentPresets } from 'bun-router'
+import { DevelopmentTools, DevelopmentPresets } from '@stacksjs/bun-router'
 
 // Initialize with development preset
 const devTools = new DevelopmentTools(DevelopmentPresets.development())
@@ -33,7 +33,7 @@ devTools.registerRoute('GET', '/users/{id}', handler, [], {
 ### Basic Usage
 
 ```typescript
-import { DevelopmentRouter } from 'bun-router'
+import { DevelopmentRouter } from '@stacksjs/bun-router'
 
 const router = new DevelopmentRouter()
 
@@ -45,7 +45,7 @@ router.debug().post('/users', handler)
 ### Debug Configuration
 
 ```typescript
-import { RouteDebugger } from 'bun-router'
+import { RouteDebugger } from '@stacksjs/bun-router'
 
 const debugger = new RouteDebugger({
   enabled: true,
@@ -79,7 +79,7 @@ const debugger = new RouteDebugger({
 ### Manual Debugging
 
 ```typescript
-import { RouteDebugHelpers } from 'bun-router'
+import { RouteDebugHelpers } from '@stacksjs/bun-router'
 
 // In route handler
 const handler = async (req: EnhancedRequest) => {
@@ -96,7 +96,7 @@ const handler = async (req: EnhancedRequest) => {
 ### Route Listing
 
 ```typescript
-import { RouteInspectionHelpers } from 'bun-router'
+import { RouteInspectionHelpers } from '@stacksjs/bun-router'
 
 // List all routes
 RouteInspectionHelpers.listRoutes()
@@ -139,7 +139,7 @@ RouteInspectionHelpers.exportRoutes('json', 'routes.json')
 ### Route Metadata
 
 ```typescript
-import { RouteInspector } from 'bun-router'
+import { RouteInspector } from '@stacksjs/bun-router'
 
 const inspector = new RouteInspector()
 
@@ -165,7 +165,7 @@ const userRoutes = inspector.getRoutes({ group: 'users' })
 ### Basic Profiling
 
 ```typescript
-import { DevelopmentRouter } from 'bun-router'
+import { DevelopmentRouter } from '@stacksjs/bun-router'
 
 const router = new DevelopmentRouter()
 
@@ -179,7 +179,7 @@ router.profile().group(() => {
 ### Profiling Configuration
 
 ```typescript
-import { PerformanceProfiler } from 'bun-router'
+import { PerformanceProfiler } from '@stacksjs/bun-router'
 
 const profiler = new PerformanceProfiler({
   enabled: true,
@@ -197,7 +197,7 @@ const profiler = new PerformanceProfiler({
 ### Manual Profiling
 
 ```typescript
-import { PerformanceProfilingHelpers } from 'bun-router'
+import { PerformanceProfilingHelpers } from '@stacksjs/bun-router'
 
 const handler = async (req: EnhancedRequest) => {
   // Start timing operation
@@ -262,7 +262,7 @@ console.log(report)
 ### Type Generation
 
 ```typescript
-import { TypeScriptHelpers } from 'bun-router'
+import { TypeScriptHelpers } from '@stacksjs/bun-router'
 
 // Generate TypeScript definitions
 const types = TypeScriptHelpers.generateTypes()
@@ -336,7 +336,7 @@ console.log(JSON.stringify(openapi, null, 2))
 ### Type-Safe Route Registration
 
 ```typescript
-import { TypeScriptUtilities } from 'bun-router'
+import { TypeScriptUtilities } from '@stacksjs/bun-router'
 
 const tsUtils = new TypeScriptUtilities()
 
@@ -370,7 +370,7 @@ if (!validation.valid) {
 ### Available Presets
 
 ```typescript
-import { DevelopmentPresets } from 'bun-router'
+import { DevelopmentPresets } from '@stacksjs/bun-router'
 
 // Full development mode - all features enabled
 const devConfig = DevelopmentPresets.development()
@@ -422,7 +422,7 @@ const devTools = new DevelopmentTools(customConfig)
 ### Express-Style Router Integration
 
 ```typescript
-import { DevelopmentTools, DevelopmentPresets } from 'bun-router'
+import { DevelopmentTools, DevelopmentPresets } from '@stacksjs/bun-router'
 
 const devTools = new DevelopmentTools(DevelopmentPresets.development())
 
@@ -443,7 +443,7 @@ app.get('/users/:id', (req, res) => {
 ### Middleware Integration
 
 ```typescript
-import { createRouteDebugMiddleware, createPerformanceProfilingMiddleware } from 'bun-router'
+import { createRouteDebugMiddleware, createPerformanceProfilingMiddleware } from '@stacksjs/bun-router'
 
 // Individual middleware
 router.use(createRouteDebugMiddleware({ logLevel: 'info' }))

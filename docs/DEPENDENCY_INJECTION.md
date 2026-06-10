@@ -7,7 +7,7 @@ The bun-router framework includes a comprehensive Dependency Injection (DI) syst
 - [Overview](#overview)
 - [IoC Container](#ioc-container)
 - [Service Providers](#service-providers)
-- [Decorators & Automatic Injection](#decorators--automatic-injection)
+- [Decorators & Automatic Injection](#decorators-automatic-injection)
 - [Contextual Binding](#contextual-binding)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
@@ -27,7 +27,7 @@ The DI system provides:
 ### Basic Usage
 
 ```typescript
-import { createContainer, Container } from 'bun-router/container'
+import { createContainer, Container } from '@stacksjs/bun-router/container'
 
 // Create container
 const container = createContainer()
@@ -106,7 +106,7 @@ Service providers manage service registration and bootstrapping.
 ### Creating Service Providers
 
 ```typescript
-import { BaseServiceProvider, Container } from 'bun-router/container'
+import { BaseServiceProvider, Container } from '@stacksjs/bun-router/container'
 
 class DatabaseServiceProvider extends BaseServiceProvider {
   readonly name = 'database'
@@ -157,7 +157,7 @@ class CacheServiceProvider extends BaseServiceProvider {
 ### Provider Manager
 
 ```typescript
-import { DefaultServiceProviderManager } from 'bun-router/container'
+import { DefaultServiceProviderManager } from '@stacksjs/bun-router/container'
 
 const container = createContainer()
 const providerManager = new DefaultServiceProviderManager(container)
@@ -181,7 +181,7 @@ process.on('SIGTERM', async () => {
 ### Deferred Providers
 
 ```typescript
-class EventServiceProvider extends DeferredServiceProvider {
+class EventServiceProvider extends BaseDeferredServiceProvider {
   readonly name = 'events'
 
   provides(): (string | symbol | Function)[] {
@@ -202,7 +202,7 @@ class EventServiceProvider extends DeferredServiceProvider {
 ### Injectable Services
 
 ```typescript
-import { Injectable, Inject } from 'bun-router/container'
+import { Injectable, Inject } from '@stacksjs/bun-router/container'
 
 @Injectable({ scope: 'singleton' })
 class DatabaseService {
@@ -271,7 +271,7 @@ container.bind('smsHandler').to(SmsHandler).withTags('notification').build()
 ### Controller Injection
 
 ```typescript
-import { Controller, Get, Post, Param, Body, InjectParam } from 'bun-router/container'
+import { Controller, Get, Post, Param, Body, InjectParam } from '@stacksjs/bun-router/container'
 
 @Controller('/api/users')
 class UserController {
@@ -341,7 +341,7 @@ class ProtectedController {
 ### Environment-Based Binding
 
 ```typescript
-import { ContextualContainer } from 'bun-router/container'
+import { ContextualContainer } from '@stacksjs/bun-router/container'
 
 const container = new ContextualContainer()
 
@@ -362,7 +362,7 @@ const logger = container.resolve<Logger>('logger')
 ### Custom Conditions
 
 ```typescript
-import { BindingConditions } from 'bun-router/container'
+import { BindingConditions } from '@stacksjs/bun-router/container'
 
 // Feature flag binding
 container.bindContextual('paymentProcessor')
@@ -392,7 +392,7 @@ container.bindContextual('cache')
 ### Environment Configuration
 
 ```typescript
-import { EnvironmentPresets } from 'bun-router/container'
+import { EnvironmentPresets } from '@stacksjs/bun-router/container'
 
 const container = new ContextualContainer()
 const envManager = container.getEnvironmentManager()
@@ -604,7 +604,7 @@ import {
   ContextualContainer,
   DefaultServiceProviderManager,
   EnvironmentPresets
-} from 'bun-router/container'
+} from '@stacksjs/bun-router/container'
 
 // Create container and setup environment
 const container = new ContextualContainer()

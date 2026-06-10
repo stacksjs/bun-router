@@ -7,7 +7,7 @@ Proper error handling is crucial for building robust web applications. This guid
 The most straightforward approach to catch all errors is to implement a global error handling middleware:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -114,7 +114,7 @@ function handleRouteErrors(handler) {
 }
 
 // Apply to specific routes
-router.get('/users/:id', handleRouteErrors(async (req) => {
+router.get('/users/{id}', handleRouteErrors(async (req) => {
   const { id } = req.params
   const user = await findUser(id)
 
@@ -131,7 +131,7 @@ router.get('/users/:id', handleRouteErrors(async (req) => {
 For asynchronous operations, ensure proper error catching:
 
 ```typescript
-router.get('/users/:id', async (req) => {
+router.get('/users/{id}', async (req) => {
   try {
     const { id } = req.params
     const user = await findUser(id)
@@ -164,7 +164,7 @@ router.group({
   middleware: [userErrorHandler]
 }, () => {
   router.get('/', getUsersHandler)
-  router.get('/:id', getUserHandler)
+  router.get('/{id}', getUserHandler)
   router.post('/', createUserHandler)
   // ...more user routes
 })
@@ -175,7 +175,7 @@ router.group({
   middleware: [orderErrorHandler]
 }, () => {
   router.get('/', getOrdersHandler)
-  router.get('/:id', getOrderHandler)
+  router.get('/{id}', getOrderHandler)
   router.post('/', createOrderHandler)
   // ...more order routes
 })
@@ -251,7 +251,7 @@ router.post('/users', async (req) => {
 Handle database-specific errors in a structured way:
 
 ```typescript
-router.get('/products/:id', async (req) => {
+router.get('/products/{id}', async (req) => {
   try {
     const { id } = req.params
     const product = await db.products.findUnique({ where: { id } })
@@ -468,7 +468,7 @@ function apiError(status, code, message, details = null) {
   return Response.json(body, { status })
 }
 
-router.get('/api/users/:id', async (req) => {
+router.get('/api/users/{id}', async (req) => {
   try {
     const { id } = req.params
     const user = await findUser(id)
@@ -631,7 +631,7 @@ async function getUserWithRetry(id, maxRetries = 3) {
   }
 }
 
-router.get('/users/:id', async (req) => {
+router.get('/users/{id}', async (req) => {
   try {
     const { id } = req.params
     const user = await getUserWithRetry(id)

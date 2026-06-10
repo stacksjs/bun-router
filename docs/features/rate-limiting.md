@@ -7,7 +7,7 @@ Bun Router includes built-in rate limiting functionality to protect your routes 
 The simplest way to add rate limiting to your application is to use the `rateLimit` middleware:
 
 ```ts
-import { Router, rateLimit } from 'bun-router'
+import { Router, rateLimit } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -21,7 +21,7 @@ router.serve({ port: 3000 })
 You can also directly use the RateLimit class:
 
 ```ts
-import { Router, RateLimit } from 'bun-router'
+import { Router, RateLimit } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -333,7 +333,7 @@ export default {
 You can also use the `RateLimit` class directly:
 
 ```ts
-import { Router, RateLimit } from 'bun-router'
+import { Router, RateLimit } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -348,7 +348,7 @@ router.use(new RateLimit({
 ### Multiple Rate Limiters with Custom Options
 
 ```ts
-import { Router, RateLimit } from 'bun-router'
+import { Router, RateLimit } from '@stacksjs/bun-router'
 
 const router = new Router()
 

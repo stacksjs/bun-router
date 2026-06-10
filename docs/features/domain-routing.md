@@ -7,7 +7,7 @@ Domain routing in `bun-router` allows you to route requests based on the domain 
 To define routes for specific domains, use the domain option when defining routes:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -42,7 +42,7 @@ With this configuration:
 You can group routes under specific domains using the `group` method with a domain option:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -91,7 +91,7 @@ router.group({
 bun-router allows you to capture dynamic subdomains as parameters, making it possible to create multi-tenant applications:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -201,7 +201,7 @@ When testing domain routes, you need to set the `Host` header in your requests:
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 test('domain routing should work', async () => {
   const router = new Router()
@@ -245,7 +245,7 @@ test('domain routing should work', async () => {
 ### Multi-tenant SaaS Application
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -309,7 +309,7 @@ router.group({
 ### Localized Content Based on Country Domains
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

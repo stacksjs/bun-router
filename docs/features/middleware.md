@@ -9,7 +9,7 @@ Middleware allows you to run code before or after a route handler executes. This
 To apply middleware to all routes, use the `use` method:
 
 ```typescript
-import { cors, jsonBody, Router } from 'bun-router'
+import { cors, jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -103,7 +103,7 @@ bun-router includes several built-in middleware components:
 Parses JSON request bodies and makes them available as `req.jsonBody`:
 
 ```typescript
-import { jsonBody, Router } from 'bun-router'
+import { jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 router.use(jsonBody())
@@ -122,7 +122,7 @@ router.post('/api/users', (req) => {
 Handles Cross-Origin Resource Sharing headers:
 
 ```typescript
-import { cors, Router } from 'bun-router'
+import { cors, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -145,7 +145,7 @@ router.use(cors({
 Adds unique IDs to requests via the `X-Request-ID` header:
 
 ```typescript
-import { requestId, Router } from 'bun-router'
+import { requestId, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 router.use(requestId())
@@ -164,7 +164,7 @@ router.get('/api/status', (req) => {
 Provides session management:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -210,7 +210,7 @@ router.post('/login', async (req) => {
 Protects against Cross-Site Request Forgery attacks:
 
 ```typescript
-import { csrf, Router, session } from 'bun-router'
+import { csrf, Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -251,7 +251,7 @@ router.post('/submit', (req) => {
 Basic authentication middleware:
 
 ```typescript
-import { auth, Router } from 'bun-router'
+import { auth, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -356,7 +356,7 @@ You can create your own middleware using either class-based or function-based ap
 ### Class-Based Middleware
 
 ```typescript
-import { EnhancedRequest, Middleware, NextFunction } from 'bun-router'
+import { EnhancedRequest, Middleware, NextFunction } from '@stacksjs/bun-router'
 
 class LoggerMiddleware implements Middleware {
   async handle(req: EnhancedRequest, next: NextFunction): Promise<Response> {
@@ -380,7 +380,7 @@ router.use(new LoggerMiddleware())
 ### Function-Based Middleware
 
 ```typescript
-import { EnhancedRequest, NextFunction } from 'bun-router'
+import { EnhancedRequest, NextFunction } from '@stacksjs/bun-router'
 
 function rateLimiter(maxRequests: number, windowMs: number) {
   // Store IP addresses and their request counts

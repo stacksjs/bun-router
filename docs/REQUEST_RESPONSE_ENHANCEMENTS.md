@@ -27,7 +27,7 @@ The Request/Response Enhancements provide:
 ### Basic Usage
 
 ```typescript
-import { createValidationMiddleware, rule } from 'bun-router'
+import { createValidationMiddleware, rule } from '@stacksjs/bun-router'
 
 // String-based validation rules
 const middleware = createValidationMiddleware({
@@ -94,7 +94,7 @@ const rules = {
 ### Custom Validation Rules
 
 ```typescript
-import { Validator } from 'bun-router'
+import { Validator } from '@stacksjs/bun-router'
 
 const validator = new Validator()
 
@@ -133,7 +133,7 @@ const validator = new Validator({
 ### Built-in Response Macros
 
 ```typescript
-import { BuiltInResponseMacros } from 'bun-router'
+import { BuiltInResponseMacros } from '@stacksjs/bun-router'
 
 // Success responses
 BuiltInResponseMacros.success(data, 'Operation successful')
@@ -189,7 +189,7 @@ const response = BuiltInResponseMacros.paginated(users.data, {
 ### Custom Response Macros
 
 ```typescript
-import { EnhancedResponse } from 'bun-router'
+import { EnhancedResponse } from '@stacksjs/bun-router'
 
 // Register custom macro
 EnhancedResponse.macro('apiSuccess', (data, message = 'Success') => {
@@ -305,7 +305,7 @@ router.get('/dashboard', async (req) => {
 ### Enhanced Route Builder
 
 ```typescript
-import { EnhancedRouteBuilder } from 'bun-router'
+import { EnhancedRouteBuilder } from '@stacksjs/bun-router'
 
 // Route with validation
 const route = new EnhancedRouteBuilder('POST', '/users', async (req) => {
@@ -324,7 +324,7 @@ const route = new EnhancedRouteBuilder('POST', '/users', async (req) => {
 ### Validation Middleware Builder
 
 ```typescript
-import { validate } from 'bun-router'
+import { validate } from '@stacksjs/bun-router'
 
 const validationMiddleware = validate()
   .field('name', 'required|string|min:2')
@@ -343,7 +343,7 @@ router.use('/api/users', validationMiddleware)
 ### Enhancement Presets
 
 ```typescript
-import { EnhancementPresets } from 'bun-router'
+import { EnhancementPresets } from '@stacksjs/bun-router'
 
 // API preset with JSON validation and response macros
 router.use('/api/_', ...EnhancementPresets.api())
@@ -366,7 +366,7 @@ import {
   EnhancedRouteBuilder,
   BuiltInResponseMacros,
   rule
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 const registerRoute = new EnhancedRouteBuilder('POST', '/register', async (req) => {
   try {

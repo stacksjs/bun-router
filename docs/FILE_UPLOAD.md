@@ -17,7 +17,7 @@ The bun-router provides comprehensive file upload handling through middleware th
 ## Basic Usage
 
 ```typescript
-import { Router, fileUpload } from 'bun-router'
+import { Router, fileUpload } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -72,7 +72,7 @@ interface FileUploadConfig {
 ### Basic File Upload
 
 ```typescript
-import { fileUpload } from 'bun-router'
+import { fileUpload } from '@stacksjs/bun-router'
 
 router.post('/upload', fileUpload({
   destination: './uploads',
@@ -83,7 +83,7 @@ router.post('/upload', fileUpload({
 ### Single File Upload
 
 ```typescript
-import { singleFileUpload } from 'bun-router'
+import { singleFileUpload } from '@stacksjs/bun-router'
 
 router.post('/avatar', singleFileUpload('avatar', {
   destination: './uploads/avatars',
@@ -94,7 +94,7 @@ router.post('/avatar', singleFileUpload('avatar', {
 ### Image Upload
 
 ```typescript
-import { imageUpload } from 'bun-router'
+import { imageUpload } from '@stacksjs/bun-router'
 
 router.post('/images', imageUpload({
   destination: './uploads/images',
@@ -105,7 +105,7 @@ router.post('/images', imageUpload({
 ### Document Upload
 
 ```typescript
-import { documentUpload } from 'bun-router'
+import { documentUpload } from '@stacksjs/bun-router'
 
 router.post('/documents', documentUpload({
   destination: './uploads/docs',
@@ -317,7 +317,7 @@ router.post('/stream-upload', fileUpload({
 Serve uploaded files securely:
 
 ```typescript
-router.get('/files/:filename', async (req) => {
+router.get('/files/{filename}', async (req) => {
   const filename = req.params.filename
   
   // Validate filename to prevent path traversal
@@ -340,7 +340,7 @@ router.get('/files/:filename', async (req) => {
 
 ```typescript
 import { describe, it, expect } from 'bun:test'
-import { fileUpload } from 'bun-router'
+import { fileUpload } from '@stacksjs/bun-router'
 
 describe('File Upload', () => {
   it('should handle file upload', async () => {
@@ -382,7 +382,7 @@ describe('File Upload', () => {
 File upload middleware works seamlessly with other bun-router middleware:
 
 ```typescript
-import { Router, auth, rateLimit, fileUpload } from 'bun-router'
+import { Router, auth, rateLimit, fileUpload } from '@stacksjs/bun-router'
 
 const router = new Router()
 

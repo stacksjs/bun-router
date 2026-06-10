@@ -19,7 +19,7 @@ Native WebSocket clustering across workers for high-performance real-time applic
 ### Basic Usage
 
 ```typescript
-import { WebSocketClusterManager } from 'bun-router/websocket/clustering'
+import { WebSocketClusterManager } from '@stacksjs/bun-router/websocket/clustering'
 
 const clusterManager = new WebSocketClusterManager({
   workerCount: 4,
@@ -111,19 +111,19 @@ Efficient static file serving using `Bun.file()` with advanced caching and compr
 ### Basic Usage
 
 ```typescript
-import { StaticFileServer } from 'bun-router/file-serving/static-files'
+import { StaticFileServer } from '@stacksjs/bun-router/file-serving/static-files'
 
 const fileServer = new StaticFileServer({
   root: './public',
-  enableCaching: true,
-  enableCompression: true,
+  compression: true,
   maxAge: 86400 // 1 day
 })
 
-// Serve files
+// Serve files — `serve()` resolves the request path against `root`
+// and returns `null` when no file matches (fallthrough)
 router.get('/static/*', async (req) => {
-  const filePath = req.params['*']
-  return await fileServer.serveFile(filePath, req)
+  const response = await fileServer.serve(req)
+  return response ?? new Response('Not Found', { status: 404 })
 })
 ```
 
@@ -132,9 +132,6 @@ router.get('/static/*', async (req) => {
 ```typescript
 const fileServer = new StaticFileServer({
   root: './public',
-  enableCaching: true,
-  enableCompression: true,
-  compressionLevel: 6,
   maxAge: 86400,
   immutable: false,
   etag: true,
@@ -143,45 +140,34 @@ const fileServer = new StaticFileServer({
   extensions: ['.html', '.htm'],
   dotfiles: 'ignore', // 'allow', 'deny', 'ignore'
   fallthrough: true,
-  redirect: true,
+  compression: true,
+  compressionThreshold: 1024, // gzip files >= 1KB
+  maxCacheFileSize: 5 * 1024 * 1024, // larger files stream from disk with Range support
   setHeaders: (res, path, stat) => {
     if (path.endsWith('.js')) {
       res.headers.set('Content-Type', 'application/javascript')
     }
   }
 })
-
-// Custom MIME types
-fileServer.addMimeType('.custom', 'application/x-custom')
-
-// Security headers
-fileServer.setSecurityHeaders({
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block'
-})
 ```
 
 ### Middleware Integration
 
 ```typescript
-import { createStaticFileMiddleware } from 'bun-router/file-serving/static-files'
+import { createStaticFileMiddleware } from '@stacksjs/bun-router/file-serving/static-files'
 
-// Create middleware
+// Create middleware (GET/HEAD only; calls next() when no file matches)
 const staticMiddleware = createStaticFileMiddleware({
   root: './public',
-  prefix: '/assets',
-  enableCaching: true,
-  enableCompression: true
+  compression: true
 })
 
 // Use with router
-router.use('/assets/*', staticMiddleware)
-
-// Or with specific routes
-router.get('/favicon.ico', staticMiddleware)
-router.get('/robots.txt', staticMiddleware)
+router.use(staticMiddleware)
 ```
+
+See [Static Files](/features/static-files) for the full options reference,
+Range-request behavior, and cache invalidation.
 
 ## SQLite Caching
 
@@ -190,7 +176,7 @@ Embedded caching using Bun's SQLite integration with compression and TTL support
 ### Basic Usage
 
 ```typescript
-import { SQLiteCache } from 'bun-router/caching/sqlite-cache'
+import { SQLiteCache } from '@stacksjs/bun-router/caching/sqlite-cache'
 
 const cache = new SQLiteCache({
   database: ':memory:', // or './cache.db'
@@ -251,7 +237,7 @@ console.log(`Memory usage: ${stats.memoryUsage} bytes`)
 ### HTTP Response Caching
 
 ```typescript
-import { createSQLiteCacheMiddleware } from 'bun-router/caching/sqlite-cache'
+import { createSQLiteCacheMiddleware } from '@stacksjs/bun-router/caching/sqlite-cache'
 
 // Create caching middleware
 const cacheMiddleware = createSQLiteCacheMiddleware({
@@ -288,7 +274,7 @@ Hot reload for development using Bun's `--hot` mode with state preservation.
 ### Basic Usage
 
 ```typescript
-import { HotReloadManager } from 'bun-router/development/hot-reload'
+import { HotReloadManager } from '@stacksjs/bun-router/development/hot-reload'
 
 const hotReload = new HotReloadManager({
   enabled: true,
@@ -310,7 +296,7 @@ const cache = hotReload.restoreState('cache', new DefaultCache())
 ### Development Server
 
 ```typescript
-import { HotReloadHelpers } from 'bun-router/development/hot-reload'
+import { HotReloadHelpers } from '@stacksjs/bun-router/development/hot-reload'
 
 // Create development server with hot reload
 const { server, hotReload } = HotReloadHelpers.createDevelopmentServer({
@@ -337,7 +323,7 @@ router.use(hotAuth)
 ### Class Decorators
 
 ```typescript
-import { HotReloadDecorators } from 'bun-router/development/hot-reload'
+import { HotReloadDecorators } from '@stacksjs/bun-router/development/hot-reload'
 
 @HotReloadDecorators.hotReloadable
 class UserService {
@@ -359,7 +345,7 @@ class UserService {
 ### Configuration Management
 
 ```typescript
-import { HotReloadUtils } from 'bun-router/development/hot-reload'
+import { HotReloadUtils } from '@stacksjs/bun-router/development/hot-reload'
 
 // Hot-reloadable configuration
 const config = HotReloadUtils.createHotConfig({
@@ -385,7 +371,7 @@ Generic optimization utilities leveraging Bun's runtime capabilities.
 ### Basic Usage
 
 ```typescript
-import { BunOptimizer } from 'bun-router/optimization/bun-utilities'
+import { BunOptimizer } from '@stacksjs/bun-router/optimization/bun-utilities'
 
 const optimizer = new BunOptimizer({
   enableJIT: true,

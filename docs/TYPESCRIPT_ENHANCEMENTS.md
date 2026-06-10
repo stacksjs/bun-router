@@ -18,7 +18,7 @@ Automatic type inference from URL patterns with compile-time validation.
 ### Basic Parameter Extraction
 
 ```typescript
-import type { ExtractTypedParams, TypedRequest, RouteHandler } from 'bun-router'
+import type { ExtractTypedParams, TypedRequest, RouteHandler } from '@stacksjs/bun-router'
 
 // Basic string parameters
 type UserParams = ExtractTypedParams<'/users/:id/posts/:postId'>
@@ -145,7 +145,7 @@ Type-safe middleware with generic constraints and automatic type propagation.
 ### Basic Middleware Types
 
 ```typescript
-import type { TypedMiddleware, AuthMiddleware, ValidationMiddleware } from 'bun-router'
+import type { TypedMiddleware, AuthMiddleware, ValidationMiddleware } from '@stacksjs/bun-router'
 
 // Authentication middleware
 interface User {
@@ -209,7 +209,7 @@ const validationMiddleware: ValidationMiddleware<
 ### Middleware Composition
 
 ```typescript
-import type { ComposeMiddleware, MiddlewareChain } from 'bun-router'
+import type { ComposeMiddleware, MiddlewareChain } from '@stacksjs/bun-router'
 
 // Compose two middleware types
 type AuthValidationMiddleware = ComposeMiddleware<
@@ -249,7 +249,7 @@ const protectedRoute: RouteHandler<
 ### Conditional Middleware
 
 ```typescript
-import type { ConditionalMiddleware } from 'bun-router'
+import type { ConditionalMiddleware } from '@stacksjs/bun-router'
 
 // Middleware that only applies under certain conditions
 type AdminOnlyMiddleware = ConditionalMiddleware<
@@ -276,7 +276,7 @@ Compile-time validation of controller methods with automatic route inference.
 ### Basic Controller Definition
 
 ```typescript
-import type { BaseController, ControllerRoute } from 'bun-router'
+import type { BaseController, ControllerRoute } from '@stacksjs/bun-router'
 
 interface UserController extends BaseController {
   // GET /users
@@ -318,7 +318,7 @@ import type {
   ParamDecorator,
   BodyDecorator,
   QueryDecorator
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Controller decorator
 @Controller({ prefix: '/api/v1/users' })
@@ -378,7 +378,7 @@ import type {
   ValidateController,
   IsValidController,
   DetectControllerConflicts
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Validate controller at compile time
 type UserControllerValidation = ValidateController<UserController>
@@ -456,7 +456,7 @@ import type {
   EnhancedRequest,
   AugmentRequestThroughChain,
   AccumulateContext
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Request augmented through middleware chain
 type MiddlewareStack = [
@@ -509,7 +509,7 @@ type WithoutAuth = ConditionallyAugmented<[]>
 ### Response Augmentation
 
 ```typescript
-import type { EnhancedResponse } from 'bun-router'
+import type { EnhancedResponse } from '@stacksjs/bun-router'
 
 // Response augmented with middleware context
 type AugmentedResponse = EnhancedResponse<{
@@ -528,7 +528,7 @@ type AugmentedResponse = EnhancedResponse<{
 ### Middleware-Aware Route Building
 
 ```typescript
-import type { AugmentedRouteBuilder, AugmentedRoute } from 'bun-router'
+import type { AugmentedRouteBuilder, AugmentedRoute } from '@stacksjs/bun-router'
 
 const routeBuilder: AugmentedRouteBuilder = {
   get<TPath, TQuery, TMiddlewares>(
@@ -564,7 +564,7 @@ const userRoute = routeBuilder.get(
 ### Route Pattern Validation
 
 ```typescript
-import type { ValidateRoutePattern, ValidateParamType } from 'bun-router'
+import type { ValidateRoutePattern, ValidateParamType } from '@stacksjs/bun-router'
 
 // Valid patterns
 type Valid1 = ValidateRoutePattern<'/users/:id/posts/:postId'>
@@ -584,7 +584,7 @@ type Invalid2 = ValidateRoutePattern<'/items/:id<invalid>'>
 ### Type-Safe Route Matching
 
 ```typescript
-import type { MatchRoute, ExtractParamsFromPath } from 'bun-router'
+import type { MatchRoute, ExtractParamsFromPath } from '@stacksjs/bun-router'
 
 // Route matching
 type Match1 = MatchRoute<'/users/:id', '/users/123'>
@@ -601,7 +601,7 @@ type Params = ExtractParamsFromPath<'/users/:id/posts/:postId', '/users/123/post
 ### OpenAPI Schema Generation
 
 ```typescript
-import type { GenerateOpenAPISchema } from 'bun-router'
+import type { GenerateOpenAPISchema } from '@stacksjs/bun-router'
 
 type UserRoutes = TypedRoute<'/users/:id<number>', { include: 'string' }, { name: string }>
 
@@ -616,7 +616,7 @@ type OpenAPISchema = GenerateOpenAPISchema<UserRoutes>
 ### Conflict Detection
 
 ```typescript
-import type { DetectRouteConflicts } from 'bun-router'
+import type { DetectRouteConflicts } from '@stacksjs/bun-router'
 
 type Routes = [
   TypedRoute<'/users/:id', {}, never>,

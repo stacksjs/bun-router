@@ -9,7 +9,7 @@ bun-router provides a simple yet powerful API for working with HTTP cookies. Thi
 To read cookies from an incoming request:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -118,7 +118,7 @@ router.get('/logout', (req) => {
 For more advanced cookie handling, `bun-router` provides a cookie parser middleware:
 
 ```typescript
-import { cookieParser, Router } from 'bun-router'
+import { cookieParser, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -152,7 +152,7 @@ router.get('/profile', (req) => {
 Signed cookies help verify that a cookie hasn't been tampered with by the client:
 
 ```typescript
-import { cookieParser, Router } from 'bun-router'
+import { cookieParser, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -416,7 +416,7 @@ When writing tests for code that uses cookies:
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 test('should set theme cookie', async () => {
   const router = new Router()

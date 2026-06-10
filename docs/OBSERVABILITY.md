@@ -12,7 +12,7 @@ Enterprise-grade observability features for distributed systems including distri
 ## Quick Start
 
 ```typescript
-import { setupProductionObservability } from 'bun-router'
+import { setupProductionObservability } from '@stacksjs/bun-router'
 
 // Initialize observability with production preset
 const observability = setupProductionObservability()
@@ -32,7 +32,7 @@ Object.entries(handlers).forEach(([path, handler]) => {
 ### Development
 
 ```typescript
-import { setupDevelopmentObservability } from 'bun-router'
+import { setupDevelopmentObservability } from '@stacksjs/bun-router'
 
 const observability = setupDevelopmentObservability()
 // - Console tracing enabled
@@ -44,7 +44,7 @@ const observability = setupDevelopmentObservability()
 ### Production
 
 ```typescript
-import { setupProductionObservability } from 'bun-router'
+import { setupProductionObservability } from '@stacksjs/bun-router'
 
 const observability = setupProductionObservability()
 // - OTLP tracing to external systems
@@ -56,7 +56,7 @@ const observability = setupProductionObservability()
 ### Kubernetes
 
 ```typescript
-import { setupKubernetesObservability } from 'bun-router'
+import { setupKubernetesObservability } from '@stacksjs/bun-router'
 
 const observability = setupKubernetesObservability()
 // - Environment variable configuration
@@ -67,7 +67,7 @@ const observability = setupKubernetesObservability()
 ### Microservices
 
 ```typescript
-import { setupMicroservicesObservability } from 'bun-router'
+import { setupMicroservicesObservability } from '@stacksjs/bun-router'
 
 const observability = setupMicroservicesObservability()
 // - Enhanced correlation tracking
@@ -85,7 +85,7 @@ import {
   initializeTracer,
   createTracingMiddleware,
   TraceHelpers
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Initialize tracer
 const tracer = initializeTracer({
@@ -153,7 +153,7 @@ router.get('/api/proxy', async (req) => {
 ### Built-in Metrics
 
 ```typescript
-import { initializeMetrics } from 'bun-router'
+import { initializeMetrics } from '@stacksjs/bun-router'
 
 const registry = initializeMetrics({
   enableDefaultMetrics: true,
@@ -173,7 +173,7 @@ const registry = initializeMetrics({
 ### Custom Metrics
 
 ```typescript
-import { getMetricsRegistry } from 'bun-router'
+import { getMetricsRegistry } from '@stacksjs/bun-router'
 
 const registry = getMetricsRegistry()
 
@@ -251,7 +251,7 @@ import {
   initializeHealthChecks,
   HealthEndpoints,
   DependencyChecks
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 const healthManager = initializeHealthChecks({
   timeout: 5000,
@@ -392,7 +392,7 @@ import {
   initializeCorrelation,
   createCorrelationMiddleware,
   CorrelationHelpers
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Initialize correlation
 initializeCorrelation({
@@ -410,7 +410,7 @@ initializeCorrelation({
 router.use(createCorrelationMiddleware())
 
 // Use in handlers
-router.get('/api/users/:id', async (req) => {
+router.get('/api/users/{id}', async (req) => {
   const correlationId = CorrelationHelpers.getId(req)
   const httpClient = CorrelationHelpers.getHttpClient(req)
 
@@ -496,7 +496,7 @@ router.get('/api/complex-operation', async (req) => {
 import {
   initializeObservability,
   ObservabilityIntegration
-} from 'bun-router'
+} from '@stacksjs/bun-router'
 
 // Initialize with custom configuration
 const observability = initializeObservability({
@@ -573,7 +573,7 @@ ENABLE_CORRELATION_LOGGING=false
 ```
 
 ```typescript
-import { setupObservabilityFromEnv } from 'bun-router'
+import { setupObservabilityFromEnv } from '@stacksjs/bun-router'
 
 // Automatically configure from environment
 const observability = setupObservabilityFromEnv()

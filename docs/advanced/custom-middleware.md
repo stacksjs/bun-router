@@ -25,7 +25,7 @@ function myMiddleware(req, next) {
 Here's an example of a simple logging middleware:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -59,7 +59,7 @@ router.get('/', (req) => {
 For middleware that needs to perform asynchronous operations:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

@@ -7,7 +7,7 @@ bun-router provides flexible tools for implementing authentication in your web a
 The simplest form of authentication verifies credentials against a database or other source:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -83,7 +83,7 @@ Here's how to use each method:
 ### Basic Authentication
 
 ```typescript
-import { Router, basicAuth } from 'bun-router'
+import { Router, basicAuth } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -118,7 +118,7 @@ router.group({
 ### Bearer Token Authentication
 
 ```typescript
-import { Router, bearerAuth } from 'bun-router'
+import { Router, bearerAuth } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -137,7 +137,7 @@ router.get('/api/protected', auth, (req) => {
 ### JWT Authentication
 
 ```typescript
-import { Router, jwtAuth, Auth } from 'bun-router'
+import { Router, jwtAuth, Auth } from '@stacksjs/bun-router'
 
 const router = new Router()
 const JWT_SECRET = 'your-jwt-secret'
@@ -205,7 +205,7 @@ router.get('/api/user', auth, (req) => {
 ### API Key Authentication
 
 ```typescript
-import { Router, apiKeyAuth, Auth } from 'bun-router'
+import { Router, apiKeyAuth, Auth } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -264,7 +264,7 @@ router.group({
 ### OAuth2 Authentication
 
 ```typescript
-import { Router, oauth2Auth, Auth } from 'bun-router'
+import { Router, oauth2Auth, Auth } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -549,7 +549,7 @@ router.get('/reports', requireAnyRole(['admin', 'analyst']), (req) => {
 For stateless APIs, JSON Web Tokens (JWT) provide a popular authentication mechanism:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
 const router = new Router()
@@ -620,7 +620,7 @@ router.get('/api/profile', verifyJWT, (req) => {
 For applications that serve both browser clients and API consumers, you can combine approaches:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
 const router = new Router()
@@ -696,7 +696,7 @@ router.get('/public', (req) => {
 For third-party authentication (Google, GitHub, etc.), implement OAuth flows:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID
@@ -805,7 +805,7 @@ router.get('/auth/github/callback', async (req) => {
 Implement passwordless authentication with email magic links:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 const EMAIL_SECRET = process.env.EMAIL_SECRET || 'email-token-secret'
@@ -877,7 +877,7 @@ router.get('/auth/email/verify', async (req) => {
 Implement MFA using TOTP (Time-based One-Time Password):
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 import { authenticator } from 'otplib'
 import { toDataURL } from 'qrcode'
 
@@ -1022,7 +1022,7 @@ router.post('/mfa/login', async (req) => {
 Implement "Remember Me" for longer-lived sessions:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -1064,7 +1064,7 @@ Implement account lockout after multiple failed login attempts:
 
 ```typescript
 import { redis } from 'bun'
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 const MAX_FAILED_ATTEMPTS = 5

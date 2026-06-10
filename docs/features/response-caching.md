@@ -17,8 +17,8 @@ The Response Caching middleware provides high-performance HTTP response caching 
 ## Basic Usage
 
 ```typescript
-import { Router } from 'bun-router'
-import { responseCache } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { responseCache } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -41,7 +41,7 @@ router.get('/api/data', async () => {
 Fast in-memory caching with LRU eviction:
 
 ```typescript
-import { memoryCache } from 'bun-router/middleware'
+import { memoryCache } from '@stacksjs/bun-router/middleware'
 
 router.use(memoryCache({
   storage: { maxEntries: 1000 },
@@ -54,7 +54,7 @@ router.use(memoryCache({
 Persistent file-based caching using Bun's optimized file APIs:
 
 ```typescript
-import { fileCache } from 'bun-router/middleware'
+import { fileCache } from '@stacksjs/bun-router/middleware'
 
 router.use(fileCache('.cache/responses', {
   storage: { maxSize: 100 * 1024 * 1024 }, // 100MB
@@ -67,7 +67,7 @@ router.use(fileCache('.cache/responses', {
 Combines memory and file caching for optimal performance:
 
 ```typescript
-import { hybridCache } from 'bun-router/middleware'
+import { hybridCache } from '@stacksjs/bun-router/middleware'
 
 router.use(hybridCache({
   storage: {
@@ -224,8 +224,8 @@ const stats = cache.getStats()
 ### API Response Caching
 
 ```typescript
-import { Router } from 'bun-router'
-import { hybridCache } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { hybridCache } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -252,7 +252,7 @@ router.use(hybridCache({
   }
 }))
 
-router.get('/api/users/:id', async (req) => {
+router.get('/api/users/{id}', async (req) => {
   const user = await db.users.findById(req.params.id)
   return Response.json(user)
 })
@@ -362,8 +362,8 @@ The hybrid cache provides the best of both worlds:
 Response caching works seamlessly with other middleware:
 
 ```typescript
-import { Router } from 'bun-router'
-import { responseCache, compression, rateLimit } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { responseCache, compression, rateLimit } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 

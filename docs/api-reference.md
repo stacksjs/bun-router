@@ -19,7 +19,7 @@ Creates a new router instance.
 **Example:**
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router({
   verbose: true,

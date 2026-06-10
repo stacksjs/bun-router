@@ -15,7 +15,7 @@ bun-router supports three types of action handlers:
 The simplest way to define an action handler is as a function directly in your route declaration:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -42,8 +42,8 @@ router.get('/products', async (req) => {
 For more complex handlers, you can create classes that implement the `ActionHandlerClass` interface:
 
 ```typescript
-import type { ActionHandlerClass, EnhancedRequest } from 'bun-router'
-import { Router } from 'bun-router'
+import type { ActionHandlerClass, EnhancedRequest } from '@stacksjs/bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Define an action class
 class UserController implements ActionHandlerClass {
@@ -76,7 +76,7 @@ Using action classes has several benefits:
 bun-router can dynamically load action handlers from string paths, which is particularly useful for organizing large applications:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -97,7 +97,7 @@ When you provide a string path, bun-router:
 Example action file (`actions/users_show.ts`):
 
 ```typescript
-import type { ActionHandlerClass, EnhancedRequest } from 'bun-router'
+import type { ActionHandlerClass, EnhancedRequest } from '@stacksjs/bun-router'
 import { UserService } from '../services/UserService'
 
 export default class ShowUserAction implements ActionHandlerClass {
@@ -126,7 +126,7 @@ export default class ShowUserAction implements ActionHandlerClass {
 Action handlers work especially well with resource routes:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

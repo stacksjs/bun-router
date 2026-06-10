@@ -8,7 +8,7 @@ To enable WebSocket support, use the `websocket` method on your router:
 
 ```typescript
 import type { ServerWebSocket } from 'bun'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Define the type for your WebSocket client data
 interface ClientData {

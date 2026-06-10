@@ -7,7 +7,7 @@ bun-router provides a convenient way to render views (HTML templates) with the `
 The most basic usage of `router.view()` defines a route that renders a template with data:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -167,7 +167,7 @@ const router = new Router({
 Here's a complete example showing how to use view rendering for a small web application:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router({
   views: {

@@ -7,7 +7,7 @@ Route groups allow you to organize related routes together and apply shared attr
 To create a route group, use the `group` method:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -45,7 +45,7 @@ This is much cleaner than repeating `/api` in every route definition.
 You can apply middleware to all routes within a group:
 
 ```typescript
-import { auth, jsonBody, Router } from 'bun-router'
+import { auth, jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -191,7 +191,7 @@ const usersUrl = router.route('admin.users') // '/admin/users'
 Here's a more complete example of how route groups can organize a blog API:
 
 ```typescript
-import { auth, cors, jsonBody, Router } from 'bun-router'
+import { auth, cors, jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

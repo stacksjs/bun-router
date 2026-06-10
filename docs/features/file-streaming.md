@@ -7,7 +7,7 @@ bun-router provides built-in utilities for efficiently streaming files to client
 The simplest way to stream a file is using the `streamFile` method:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

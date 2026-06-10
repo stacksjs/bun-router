@@ -7,7 +7,7 @@ bun-router allows you to extend the Router class with custom methods, enabling y
 Use the `extend()` method to add custom methods to your router instance:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -192,7 +192,7 @@ router.crud('User', { middleware: [authMiddleware] }) // Add auth middleware
 To get proper TypeScript support for your extended methods, you can use declaration merging:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Extend the Router interface
 declare module 'bun-router' {
@@ -247,7 +247,7 @@ export function installMyRouterPlugin(router) {
 }
 
 // Using the plugin
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 import { installMyRouterPlugin } from './myRouterPlugin'
 
 const router = new Router()

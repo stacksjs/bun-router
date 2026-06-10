@@ -7,13 +7,13 @@ This guide will help you get up and running with `bun-router` quickly. We'll cre
 First, make sure you have `bun-router` installed:
 
 ```bash
-bun add bun-router
+bun add @stacksjs/bun-router
 ```
 
 Create a new file called `server.ts` in your project:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Create a new router
 const router = new Router()
@@ -44,7 +44,7 @@ Visit `<http://localhost:3000>` in your browser to see "Welcome to my API!".
 Let's add more routes to our API:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -108,7 +108,7 @@ router.get('/users/by-username/{username}', (req) => {
 Middleware allows you to process requests before they reach your route handlers:
 
 ```typescript
-import { jsonBody, Router } from 'bun-router'
+import { jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -150,7 +150,8 @@ router.group({
 Name your routes to generate URLs later:
 
 ```typescript
-router.get('/users/{id}', getUserHandler, 'users.show')
+// Signature: router.get(path, handler, type?, name?, middleware?)
+router.get('/users/{id}', getUserHandler, 'web', 'users.show')
 
 // Generate URL from named route
 const url = router.route('users.show', { id: '123' }) // '/users/123'

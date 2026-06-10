@@ -27,13 +27,13 @@ The performance monitoring system consists of four main components:
 ### Basic Setup
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 import {
   performanceMonitor,
   requestTracer,
   performanceDashboard,
   performanceAlerting
-} from 'bun-router/middleware'
+} from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -111,7 +111,7 @@ ZIPKIN_ENDPOINT=http://zipkin:9411
 Collects comprehensive metrics about your application's performance:
 
 ```typescript
-import { PerformanceMonitor } from 'bun-router/middleware'
+import { PerformanceMonitor } from '@stacksjs/bun-router/middleware'
 
 const monitor = new PerformanceMonitor({
   enabled: true,
@@ -160,7 +160,7 @@ const profiles = monitor.getProfiles()
 Provides distributed tracing capabilities:
 
 ```typescript
-import { RequestTracer } from 'bun-router/middleware'
+import { RequestTracer } from '@stacksjs/bun-router/middleware'
 
 const tracer = new RequestTracer({
   enabled: true,
@@ -192,7 +192,7 @@ const tracer = new RequestTracer({
 })
 
 // Create child spans in your handlers
-router.get('/users/:id', async (req) => {
+router.get('/users/{id}', async (req) => {
   const childSpanId = tracer.createChildSpan(req.spanId!, 'database-query')
   
   if (childSpanId) {
@@ -226,7 +226,7 @@ router.get('/users/:id', async (req) => {
 Rule-based alerting system:
 
 ```typescript
-import { PerformanceAlerting } from 'bun-router/middleware'
+import { PerformanceAlerting } from '@stacksjs/bun-router/middleware'
 
 const alerting = new PerformanceAlerting({
   enabled: true,
@@ -330,7 +330,7 @@ alerting.resolveAlert('alert-id-123')
 Web-based monitoring dashboard:
 
 ```typescript
-import { PerformanceDashboard } from 'bun-router/middleware'
+import { PerformanceDashboard } from '@stacksjs/bun-router/middleware'
 
 const dashboard = new PerformanceDashboard({
   enabled: true,
@@ -450,8 +450,8 @@ const developmentConfig = {
 ### Basic Monitoring Setup
 
 ```typescript
-import { Router } from 'bun-router'
-import { performanceMonitor } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { performanceMonitor } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -471,8 +471,8 @@ export default router
 ### Advanced Tracing
 
 ```typescript
-import { Router } from 'bun-router'
-import { requestTracer } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { requestTracer } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -491,7 +491,7 @@ const tracer = requestTracer({
 
 router.use(tracer)
 
-router.get('/api/users/:id', async (req) => {
+router.get('/api/users/{id}', async (req) => {
   // Create a span for database operation
   const dbSpanId = tracer.createChildSpan(req.spanId!, 'database-query')
   
@@ -526,7 +526,7 @@ router.get('/api/users/:id', async (req) => {
 ### Custom Alerting Rules
 
 ```typescript
-import { PerformanceAlerting } from 'bun-router/middleware'
+import { PerformanceAlerting } from '@stacksjs/bun-router/middleware'
 
 const alerting = new PerformanceAlerting({
   enabled: true,
@@ -589,7 +589,7 @@ const alerting = new PerformanceAlerting({
 ### Dashboard with Custom Authentication
 
 ```typescript
-import { PerformanceDashboard } from 'bun-router/middleware'
+import { PerformanceDashboard } from '@stacksjs/bun-router/middleware'
 
 const dashboard = new PerformanceDashboard({
   enabled: true,

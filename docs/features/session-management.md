@@ -7,7 +7,7 @@ bun-router provides a robust session management system to maintain state across 
 To use sessions in your application, first add the session middleware:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -157,7 +157,7 @@ router.use(session({
 The file store persists sessions to the filesystem:
 
 ```typescript
-import { fileStore } from 'bun-router'
+import { fileStore } from '@stacksjs/bun-router'
 
 router.use(session({
   secret: 'your-secret',
@@ -175,7 +175,7 @@ For production applications, Redis is recommended for session storage. `bun-rout
 
 ```typescript
 import { redis } from 'bun'
-import { redisStore } from 'bun-router'
+import { redisStore } from '@stacksjs/bun-router'
 
 // Bun's built-in Redis client is used by default
 // It reads from process.env.REDIS_URL or defaults to "redis://localhost:6379"
@@ -194,7 +194,7 @@ For custom Redis configuration:
 
 ```typescript
 import { RedisClient } from 'bun'
-import { redisStore } from 'bun-router'
+import { redisStore } from '@stacksjs/bun-router'
 
 // Create a custom Redis client
 const client = new RedisClient('redis://username:password@redis-server:6379', {
@@ -223,7 +223,7 @@ Bun's Redis client automatically handles connection pooling, reconnections, and 
 You can implement a custom session store by creating a class that implements the `SessionStore` interface:
 
 ```typescript
-import { SessionStore } from 'bun-router'
+import { SessionStore } from '@stacksjs/bun-router'
 
 class MyCustomStore implements SessionStore {
   async get(sid: string): Promise<Record<string, any> | null> {
@@ -393,7 +393,7 @@ Here's a complete example of using sessions for user authentication:
 
 ```typescript
 import { compare } from 'bcrypt'
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 import { db } from './database'
 
 const router = new Router()
@@ -500,7 +500,7 @@ When running `bun-router` in a clustered or distributed environment (multiple se
 
 ```typescript
 import { redis, RedisClient } from 'bun'
-import { redisStore, Router, session } from 'bun-router'
+import { redisStore, Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -540,7 +540,7 @@ This ensures that users can be routed to any server instance while maintaining t
 You can combine sessions with JWT for enhanced security and flexibility:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 import { sign, verify } from 'jsonwebtoken'
 
 const router = new Router()
@@ -632,7 +632,7 @@ When writing tests for code that uses sessions, you'll need to set up the sessio
 
 ```typescript
 import { expect, test } from 'bun:test'
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 test('authenticated route should return user data', async () => {
   const router = new Router()

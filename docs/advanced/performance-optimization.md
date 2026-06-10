@@ -15,15 +15,15 @@ Bun is designed to be fast by default. To maximize performance:
 How you organize your routes can significantly impact performance:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
 // Organize routes from most specific to most general
 // Frequently accessed routes should be defined first
-router.get('/api/products/:id', getProductHandler) // Specific route
+router.get('/api/products/{id}', getProductHandler) // Specific route
 router.get('/api/products', getProductsHandler)
-router.get('/api/categories/:id/products', getCategoryProductsHandler)
+router.get('/api/categories/{id}/products', getCategoryProductsHandler)
 
 // Catch-all route should be defined last
 router.get('*', notFoundHandler)
@@ -183,7 +183,7 @@ Optimize database interactions:
 
 ```typescript
 // Inefficient database query
-router.get('/api/products/:id', async (req) => {
+router.get('/api/products/{id}', async (req) => {
   const { id } = req.params
 
   // N+1 query problem
@@ -202,7 +202,7 @@ router.get('/api/products/:id', async (req) => {
 })
 
 // More efficient - combining queries
-router.get('/api/products/:id', async (req) => {
+router.get('/api/products/{id}', async (req) => {
   const { id } = req.params
 
   // Single query with joins/includes

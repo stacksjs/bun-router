@@ -7,7 +7,7 @@ bun-router can be configured when initializing a new router instance. This page 
 When creating a new router instance, you can pass a configuration object:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router({
   // Configuration options here

@@ -7,7 +7,7 @@ Route parameters allow you to capture values from URL segments and access them i
 To define a route parameter, use curly braces `{}` in your route path:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

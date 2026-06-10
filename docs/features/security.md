@@ -9,7 +9,7 @@ Always serve your application over HTTPS in production environments. This encryp
 ```typescript
 import { readFileSync } from 'node:fs'
 import { createSecureServer } from 'node:https'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -69,7 +69,7 @@ router.get('/set-cookie', (req) => {
 Properly configure CORS to restrict which domains can access your API:
 
 ```typescript
-import { cors, Router } from 'bun-router'
+import { cors, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -128,7 +128,7 @@ router.use(cspMiddleware)
 Use bun-router's built-in CSRF protection for forms and state-changing requests:
 
 ```typescript
-import { csrfProtection, Router, session } from 'bun-router'
+import { csrfProtection, Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -177,7 +177,7 @@ Implement rate limiting to prevent brute force attacks and abuse:
 
 ```typescript
 import { redis } from 'bun'
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -234,7 +234,7 @@ router.use(rateLimit({ maxRequests: 100, windowMs: 60 _ 1000 }))
 Always validate and sanitize user inputs:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 import { z } from 'zod' // Popular validation library
 
 const router = new Router()
@@ -280,7 +280,7 @@ router.post('/register', async (req) => {
 Use Bun's built-in password hashing functions to securely handle passwords:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -368,7 +368,7 @@ When working with databases, always use parameterized queries:
 
 ```typescript
 import { Database } from 'bun:sqlite'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 const db = new Database('app.db')
@@ -397,7 +397,7 @@ router.get('/users/:id', (req) => {
 Configure sessions to expire after a period of inactivity:
 
 ```typescript
-import { Router, session } from 'bun-router'
+import { Router, session } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -425,7 +425,7 @@ router.use((req, next) => {
 When handling file uploads, implement proper validation and restrictions:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

@@ -7,7 +7,7 @@ Installing `bun-router` is simple. You can use Bun's built-in package manager or
 The recommended way to install `bun-router` is with Bun:
 
 ```bash
-bun add bun-router
+bun add @stacksjs/bun-router
 ```
 
 ## Using Other Package Managers
@@ -17,15 +17,15 @@ bun-router is also available through npm, pnpm, and yarn:
 ::: code-group
 
 ```bash [npm]
-npm install bun-router
+npm install @stacksjs/bun-router
 ```
 
 ```bash [pnpm]
-pnpm add bun-router
+pnpm add @stacksjs/bun-router
 ```
 
 ```bash [yarn]
-yarn add bun-router
+yarn add @stacksjs/bun-router
 ```
 
 :::
@@ -42,7 +42,7 @@ bun-router is designed specifically for Bun applications and requires:
 After installation, you can create a basic server to verify everything is working correctly:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Create a new router
 const router = new Router()

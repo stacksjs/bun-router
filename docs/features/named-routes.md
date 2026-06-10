@@ -7,7 +7,7 @@ Named routes allow you to reference routes by a name rather than their URL patte
 To define a named route, add a name parameter when defining the route:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -138,7 +138,7 @@ const url = router.route('users.show', { id: '123' })
 Here's a more comprehensive example showing how named routes can be used in a blog application:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 

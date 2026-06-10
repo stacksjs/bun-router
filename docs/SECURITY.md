@@ -19,8 +19,8 @@ The security middleware suite includes:
 The easiest way to get started is using one of the predefined security presets:
 
 ```typescript
-import { Router } from 'bun-router'
-import { securityPresets } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { securityPresets } from '@stacksjs/bun-router/middleware'
 
 const router = new Router()
 
@@ -45,7 +45,7 @@ router.use(securityPresets.development())
 For fine-grained control, create a custom security suite:
 
 ```typescript
-import { securitySuite } from 'bun-router/middleware'
+import { securitySuite } from '@stacksjs/bun-router/middleware'
 
 router.use(securitySuite({
   helmet: true,
@@ -77,7 +77,7 @@ router.use(securitySuite({
 Adds essential security headers to responses:
 
 ```typescript
-import { Helmet } from 'bun-router/middleware'
+import { Helmet } from '@stacksjs/bun-router/middleware'
 
 router.use(new Helmet({
   contentSecurityPolicy: {
@@ -105,7 +105,7 @@ router.use(new Helmet({
 Protects against common attacks:
 
 ```typescript
-import { Security } from 'bun-router/middleware'
+import { Security } from '@stacksjs/bun-router/middleware'
 
 router.use(new Security({
   attackPrevention: {
@@ -144,7 +144,7 @@ router.use(new Security({
 Rate limiting and request throttling:
 
 ```typescript
-import { DDoSProtection } from 'bun-router/middleware'
+import { DDoSProtection } from '@stacksjs/bun-router/middleware'
 
 router.use(new DDoSProtection({
   enabled: true,
@@ -166,7 +166,7 @@ router.use(new DDoSProtection({
 Schema-based request validation:
 
 ```typescript
-import { InputValidation } from 'bun-router/middleware'
+import { InputValidation } from '@stacksjs/bun-router/middleware'
 
 router.use(new InputValidation({
   enabled: true,
@@ -198,7 +198,7 @@ router.use(new InputValidation({
 Advanced CSP with nonce support:
 
 ```typescript
-import { ContentSecurityPolicy } from 'bun-router/middleware'
+import { ContentSecurityPolicy } from '@stacksjs/bun-router/middleware'
 
 router.use(new ContentSecurityPolicy({
   directives: {
@@ -338,8 +338,8 @@ The security middleware protects against:
 ### API Security Setup
 
 ```typescript
-import { Router } from 'bun-router'
-import { securitySuite } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { securitySuite } from '@stacksjs/bun-router/middleware'
 
 const apiRouter = new Router()
 
@@ -374,8 +374,8 @@ apiRouter.get('/api/users', (req) => {
 ### Web Application Security
 
 ```typescript
-import { Router } from 'bun-router'
-import { securityPresets } from 'bun-router/middleware'
+import { Router } from '@stacksjs/bun-router'
+import { securityPresets } from '@stacksjs/bun-router/middleware'
 
 const webRouter = new Router()
 
@@ -405,7 +405,7 @@ webRouter.get('/', (req) => {
 ### Custom Validation Schema
 
 ```typescript
-import { inputValidation } from 'bun-router/middleware'
+import { inputValidation } from '@stacksjs/bun-router/middleware'
 
 router.use(inputValidation({
   schemas: {

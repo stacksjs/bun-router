@@ -513,7 +513,7 @@ router.group({
 These advanced features can be integrated with your existing bun-router setup:
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 import { createAdvancedRouter } from './src/routing/advanced-router'
 
 // Use advanced router for new features

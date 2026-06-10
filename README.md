@@ -27,13 +27,13 @@ A high-performance, feature-rich router for Bun applications.
 ## Installation
 
 ```bash
-bun add bun-router
+bun add @stacksjs/bun-router
 ```
 
 ## Basic Usage
 
 ```typescript
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Create a router
 const router = new Router()
@@ -70,7 +70,7 @@ const url = router.route('users.show', { id: '123' })
 ## Middleware
 
 ```typescript
-import { cors, jsonBody, Router } from 'bun-router'
+import { cors, jsonBody, Router } from '@stacksjs/bun-router'
 
 const router = new Router()
 
@@ -99,7 +99,7 @@ router.group({
 ### Creating Custom Middleware
 
 ```typescript
-import { EnhancedRequest, MiddlewareHandler, NextFunction } from 'bun-router'
+import { EnhancedRequest, MiddlewareHandler, NextFunction } from '@stacksjs/bun-router'
 
 class LoggerMiddleware {
   async handle(req: EnhancedRequest, next: NextFunction): Promise<Response> {
@@ -118,7 +118,7 @@ bun-router provides seamless integration with Bun's high-performance WebSocket c
 
 ```typescript
 import type { ServerWebSocket } from 'bun'
-import { Router } from 'bun-router'
+import { Router } from '@stacksjs/bun-router'
 
 // Define data type for WebSocket clients
 interface ClientData {
@@ -186,9 +186,9 @@ router.websocket({
   },
 
   // Advanced configuration options
-  maxPayloadLength: 16 _ 1024 _ 1024, // 16MB max message size (default)
+  maxPayloadLength: 16 * 1024 * 1024, // 16MB max message size (default)
   idleTimeout: 120, // 2 minutes (default)
-  backpressureLimit: 1024 _ 1024, // 1MB (default)
+  backpressureLimit: 1024 * 1024, // 1MB (default)
   closeOnBackpressureLimit: false, // Don't close on backpressure limit (default)
 
   // Enable per-message compression
@@ -345,7 +345,7 @@ router.websocket({
       console.log('Backpressure detected, will process more in drain event')
 
       // Store state to resume in drain handler
-      ws.data.pendingOperations = [/_ ...operations to complete _/]
+      ws.data.pendingOperations = [/* ...operations to complete */]
     }
   },
 
@@ -464,7 +464,7 @@ router.get('/login', (req) => {
   req.cookies.set('user_id', '12345', {
     httpOnly: true,
     secure: true,
-    maxAge: 60 _ 60 * 24 // 1 day
+    maxAge: 60 * 60 * 24 // 1 day
   })
 
   return new Response('Logged in')
@@ -479,100 +479,67 @@ router.get('/logout', (req) => {
 
 ### Authentication Helper
 
-Built-in methods for handling various authentication strategies:
+Built-in helpers for JWT, API keys, and OAuth2 (authorization-code flow):
 
 ```typescript
-// Basic Authentication
-router.get('/api/protected', (req) => {
-  const auth = req.auth.basic()
+import { ApiKeyManager, JWT, OAuth2Helper } from '@stacksjs/bun-router'
 
-  if (!auth.isValid()) {
-    return auth.unauthorized('Protected area')
-  }
+// JWT — sign and verify tokens
+const jwt = new JWT('your-secret-key')
 
-  const { username, password } = auth.credentials()
-  // Verify against your user database
-
-  return Response.json({ message: 'Authenticated' })
-})
-
-// Bearer Token Authentication
-router.get('/api/user-profile', (req) => {
-  const auth = req.auth.bearer()
-
-  if (!auth.isValid()) {
-    return auth.unauthorized('Invalid token')
-  }
-
-  const token = auth.token()
-  // Verify token validity
-
-  return Response.json({ message: 'Valid token' })
-})
-
-// JWT Authentication
 router.post('/api/login', async (req) => {
   const { username, password } = await req.json()
-  // Verify credentials
+  // ...verify credentials against your user store...
 
-  const auth = req.auth.jwt()
-  const token = auth.sign({ userId: 123, role: 'admin' }, {
-    expiresIn: '1h',
-    secret: 'your-secret-key'
-  })
-
+  const token = jwt.sign({ userId: 123, role: 'admin' }, { expiresIn: '1h' })
   return Response.json({ token })
 })
 
 router.get('/api/dashboard', (req) => {
-  const auth = req.auth.jwt()
+  // `bearerToken()` reads the `Authorization: Bearer <token>` header
+  const token = req.bearerToken()
+  const payload = token ? jwt.verify(token) : null
 
-  if (!auth.verify({ secret: 'your-secret-key' })) {
-    return auth.unauthorized('Invalid JWT')
+  if (!payload) {
+    return new Response('Unauthorized', { status: 401 })
   }
 
-  const payload = auth.payload()
   return Response.json({ user: payload })
 })
 
-// API Key Authentication
+// API keys — generate, scope, and validate (reads X-API-Key by default)
+const apiKeys = new ApiKeyManager({ keyName: 'X-API-Key' })
+const key = apiKeys.generateKey('acme-corp', ['read:data'], 60 * 60 * 24)
+
 router.get('/api/data', (req) => {
-  const auth = req.auth.apiKey('x-api-key')
-
-  if (!auth.isValid()) {
-    return auth.unauthorized('Invalid API key')
+  const apiKey = apiKeys.extractFromRequest(req)
+  if (!apiKey || !apiKeys.validateKey(apiKey, ['read:data'])) {
+    return new Response('Invalid API key', { status: 401 })
   }
-
-  const apiKey = auth.key()
-  // Verify API key against database and check scopes
-
-  return Response.json({ data: 'Secure data' })
+  return Response.json({ data: 'Secure data', owner: apiKeys.getKeyInfo(apiKey)?.owner })
 })
 
-// OAuth2 Authentication
-router.get('/auth/github', (req) => {
-  const auth = req.auth.oauth2({
-    provider: 'github',
-    clientId: 'your-client-id',
-    redirectUri: 'http://localhost:3000/auth/callback'
-  })
+// OAuth2 — authorization-code flow
+const github = new OAuth2Helper({
+  clientId: 'your-client-id',
+  clientSecret: 'your-client-secret',
+  redirectUri: 'http://localhost:3000/auth/callback',
+  authorizeUrl: 'https://github.com/login/oauth/authorize',
+  tokenUrl: 'https://github.com/login/oauth/access_token',
+  scope: 'read:user',
+})
 
-  return auth.redirect()
+router.get('/auth/github', () => {
+  return Response.redirect(github.getAuthorizationUrl())
 })
 
 router.get('/auth/callback', async (req) => {
-  const auth = req.auth.oauth2({
-    provider: 'github',
-    clientId: 'your-client-id',
-    clientSecret: 'your-client-secret',
-    redirectUri: 'http://localhost:3000/auth/callback'
-  })
-
-  const { accessToken, profile } = await auth.handleCallback(req)
-  // Create or update user record
-
+  const code = new URL(req.url).searchParams.get('code')!
+  const tokens = await github.exchangeCodeForToken(code)
+  // ...create or update the user record with tokens.access_token...
   return Response.redirect('/dashboard')
 })
+```
 
 ### File Streaming
 
