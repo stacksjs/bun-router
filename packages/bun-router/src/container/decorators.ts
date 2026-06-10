@@ -4,13 +4,22 @@
  */
 
 import type { ResolutionContext } from './container'
-import { Container } from './container'
+import {
+  Container,
+  INJECT_METADATA_KEY,
+  INJECTABLE_METADATA_KEY,
+  OPTIONAL_METADATA_KEY,
+  TAGGED_METADATA_KEY,
+} from './container'
 
-// Metadata keys with explicit types
-export const INJECTABLE_METADATA_KEY: unique symbol = Symbol('injectable')
-export const INJECT_METADATA_KEY: unique symbol = Symbol('inject')
-export const OPTIONAL_METADATA_KEY: unique symbol = Symbol('optional')
-export const TAGGED_METADATA_KEY: unique symbol = Symbol('tagged')
+// The injection metadata keys MUST be the container's own symbols — this
+// module previously declared its own `Symbol('inject')` etc., so metadata
+// written by `@Inject` was invisible to `Container.getConstructorDependencies`
+// (which reads with the container's symbols) and constructor injection
+// silently resolved nothing. Re-exported for backward compatibility.
+export { INJECT_METADATA_KEY, INJECTABLE_METADATA_KEY, OPTIONAL_METADATA_KEY, TAGGED_METADATA_KEY }
+
+// Decorator-specific metadata keys
 export const CONTROLLER_METADATA_KEY: unique symbol = Symbol('controller')
 export const ROUTE_METADATA_KEY: unique symbol = Symbol('route')
 export const MIDDLEWARE_METADATA_KEY: unique symbol = Symbol('middleware')

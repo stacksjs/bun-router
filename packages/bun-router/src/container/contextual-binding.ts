@@ -600,4 +600,7 @@ export class BindingConditions {
   }
 }
 
-export { ContextualContainer as DIContainer }
+// NOTE: this module used to also alias `ContextualContainer` as
+// `DIContainer`, colliding with container.ts's `Container as DIContainer`
+// alias — two different classes under one public name. The base
+// container keeps the alias; use `ContextualContainer` explicitly here.
