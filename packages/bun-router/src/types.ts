@@ -1106,6 +1106,22 @@ export interface ServerOptions<T extends WebSocketData = WebSocketData> extends 
    */
   static?: Record<string, Response>
   /**
+   * Opt-in: register compatible routes with `Bun.serve`'s native router
+   * (`routes`), skipping the fetch handler's URL parsing and route
+   * matching for them. Compatible means: standard HTTP method, no
+   * domain scoping, no `where()`/inline constraints, no optional
+   * params, and `{param}`s spanning whole segments. Everything else —
+   * incompatible routes, 404/405 handling, HEAD fallback, the generic
+   * OPTIONS preflight — still flows through the fetch handler with
+   * identical semantics.
+   *
+   * Caveat: Bun matches by specificity (exact > param > wildcard).
+   * Apps that rely on registration order between same-shape overlapping
+   * patterns should leave this off. Routes registered after `serve()`
+   * only join the native table after `reload()`.
+   */
+  nativeRoutes?: boolean
+  /**
    * Development mode options for Bun's dev server.
    * When true, enables HMR and development features.
    * When an object, allows fine-grained control over HMR and console streaming.

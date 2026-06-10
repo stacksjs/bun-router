@@ -4,6 +4,7 @@ This guide covers the comprehensive Bun-specific optimizations available in bun-
 
 ## Table of Contents
 
+- [Native Route Dispatch](#native-route-dispatch)
 - [WebSocket Clustering](#websocket-clustering)
 - [Static File Serving](#static-file-serving)
 - [SQLite Caching](#sqlite-caching)
@@ -11,6 +12,39 @@ This guide covers the comprehensive Bun-specific optimizations available in bun-
 - [Runtime Optimizations](#runtime-optimizations)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Best Practices](#best-practices)
+
+## Native Route Dispatch
+
+Opt in to `Bun.serve()`'s built-in router for compatible routes — they are
+matched in native code and skip the fetch handler's URL parsing and route
+matching entirely:
+
+```typescript
+const router = new Router()
+
+router.get('/users/{id}', req => Response.json({ id: req.params.id }))
+router.post('/users', createUserHandler)
+
+await router.serve({ port: 3000, nativeRoutes: true })
+```
+
+A route goes native when it uses a standard HTTP method, has no domain
+scoping, no `where()`/inline constraints, no optional `{param?}` segments,
+and every `{param}` spans a whole segment. Everything else — and all
+404/405 handling, the HEAD→GET fallback, and the generic OPTIONS
+preflight — still flows through the fetch handler with identical
+semantics. Global middleware, route middleware, cookies, and
+`request()` context all behave the same on both paths.
+
+Two caveats:
+
+- Bun resolves overlapping patterns by specificity (exact > param >
+  wildcard), not by registration order. If your app relies on
+  registration order between same-shape overlapping patterns, leave
+  this off.
+- The native table is a snapshot taken at `serve()`. Routes registered
+  afterwards are served by the fetch handler until you call
+  `router.reload()`, which rebuilds the table.
 
 ## WebSocket Clustering
 

@@ -74,6 +74,7 @@ RequestWithMacros.macroAccessor('cookies', function (this: EnhancedRequest) {
 /**
  * Server handling extension for Router class
  */
+// eslint-disable-next-line pickier/no-unused-vars -- false positive: used on the next line
 export function registerServerHandling(RouterClass: typeof Router): void {
   Object.defineProperties(RouterClass.prototype, {
     /**
@@ -122,6 +123,18 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           serverOptions.development = options.development
         }
 
+        // Opt-in: hand compatible routes to Bun's native router so they
+        // skip the fetch handler's URL parsing and matching entirely.
+        // Incompatible routes and 404/405/HEAD/preflight semantics keep
+        // flowing through the fetch fallback unchanged.
+        this._nativeRoutesEnabled = options.nativeRoutes === true
+        if (this._nativeRoutesEnabled) {
+          const nativeRoutes = this._buildNativeRoutes()
+          if (nativeRoutes) {
+            serverOptions.routes = nativeRoutes
+          }
+        }
+
         // Apply WebSocket configuration if provided
         if (this.wsConfig) {
           serverOptions.websocket = this.wsConfig
@@ -161,13 +174,22 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // Close the current server
         this.serverInstance.stop()
 
-        // Start a new server with the same configuration
-        this.serverInstance = Bun.serve({
+        // Start a new server with the same configuration. The native
+        // route table is rebuilt so routes registered since serve()
+        // join it.
+        const reloadOptions: any = {
           port,
           hostname,
           fetch: this.handleRequest.bind(this),
           websocket: this.wsConfig || undefined,
-        })
+        }
+        if (this._nativeRoutesEnabled) {
+          const nativeRoutes = this._buildNativeRoutes()
+          if (nativeRoutes) {
+            reloadOptions.routes = nativeRoutes
+          }
+        }
+        this.serverInstance = Bun.serve(reloadOptions)
 
         if (this.config.verbose) {
           console.log(`🔄 Server reloaded at http://${hostname}:${port}`)
@@ -186,6 +208,214 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // handleRequestImpl as a public method, so we cast through unknown.
         const self = this as unknown as { handleRequestImpl: (r: Request) => Promise<Response> }
         return runWithRequest(req as EnhancedRequest, () => self.handleRequestImpl(req))
+      },
+      writable: true,
+      configurable: true,
+    },
+
+    /**
+     * Internal: dispatch a matched route — enhance the request, run the
+     * cached middleware chain (global + route middleware + handler) and
+     * apply queued cookies. Shared by the fetch handler and the native
+     * Bun route wrappers.
+     */
+    _dispatchMatchedRoute: {
+      async value(matchedRoute: Route, req: Request, params: Record<string, string>): Promise<Response> {
+        const enhancedReq = this.enhanceRequest(req, params)
+        setCurrentRequest(enhancedReq)
+
+        // Add the matched route to the request
+        enhancedReq.route = matchedRoute
+
+        // Resolve the middleware chain for this route. The composed
+        // chain is cached on the route and only rebuilt when `use()`
+        // registers new global middleware or the route's own stack
+        // changes — building the closure chain per request was a
+        // hot-path cost.
+        const route = matchedRoute as Route & {
+          _compiledChain?: (req: EnhancedRequest) => Promise<Response | null>
+          _chainEpoch?: number
+          _chainMwLen?: number
+        }
+        const epoch: number = this._mwEpoch || 0
+        const routeMwLen = route.middleware ? route.middleware.length : 0
+
+        let chain = route._compiledChain
+        if (!chain || route._chainEpoch !== epoch || route._chainMwLen !== routeMwLen) {
+          // The handler's dispatch branch (function vs class vs string
+          // action) is resolved once here instead of per request
+          const invoke = createHandlerInvoker(route.handler, this.config)
+
+          if (routeMwLen === 0 && this.globalMiddleware.length === 0) {
+            // No middleware: the chain is the bare invoker — no
+            // closure tower, no next() allocations per request
+            chain = invoke
+          }
+          else {
+            const middlewareStack = routeMwLen > 0
+              ? [...this.globalMiddleware, ...route.middleware]
+              : [...this.globalMiddleware]
+            middlewareStack.push((handlerReq: EnhancedRequest, _next: any) => invoke(handlerReq))
+            chain = this.buildMiddlewareChain(middlewareStack)!
+          }
+          route._compiledChain = chain
+          route._chainEpoch = epoch
+          route._chainMwLen = routeMwLen
+        }
+
+        let response: Response | null
+        try {
+          response = await chain!(enhancedReq)
+        }
+        catch (error) {
+          if (this.errorHandler) {
+            response = await this.errorHandler(error as Error)
+          }
+          else {
+            throw error
+          }
+        }
+
+        // Apply modified cookies to the response
+        if (response) {
+          return this.applyModifiedCookies(response, enhancedReq)
+        }
+
+        // This should not happen since we're always returning a response now
+        return new Response('No response from middleware chain', { status: 500 })
+      },
+      writable: true,
+      configurable: true,
+    },
+
+    /**
+     * Internal: build Bun.serve's native `routes` table from compatible
+     * registered routes (see `ServerOptions.nativeRoutes`). Returns null
+     * when nothing qualifies.
+     */
+    _buildNativeRoutes: {
+      value(): Record<string, Record<string, (req: Request) => Promise<Response>>> | null {
+        const NATIVE_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'])
+
+        // Convert `{param}` paths to Bun's `:param` syntax. Returns null
+        // for shapes the native router can't express with our semantics:
+        // optional params, constraints, mixed segments like `user-{id}`,
+        // and non-trailing wildcards.
+        const convertPath = (path: string): string | null => {
+          if (path === '*') {
+            return '/*'
+          }
+          const segments = path.split('/')
+          const converted: string[] = []
+          for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]
+            if (segment === '') {
+              converted.push(segment)
+              continue
+            }
+            if (segment === '*') {
+              // Wildcards only in the trailing position
+              return i === segments.length - 1 ? [...converted, '*'].join('/') : null
+            }
+            const paramMatch = segment.match(/^\{([A-Z_$][\w$]*)\}$/i)
+            if (paramMatch) {
+              converted.push(`:${paramMatch[1]}`)
+              continue
+            }
+            if (segment.includes('{') || segment.includes(':') || segment.includes('*')) {
+              return null
+            }
+            converted.push(segment)
+          }
+          return converted.join('/')
+        }
+
+        // Wrap a route in the same context/error envelope the fetch
+        // handler provides, so handlers can't tell which router matched
+        const self = this
+        const wrapRoute = (route: Route, isWildcard: boolean) => {
+          return (req: Request & { params?: Record<string, string> }) => {
+            return runWithRequest(req as EnhancedRequest, async () => {
+              try {
+                let params: Record<string, string> = req.params ?? {}
+                if (isWildcard) {
+                  // Bun doesn't expose the wildcard remainder as a param;
+                  // mirror the fetch matcher's `wildcard` key
+                  const pathname = new URL(req.url).pathname
+                  const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
+                  params = { ...params, wildcard: pathname.slice(basePath.length) }
+                }
+                return await self._dispatchMatchedRoute(route, req, params)
+              }
+              catch (error) {
+                console.error('Error handling request:', error)
+                if (self.errorHandler) {
+                  return self.errorHandler(error as Error)
+                }
+                return new Response(JSON.stringify({
+                  success: false,
+                  message: 'Internal Server Error',
+                  error: error instanceof Error ? error.message : String(error),
+                }), {
+                  status: 500,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+                  },
+                })
+              }
+            })
+          }
+        }
+
+        const natives: Record<string, Record<string, (req: Request) => Promise<Response>>> = {}
+        // Bun resolves same-shape patterns by specificity, not by our
+        // registration order — only the first registration of a given
+        // shape goes native; later ones would silently shadow it
+        const claimedShapes = new Map<string, string>()
+
+        for (const route of this.routes as Route[]) {
+          if (!NATIVE_METHODS.has(route.method)) {
+            continue
+          }
+          // Constrained params need our matcher
+          if (route.constraints && Object.keys(route.constraints).length > 0) {
+            continue
+          }
+          // Response-handler routes are already served via Bun's static map
+          if (route.handler instanceof Response) {
+            continue
+          }
+          const bunPath = convertPath(route.path)
+          if (!bunPath) {
+            continue
+          }
+
+          const shape = bunPath.replace(/:[^/]+/g, ':p')
+          const claimedBy = claimedShapes.get(shape)
+          if (claimedBy && claimedBy !== bunPath) {
+            continue
+          }
+          claimedShapes.set(shape, bunPath)
+
+          const entry = (natives[bunPath] ??= {})
+          if (entry[route.method]) {
+            continue // first registration wins, matching the fetch matcher
+          }
+          entry[route.method] = wrapRoute(route, route.path.endsWith('*'))
+        }
+
+        // GET routes answer HEAD automatically (mirrors the fetch
+        // matcher's HEAD→GET fallback, but stays on the native fast path)
+        for (const entry of Object.values(natives)) {
+          if (entry.GET && !entry.HEAD) {
+            entry.HEAD = entry.GET
+          }
+        }
+
+        return Object.keys(natives).length > 0 ? natives : null
       },
       writable: true,
       configurable: true,
@@ -229,71 +459,14 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             return new Response(null, { status: 204, headers: preflightHeaders })
           }
 
-          // Enhance the request with params and other utilities
-          const enhancedReq = this.enhanceRequest(req, match?.params || {})
-          setCurrentRequest(enhancedReq)
-
           if (match) {
-            // Add the matched route to the request
-            enhancedReq.route = match.route
-
-            // Resolve the middleware chain for this route. The composed
-            // chain (global middleware + route middleware + handler) is
-            // cached on the route and only rebuilt when `use()` registers
-            // new global middleware or the route's own stack changes —
-            // building the closure chain per request was a hot-path cost.
-            const route = match.route as Route & {
-              _compiledChain?: (req: EnhancedRequest) => Promise<Response | null>
-              _chainEpoch?: number
-              _chainMwLen?: number
-            }
-            const epoch: number = this._mwEpoch || 0
-            const routeMwLen = route.middleware ? route.middleware.length : 0
-
-            let chain = route._compiledChain
-            if (!chain || route._chainEpoch !== epoch || route._chainMwLen !== routeMwLen) {
-              // The handler's dispatch branch (function vs class vs string
-              // action) is resolved once here instead of per request
-              const invoke = createHandlerInvoker(route.handler, this.config)
-
-              if (routeMwLen === 0 && this.globalMiddleware.length === 0) {
-                // No middleware: the chain is the bare invoker — no
-                // closure tower, no next() allocations per request
-                chain = invoke
-              }
-              else {
-                const middlewareStack = routeMwLen > 0
-                  ? [...this.globalMiddleware, ...route.middleware]
-                  : [...this.globalMiddleware]
-                middlewareStack.push((handlerReq: EnhancedRequest, _next: any) => invoke(handlerReq))
-                chain = this.buildMiddlewareChain(middlewareStack)!
-              }
-              route._compiledChain = chain
-              route._chainEpoch = epoch
-              route._chainMwLen = routeMwLen
-            }
-
-            let response: Response | null
-            try {
-              response = await chain!(enhancedReq)
-            }
-            catch (error) {
-              if (this.errorHandler) {
-                response = await this.errorHandler(error as Error)
-              }
-              else {
-                throw error
-              }
-            }
-
-            // Apply modified cookies to the response
-            if (response) {
-              return this.applyModifiedCookies(response, enhancedReq)
-            }
-
-            // This should not happen since we're always returning a response now
-            return new Response('No response from middleware chain', { status: 500 })
+            return await this._dispatchMatchedRoute(match.route, req, match.params)
           }
+
+          // Enhance the request with params and other utilities (the
+          // matched-route path enhances inside _dispatchMatchedRoute)
+          const enhancedReq = this.enhanceRequest(req, {})
+          setCurrentRequest(enhancedReq)
 
           // No route found - check if the path exists with a different method (405 vs 404).
           // The 404/405 responses below now (a) include path + method in the body so client
@@ -391,7 +564,20 @@ export function registerServerHandling(RouterClass: typeof Router): void {
     enhanceRequest: {
       value(req: Request, params: Record<string, string> = {}): EnhancedRequest {
         const enhancedReq = req as unknown as EnhancedRequest
-        enhancedReq.params = params
+        if ('params' in req) {
+          // Bun's native-route requests expose `params` as a readonly
+          // prototype getter — plain assignment throws. An own property
+          // shadows it (and carries our augmentations, e.g. `wildcard`).
+          Object.defineProperty(enhancedReq, 'params', {
+            value: params,
+            writable: true,
+            configurable: true,
+            enumerable: true,
+          })
+        }
+        else {
+          enhancedReq.params = params
+        }
         RequestWithMacros.applyMacros(enhancedReq)
         return enhancedReq
       },
