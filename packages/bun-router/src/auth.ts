@@ -1,4 +1,5 @@
-import type { EnhancedRequest, JwtPayload } from './types'
+import type { EnhancedRequest, JwtHeader, JwtPayload } from './types'
+import { timingSafeEqual } from 'node:crypto'
 
 // Types
 export interface JwtVerifyOptions {
@@ -22,8 +23,23 @@ export interface JwtSignOptions {
   keyid?: string
   jwtid?: string
   noTimestamp?: boolean
-  header?: Record<string, any>
+  header?: Partial<JwtHeader>
   encoding?: string
+}
+
+/**
+ * Token endpoint response for the OAuth2 authorization-code flow
+ * (RFC 6749 §5.1). Providers may include extra fields — they're preserved
+ * under the index signature.
+ */
+export interface OAuth2TokenResponse {
+  access_token: string
+  token_type: string
+  expires_in?: number
+  refresh_token?: string
+  scope?: string
+  id_token?: string
+  [key: string]: string | number | undefined
 }
 
 export interface ApiKeyOptions {
@@ -74,7 +90,7 @@ export class JWT {
   /**
    * Sign payload into a JWT token
    */
-  sign(payload: Record<string, any>, options: JwtSignOptions = {}): string {
+  sign(payload: JwtPayload, options: JwtSignOptions = {}): string {
     // Default header
     const header = {
       alg: options.algorithm || 'HS256',
@@ -132,7 +148,7 @@ export class JWT {
   /**
    * Verify a JWT token and return the decoded payload
    */
-  verify(token: string, options: JwtVerifyOptions = {}): Record<string, any> | null {
+  verify(token: string, options: JwtVerifyOptions = {}): JwtPayload | null {
     try {
       const parts = token.split('.')
 
@@ -143,8 +159,8 @@ export class JWT {
       const [encodedHeader, encodedPayload, signature] = parts
 
       // Decode header and payload
-      const header = JSON.parse(base64UrlDecode(encodedHeader))
-      const payload = JSON.parse(base64UrlDecode(encodedPayload))
+      const header = JSON.parse(base64UrlDecode(encodedHeader)) as JwtHeader
+      const payload = JSON.parse(base64UrlDecode(encodedPayload)) as JwtPayload
 
       // Verify algorithm if specified
       if (options.algorithms && !options.algorithms.includes(header.alg)) {
@@ -156,7 +172,11 @@ export class JWT {
       const data = `${encodedHeader}.${encodedPayload}`
       const expectedSignature = this.createSignature(data, this.secret, header.alg)
 
-      if (signature !== expectedSignature) {
+      // Constant-time comparison — `!==` leaks how much of the signature
+      // matched through response timing
+      const sigBuf = Buffer.from(signature)
+      const expectedBuf = Buffer.from(expectedSignature)
+      if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
         throw new Error('Invalid signature')
       }
 
@@ -200,7 +220,7 @@ export class JWT {
   /**
    * Decode a JWT token without verifying the signature
    */
-  decode(token: string): { header: Record<string, any>, payload: Record<string, any> } | null {
+  decode(token: string): { header: JwtHeader, payload: JwtPayload } | null {
     try {
       const parts = token.split('.')
 
@@ -402,7 +422,7 @@ export class OAuth2Helper {
   /**
    * Exchange authorization code for access token
    */
-  async exchangeCodeForToken(code: string): Promise<Record<string, any>> {
+  async exchangeCodeForToken(code: string): Promise<OAuth2TokenResponse> {
     const params = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
@@ -423,13 +443,13 @@ export class OAuth2Helper {
       throw new Error(`OAuth token exchange failed: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json() as Record<string, any>
+    return await response.json() as OAuth2TokenResponse
   }
 
   /**
    * Refresh an access token using a refresh token
    */
-  async refreshToken(refreshToken: string): Promise<Record<string, any>> {
+  async refreshToken(refreshToken: string): Promise<OAuth2TokenResponse> {
     const params = new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
@@ -449,7 +469,7 @@ export class OAuth2Helper {
       throw new Error(`OAuth token refresh failed: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json() as Record<string, any>
+    return await response.json() as OAuth2TokenResponse
   }
 }
 
