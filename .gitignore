@@ -14,3 +14,8 @@ docs/.vitepress/cache
 .env
 packages/bun-router/bin/router
 pantry
+# Generated CLI artifacts (bun-router middleware-map output)
+packages/bun-router/middleware-map.ts
+packages/bun-router/temp-middleware-map.ts
+packages/bun-router/test-map.ts
+packages/bun-router/test-middleware-map.ts
