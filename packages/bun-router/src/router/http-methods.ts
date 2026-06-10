@@ -147,8 +147,11 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
           registerNamedRoute(name, route.path)
         }
 
-        // Add to optimized route compiler if available
-        if (this.addRouteToCompiler) {
+        // Add to optimized route compiler if available. Domain-scoped routes
+        // stay out of the shared trie — its cache is keyed by method+path
+        // only, so a domain route in the trie could be served to the wrong
+        // host. They are matched by the domain-aware fallback instead.
+        if (this.addRouteToCompiler && !domain) {
           this.addRouteToCompiler(route)
         }
 
@@ -251,6 +254,23 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
       configurable: true,
     },
 
+    // HTTP HEAD method. Note: GET routes already answer HEAD requests
+    // automatically — register an explicit HEAD route only when the HEAD
+    // behavior must differ from GET.
+    head: {
+      value(
+        path: string,
+        handler: ActionHandler,
+        type?: 'api' | 'web',
+        name?: string,
+        middleware?: (string | MiddlewareHandler)[],
+      ): Router {
+        return this.addRoute('HEAD', path, handler, type, name, middleware)
+      },
+      writable: true,
+      configurable: true,
+    },
+
     // Register a route that responds to multiple HTTP methods
     match: {
       value(
@@ -309,6 +329,15 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         for (const [param, value] of Object.entries(params)) {
           url = url.replace(`{${param}}`, encodeURIComponent(value))
           url = url.replace(`{${param}?}`, encodeURIComponent(value))
+        }
+
+        // Drop unfilled optional placeholders and tidy up the slashes
+        // they leave behind (`/posts/{page?}` → `/posts`)
+        if (url.includes('{')) {
+          url = url.replace(/\{[^}]+\?\}/g, '').replace(/\/{2,}/g, '/')
+          if (url.length > 1 && url.endsWith('/')) {
+            url = url.slice(0, -1)
+          }
         }
 
         return url

@@ -162,6 +162,9 @@ declare module './router' {
       edit?: ActionHandler
     }) => Router
 
+    // HTTP HEAD method (GET routes already answer HEAD automatically)
+    head: (path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string, middleware?: any[]) => Router
+
     // Redirect and utility methods
     onError: (handler: (error: Error) => Response | Promise<Response>) => Router
     redirect: (url: string, status?: 301 | 302 | 303 | 307 | 308) => Response
