@@ -18,6 +18,12 @@ export interface StaticFileConfig {
   compressionThreshold?: number
   cacheControl?: string
   dotfiles?: 'allow' | 'deny' | 'ignore'
+  /**
+   * Files larger than this (bytes) are streamed straight from disk via
+   * `Bun.file()` instead of being buffered into the in-memory cache.
+   * Streamed responses support HTTP Range requests (206). Default: 5 MiB.
+   */
+  maxCacheFileSize?: number
 }
 
 export interface FileCache {
@@ -62,6 +68,7 @@ export class StaticFileServer {
       compressionThreshold: config.compressionThreshold ?? 1024,
       cacheControl: config.cacheControl ?? '',
       dotfiles: config.dotfiles ?? 'ignore',
+      maxCacheFileSize: config.maxCacheFileSize ?? 5 * 1024 * 1024, // 5 MiB
       ...config,
     }
   }
@@ -71,10 +78,19 @@ export class StaticFileServer {
    */
   async serve(request: Request): Promise<Response | null> {
     const url = new URL(request.url)
-    const pathname = decodeURIComponent(url.pathname)
 
-    // Security: prevent directory traversal
-    if (pathname.includes('..') || pathname.includes('\0')) {
+    // Malformed percent-encoding must not crash the server with a 500
+    let pathname: string
+    try {
+      pathname = decodeURIComponent(url.pathname)
+    }
+    catch {
+      return new Response('Bad Request', { status: 400 })
+    }
+
+    // Security: prevent directory traversal (the check runs after
+    // decoding, so encoded forms like %2e%2e are covered too)
+    if (pathname.includes('..') || pathname.includes('\0') || pathname.includes('\\')) {
       return new Response('Forbidden', { status: 403 })
     }
 
@@ -120,6 +136,12 @@ export class StaticFileServer {
       // Check if cached version is still valid
       if (cached && cached.lastModified === lastModified) {
         return this.serveCachedFile(request, cached, requestPath, startTime)
+      }
+
+      // Large files are streamed straight from disk (with Range support)
+      // instead of buffered into the in-memory cache
+      if (size > this.config.maxCacheFileSize) {
+        return this.serveStreamedFile(request, filePath, requestPath, lastModified, startTime)
       }
 
       // Read and cache file
@@ -224,6 +246,75 @@ export class StaticFileServer {
     this.updateStats(requestPath, content.byteLength, startTime, false)
 
     return new Response(content, { headers })
+  }
+
+  /**
+   * Stream a file from disk without buffering it into memory.
+   * Supports single-range HTTP Range requests (RFC 9110 §14).
+   */
+  private serveStreamedFile(
+    request: Request,
+    filePath: string,
+    requestPath: string,
+    lastModified: string,
+    startTime: number,
+  ): Response {
+    const file = Bun.file(filePath)
+    const size = file.size
+    const mimeType = file.type || this.getMimeType(filePath)
+
+    const headers = new Headers()
+    headers.set('Content-Type', mimeType)
+    headers.set('Accept-Ranges', 'bytes')
+
+    if (this.config.lastModified) {
+      headers.set('Last-Modified', lastModified)
+      if (request.headers.get('if-modified-since') === lastModified) {
+        this.updateStats(requestPath, 0, startTime, true)
+        return new Response(null, { status: 304, headers })
+      }
+    }
+
+    if (this.config.cacheControl) {
+      headers.set('Cache-Control', this.config.cacheControl)
+    }
+    else {
+      headers.set('Cache-Control', this.config.immutable
+        ? `public, max-age=${this.config.maxAge}, immutable`
+        : `public, max-age=${this.config.maxAge}`)
+    }
+
+    // Single-range requests: "bytes=start-end", "bytes=start-", "bytes=-suffix"
+    const rangeHeader = request.headers.get('range')
+    const rangeMatch = rangeHeader?.match(/^bytes=(\d*)-(\d*)$/)
+    if (rangeMatch && (rangeMatch[1] !== '' || rangeMatch[2] !== '')) {
+      let start: number
+      let end: number
+      if (rangeMatch[1] === '') {
+        // Suffix range: last N bytes
+        const suffixLength = Number(rangeMatch[2])
+        start = Math.max(0, size - suffixLength)
+        end = size - 1
+      }
+      else {
+        start = Number(rangeMatch[1])
+        end = rangeMatch[2] === '' ? size - 1 : Math.min(Number(rangeMatch[2]), size - 1)
+      }
+
+      if (start > end || start >= size) {
+        headers.set('Content-Range', `bytes */${size}`)
+        return new Response(null, { status: 416, headers })
+      }
+
+      headers.set('Content-Range', `bytes ${start}-${end}/${size}`)
+      headers.set('Content-Length', String(end - start + 1))
+      this.updateStats(requestPath, end - start + 1, startTime, false)
+      return new Response(file.slice(start, end + 1), { status: 206, headers })
+    }
+
+    headers.set('Content-Length', String(size))
+    this.updateStats(requestPath, size, startTime, false)
+    return new Response(file, { headers })
   }
 
   /**
@@ -378,6 +469,15 @@ export class StaticFileServer {
   clearCache(): void {
     this.cache.clear()
     this.compressionCache.clear()
+  }
+
+  /**
+   * Invalidate a single cached file (e.g. from a file watcher), leaving
+   * the rest of the cache warm.
+   */
+  invalidateFile(filePath: string): void {
+    this.cache.delete(filePath)
+    this.compressionCache.delete(filePath)
   }
 
   /**
@@ -567,15 +667,52 @@ export const FileServingUtils = {
    */
   createFileWatcher: async (server: StaticFileServer, watchPath: string): Promise<{ close: () => void }> => {
     const fs = await import('node:fs')
-    const watcher = fs.watch(watchPath, { recursive: true }, (eventType: string, filename: string | null) => {
-      if (eventType === 'change' || eventType === 'rename') {
+    const path = await import('node:path')
+
+    // Changes are debounced and invalidated per-file: a burst of writes
+    // (build output, git checkout) used to flush the entire cache once
+    // per event. Events without a filename still fall back to a full clear.
+    const pendingFiles = new Set<string>()
+    let fullClear = false
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+    const flush = () => {
+      debounceTimer = null
+      if (fullClear) {
         server.clearCache()
-        console.warn(`File changed: ${filename || 'unknown'}, cache cleared`)
       }
+      else {
+        for (const file of pendingFiles) {
+          server.invalidateFile(file)
+        }
+      }
+      pendingFiles.clear()
+      fullClear = false
+    }
+
+    const watcher = fs.watch(watchPath, { recursive: true }, (eventType: string, filename: string | null) => {
+      if (eventType !== 'change' && eventType !== 'rename') {
+        return
+      }
+      if (filename) {
+        pendingFiles.add(path.join(watchPath, filename))
+      }
+      else {
+        fullClear = true
+      }
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      debounceTimer = setTimeout(flush, 100)
     })
 
     return {
-      close: () => watcher.close(),
+      close: () => {
+        if (debounceTimer) {
+          clearTimeout(debounceTimer)
+        }
+        watcher.close()
+      },
     }
   },
 }
