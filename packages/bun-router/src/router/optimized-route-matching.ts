@@ -46,20 +46,38 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
       value(path: string, method: HTTPMethod, domain?: string): MatchResult | undefined {
         this.initializeRouteCompiler()
 
-        // Use the optimized compiler for matching
-        const match = this.routeCompiler.match(path, method)
+        // Domain-scoped routes are matched by the domain-aware fallback.
+        // The trie (and its cache key) is method+path only, so letting it
+        // answer for hosts with registered domain routes would let one
+        // domain's cached match poison another's.
+        if (domain && this.domains[domain]) {
+          const domainMatch = this.fallbackMatchRoute(path, method, domain)
+          if (domainMatch) {
+            return domainMatch
+          }
+        }
+        else {
+          // Use the optimized compiler for matching
+          const match = this.routeCompiler.match(path, method)
 
-        if (match) {
-          // Check domain constraints if specified
-          if (domain && match.route.domain && match.route.domain !== domain) {
-            return undefined
+          if (match && (!domain || !match.route.domain || match.route.domain === domain)) {
+            return match
           }
 
-          return match
+          // Fallback to original matching for edge cases (optional params, etc.)
+          const fallback = this.fallbackMatchRoute(path, method, domain)
+          if (fallback) {
+            return fallback
+          }
         }
 
-        // Fallback to original matching for edge cases
-        return this.fallbackMatchRoute(path, method, domain)
+        // A HEAD request is served by the matching GET route when no
+        // explicit HEAD route exists (RFC 9110 §9.3.2)
+        if (method === 'HEAD') {
+          return this.matchRoute(path, 'GET', domain)
+        }
+
+        return undefined
       },
       writable: true,
       configurable: true,
@@ -78,6 +96,12 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
         // Check legacy cache first
         if (this.routeCache.has(cacheKey)) {
           return this.routeCache.get(cacheKey)
+        }
+
+        // Bound the legacy cache — high-cardinality dynamic paths would
+        // otherwise grow it without limit
+        if (this.routeCache.size >= 10_000) {
+          this.routeCache.clear()
         }
 
         // Fast path for static routes
@@ -128,6 +152,31 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
           }
         }
 
+        // Try wildcard routes — domain-scoped first, then global
+        const wildcardPools: Route[][] = domain && this.domains[domain]
+          ? [this.domains[domain], this.routes]
+          : [this.routes]
+
+        for (const pool of wildcardPools) {
+          for (const route of pool) {
+            if (route.method !== method || !route.path.endsWith('*')) {
+              continue
+            }
+            const basePath = route.path.slice(0, -1) // Remove the '*'
+            if (url.pathname.startsWith(basePath)) {
+              const result = {
+                route,
+                params: { wildcard: url.pathname.slice(basePath.length) },
+              }
+              this.routeCache.set(cacheKey, result)
+              return result
+            }
+          }
+        }
+
+        // Cache the miss too — repeated requests for an unknown path skip
+        // the full scan (the cache is cleared whenever routes change)
+        this.routeCache.set(cacheKey, undefined)
         return undefined
       },
       writable: true,
