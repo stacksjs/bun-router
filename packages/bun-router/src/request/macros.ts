@@ -9,6 +9,12 @@ import type { EnhancedRequest } from '../types'
 export interface RequestMacro {
   name: string
   handler: (this: EnhancedRequest, ...args: any[]) => any
+  /**
+   * Accessor macros are installed as getters on the macro prototype —
+   * `req.<name>` invokes the handler instead of returning a function.
+   * Assignment shadows the accessor with an own property.
+   */
+  accessor?: boolean
 }
 
 // Hoisted hot-path helpers — compiled once instead of per call
@@ -30,7 +36,7 @@ function getParsedURL(req: EnhancedRequest): URL {
   return cache._parsedURL
 }
 
-function getParsedCookies(req: EnhancedRequest): Record<string, string> {
+export function getParsedCookies(req: EnhancedRequest): Record<string, string> {
   const cache = req as EnhancedRequest & RequestParseCache
   if (!cache._parsedCookies) {
     const cookies: Record<string, string> = {}
@@ -68,8 +74,8 @@ class RequestMacroRegistry {
   /**
    * Register a request macro
    */
-  register(name: string, handler: (this: EnhancedRequest, ...args: any[]) => any): void {
-    this.macros.set(name, { name, handler })
+  register(name: string, handler: (this: EnhancedRequest, ...args: any[]) => any, accessor = false): void {
+    this.macros.set(name, { name, handler, accessor })
     this.epoch++
   }
 
@@ -146,6 +152,16 @@ export class RequestWithMacros {
   }
 
   /**
+   * Register an accessor macro: `req.<name>` evaluates the getter
+   * (instead of exposing a callable). Assignment to the property
+   * shadows the accessor with an own value, so consumers that set
+   * `req.<name> = ...` keep working.
+   */
+  static macroAccessor(name: string, getter: (this: EnhancedRequest) => any): void {
+    requestMacroRegistry.register(name, getter, true)
+  }
+
+  /**
    * Apply macros to a request object.
    *
    * Macros are attached via a shared prototype inserted between the
@@ -176,7 +192,24 @@ export class RequestWithMacros {
     if (!proto) {
       proto = Object.create(base) as Record<PropertyKey, unknown>
       for (const macro of requestMacroRegistry.all()) {
-        proto[macro.name] = macro.handler
+        if (macro.accessor) {
+          Object.defineProperty(proto, macro.name, {
+            get: macro.handler,
+            // Assignment shadows the accessor with an own property
+            set(value: unknown) {
+              Object.defineProperty(this, macro.name, {
+                value,
+                writable: true,
+                configurable: true,
+                enumerable: true,
+              })
+            },
+            configurable: true,
+          })
+        }
+        else {
+          proto[macro.name] = macro.handler
+        }
       }
       Object.defineProperty(proto, MACRO_PROTO, { value: true })
       Object.defineProperty(proto, MACRO_BASE, { value: base })

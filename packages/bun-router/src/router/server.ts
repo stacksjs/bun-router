@@ -1,7 +1,7 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
-import { RequestWithMacros } from '../request/macros'
+import { getParsedCookies, RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
 
 // Helpers that frameworks layered on bun-router treat as guaranteed but
@@ -23,6 +23,52 @@ if (!RequestWithMacros.hasMacro('get')) {
     return value !== null && value !== undefined ? value : defaultValue
   })
 }
+// `cookies` — dual-shape, mirroring the response macros (#1857): callable
+// as `req.cookies()` (the legacy built-in macro form, returns the parsed
+// map) while also carrying the name→value entries for direct access and
+// the get/set/delete/getAll utility methods `EnhancedRequest` declares.
+// Installed as a shared-prototype accessor: the hybrid materializes on
+// first access and is cached as an own property, so requests that never
+// touch cookies do zero cookie work.
+RequestWithMacros.macroAccessor('cookies', function (this: EnhancedRequest) {
+  const req = this
+  const cookies = (): Record<string, string> => ({ ...getParsedCookies(req) })
+
+  // Direct map access (req.cookies.session). defineProperty instead of
+  // Object.assign — a cookie literally named `name` or `length` would
+  // collide with the function's own non-writable properties.
+  for (const [key, value] of Object.entries(getParsedCookies(req))) {
+    Object.defineProperty(cookies, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    })
+  }
+
+  cookies.get = (name: string) => getParsedCookies(req)[name]
+  cookies.set = (name: string, value: string, options: any = {}) => {
+    if (!req._cookiesToSet) {
+      req._cookiesToSet = []
+    }
+    req._cookiesToSet.push({ name, value, options })
+  }
+  cookies.delete = (name: string, options: any = {}) => {
+    if (!req._cookiesToDelete) {
+      req._cookiesToDelete = []
+    }
+    req._cookiesToDelete.push({ name, options })
+  }
+  cookies.getAll = () => ({ ...getParsedCookies(req) })
+
+  Object.defineProperty(req, 'cookies', {
+    value: cookies,
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  })
+  return cookies
+})
 
 /**
  * Server handling extension for Router class
@@ -322,89 +368,17 @@ export function registerServerHandling(RouterClass: typeof Router): void {
     },
 
     /**
-     * Enhance a request with params and other utilities
+     * Enhance a request with params and other utilities.
+     *
+     * Per-request work is intentionally minimal: assign `params` and
+     * insert the shared macro prototype. Everything else (cookies,
+     * input helpers, URL parsing) lives on the prototype and
+     * materializes lazily on first access.
      */
     enhanceRequest: {
       value(req: Request, params: Record<string, string> = {}): EnhancedRequest {
-        // Lazy cookie parsing — most requests never read a cookie, so the
-        // header is only parsed (and decoded) on first access. Malformed
-        // percent-encoding falls back to the raw value instead of throwing.
-        let parsedCookies: Record<string, string> | null = null
-
-        const getCookies = () => {
-          if (parsedCookies === null) {
-            parsedCookies = {}
-            const cookieHeader = req.headers.get('cookie')
-            if (cookieHeader) {
-              for (const cookie of cookieHeader.split(';')) {
-                const eqIndex = cookie.indexOf('=')
-                if (eqIndex === -1)
-                  continue
-                const name = cookie.slice(0, eqIndex).trim()
-                if (!name)
-                  continue
-                const value = cookie.slice(eqIndex + 1).trim()
-                try {
-                  parsedCookies[name] = decodeURIComponent(value)
-                }
-                catch {
-                  parsedCookies[name] = value
-                }
-              }
-            }
-          }
-          return parsedCookies
-        }
-
-        // Cookie utility methods (get/set/delete/getAll)
-        const cookieMethods = {
-          get: (name: string) => getCookies()[name],
-          set: (name: string, value: string, options: any = {}) => {
-            const enhancedRequest = req as EnhancedRequest
-            if (!enhancedRequest._cookiesToSet) {
-              enhancedRequest._cookiesToSet = []
-            }
-            enhancedRequest._cookiesToSet.push({ name, value, options })
-          },
-          delete: (name: string, options: any = {}) => {
-            const enhancedRequest = req as EnhancedRequest
-            if (!enhancedRequest._cookiesToDelete) {
-              enhancedRequest._cookiesToDelete = []
-            }
-            enhancedRequest._cookiesToDelete.push({ name, options })
-          },
-          getAll: () => ({ ...getCookies() }),
-        }
-
-        // Create enhanced request. `_cookiesToSet`/`_cookiesToDelete` are
-        // created lazily by the cookie methods — most requests never set
-        // a cookie, so the empty arrays were wasted allocations.
         const enhancedReq = Object.assign(req, { params }) as unknown as EnhancedRequest
-
-        // Attach registered request macros (input, has, bearerToken, cookie,
-        // getParam, get, etc.) via the shared macro prototype — one
-        // setPrototypeOf instead of per-request closure assignment.
         RequestWithMacros.applyMacros(enhancedReq)
-
-        // `cookies` is both a plain name→value map (direct access) and the
-        // get/set/delete/getAll utility. The merged object is materialized
-        // lazily on first access so requests that never touch cookies skip
-        // header parsing entirely. Defined as an own property so it shadows
-        // the `cookies` macro on the prototype.
-        // Name→value map merged with the get/set/delete/getAll helpers; the
-        // function-valued keys make a strict Record<string, string> impossible
-        let cookiesObject: Record<string, unknown> | null = null
-        Object.defineProperty(enhancedReq, 'cookies', {
-          get() {
-            if (cookiesObject === null) {
-              cookiesObject = { ...getCookies(), ...cookieMethods }
-            }
-            return cookiesObject
-          },
-          configurable: true,
-          enumerable: true,
-        })
-
         return enhancedReq
       },
       writable: true,
