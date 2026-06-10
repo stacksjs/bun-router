@@ -380,6 +380,10 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           if (!NATIVE_METHODS.has(route.method)) {
             continue
           }
+          // Explicit per-route opt-out (router.withoutNativeDispatch())
+          if (route.nativeDispatch === false) {
+            continue
+          }
           // Constrained params need our matcher
           if (route.constraints && Object.keys(route.constraints).length > 0) {
             continue

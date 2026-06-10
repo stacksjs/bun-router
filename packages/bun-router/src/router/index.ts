@@ -140,6 +140,9 @@ declare module './router' {
     renderView: (view: string, data?: Record<string, any>, options?: { layout?: string }) => Promise<string>
     view: (path: string, view: string, data?: Record<string, any>, options?: { layout?: string, status?: number, headers?: Record<string, string> }) => Router
 
+    // Keep the most recently registered route off the native route table
+    withoutNativeDispatch: () => Router
+
     // Route constraint methods
     where: ((_param: string, _pattern: string | RegExp) => Router) & ((constraints: Record<string, string | RegExp>) => Router)
     whereNumber: (param: string) => Router

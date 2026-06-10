@@ -5,6 +5,7 @@ import { matchPath } from '../utils'
 /**
  * Route matching extension for Router class
  */
+// eslint-disable-next-line pickier/no-unused-vars -- false positive: used on the next line
 export function registerRouteMatching(RouterClass: typeof Router): void {
   Object.defineProperties(RouterClass.prototype, {
     /**
@@ -285,6 +286,24 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
           }
         }
 
+        return this
+      },
+      writable: true,
+      configurable: true,
+    },
+
+    /**
+     * Keep the most recently registered route on the fetch-handler
+     * matcher even when serving with `nativeRoutes: true`. Useful when a
+     * route must respect registration-order precedence against an
+     * overlapping pattern (Bun's native router resolves by specificity).
+     */
+    withoutNativeDispatch: {
+      value(): Router {
+        const lastRoute = this.routes[this.routes.length - 1]
+        if (lastRoute) {
+          lastRoute.nativeDispatch = false
+        }
         return this
       },
       writable: true,

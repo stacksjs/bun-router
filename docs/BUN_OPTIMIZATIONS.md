@@ -34,14 +34,25 @@ and every `{param}` spans a whole segment. Everything else — and all
 404/405 handling, the HEAD→GET fallback, and the generic OPTIONS
 preflight — still flows through the fetch handler with identical
 semantics. Global middleware, route middleware, cookies, and
-`request()` context all behave the same on both paths.
+`request()` context all behave the same on both paths. Routes
+discovered during startup (file-based views and `routes/` API files)
+join the native table too, since discovery runs before it is built.
+
+Individual routes can opt out — they stay on the fetch-handler matcher
+while the rest of the table goes native:
+
+```typescript
+router.get('/reports/{id}', legacyHandler)
+router.withoutNativeDispatch() // applies to the route registered above
+```
 
 Two caveats:
 
 - Bun resolves overlapping patterns by specificity (exact > param >
   wildcard), not by registration order. If your app relies on
-  registration order between same-shape overlapping patterns, leave
-  this off.
+  registration order between same-shape overlapping patterns, opt the
+  affected routes out with `withoutNativeDispatch()` (or leave the
+  feature off).
 - The native table is a snapshot taken at `serve()`. Routes registered
   afterwards are served by the fetch handler until you call
   `router.reload()`, which rebuilds the table.

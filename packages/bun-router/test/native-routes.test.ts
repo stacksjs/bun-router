@@ -96,3 +96,83 @@ describe('native routes (serve({ nativeRoutes: true }))', () => {
     expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
   })
 })
+
+describe('native routes dispatch routing', () => {
+  it('withoutNativeDispatch() keeps a route on the fetch handler', async () => {
+    const router: any = new Router()
+    router.get('/native-path', () => new Response('native'))
+    router.get('/fetch-path', () => new Response('fetch'))
+    router.withoutNativeDispatch()
+
+    // Spy: natively-dispatched requests never enter handleRequestImpl
+    const fetchPaths: string[] = []
+    const original = router.handleRequestImpl.bind(router)
+    router.handleRequestImpl = (req: Request) => {
+      fetchPaths.push(new URL(req.url).pathname)
+      return original(req)
+    }
+
+    const server = await router.serve({ port: 0, nativeRoutes: true })
+    const base = `http://localhost:${server.port}`
+
+    expect(await (await fetch(`${base}/native-path`)).text()).toBe('native')
+    expect(await (await fetch(`${base}/fetch-path`)).text()).toBe('fetch')
+    expect(fetchPaths).not.toContain('/native-path')
+    expect(fetchPaths).toContain('/fetch-path')
+
+    server.stop(true)
+  })
+
+  it('routes registered during serve() initialization join the native table', async () => {
+    const router: any = new Router()
+    // Mirrors file-based/API route discovery, which serve() awaits
+    // before building the native table
+    router._initFileRoutes = async () => {
+      router.get('/discovered', () => new Response('discovered'))
+    }
+
+    const fetchPaths: string[] = []
+    const original = router.handleRequestImpl.bind(router)
+    router.handleRequestImpl = (req: Request) => {
+      fetchPaths.push(new URL(req.url).pathname)
+      return original(req)
+    }
+
+    const server = await router.serve({ port: 0, nativeRoutes: true })
+    const base = `http://localhost:${server.port}`
+
+    expect(await (await fetch(`${base}/discovered`)).text()).toBe('discovered')
+    expect(fetchPaths).not.toContain('/discovered')
+
+    server.stop(true)
+  })
+
+  it('reload() picks up routes registered after serve()', async () => {
+    const router: any = new Router()
+    router.get('/initial', () => new Response('initial'))
+
+    const server = await router.serve({ port: 0, nativeRoutes: true })
+    const base = `http://localhost:${server.port}`
+
+    router.get('/late', () => new Response('late'))
+    // Served via the fetch fallback until reload. `Connection: close` so
+    // no pooled keep-alive socket to the pre-reload server instance
+    // survives into the post-reload assertions.
+    const preReload = await fetch(`${base}/late`, { headers: { Connection: 'close' } })
+    expect(await preReload.text()).toBe('late')
+
+    const fetchPaths: string[] = []
+    const original = router.handleRequestImpl.bind(router)
+    router.handleRequestImpl = (req: Request) => {
+      fetchPaths.push(new URL(req.url).pathname)
+      return original(req)
+    }
+
+    await router.reload()
+    const reloadedBase = `http://localhost:${router.serverInstance.port}`
+    expect(await (await fetch(`${reloadedBase}/late`)).text()).toBe('late')
+    expect(fetchPaths).not.toContain('/late')
+
+    router.serverInstance.stop(true)
+  })
+})

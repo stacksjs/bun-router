@@ -1060,6 +1060,13 @@ export interface Route {
   pattern?: {
     exec: (url: URL) => PatternMatchResult | null
   }
+  /**
+   * Set to `false` (via `router.withoutNativeDispatch()`) to keep this
+   * route on the fetch-handler matcher even when the server runs with
+   * `nativeRoutes: true` — e.g. when it must respect registration-order
+   * precedence against an overlapping pattern.
+   */
+  nativeDispatch?: boolean
 }
 
 /**
