@@ -6,7 +6,34 @@ import { createModelBindingMiddleware } from '../model-binding'
 import { createRouteCacheMiddleware, RouteCacheFactory } from '../routing/route-caching'
 import { createRateLimitMiddleware, parseThrottleString, ThrottleFactory } from '../routing/route-throttling'
 import { DomainGroup, DomainMatcher, SubdomainRouter } from '../routing/subdomain-routing'
-import { registerNamedRoute } from '../url'
+import { getNamedRoutePath, registerNamedRoute } from '../url'
+import { matchPath } from '../utils'
+
+/**
+ * A route registered on a {@link FluentRouter}
+ */
+export interface RegisteredFluentRoute {
+  method: string
+  path: string
+  handler: RouteHandler
+  middleware: MiddlewareHandler[]
+  name?: string
+}
+
+/**
+ * Laravel-style resource controller shape accepted by
+ * {@link FluentRouter.resource}. Every action is optional — only the
+ * actions present (and allowed by `only`/`except`) are registered.
+ */
+export interface FluentResourceController {
+  index?: RouteHandler
+  create?: RouteHandler
+  store?: RouteHandler
+  show?: RouteHandler
+  edit?: RouteHandler
+  update?: RouteHandler
+  destroy?: RouteHandler
+}
 
 /**
  * Fluent route builder with chainable API
@@ -97,7 +124,9 @@ export class FluentRouteBuilder {
     // Add model binding middleware
     if (Object.keys(this.modelBindings).length > 0) {
       const parameters = Object.keys(this.modelBindings).map(name => ({ name }))
-      const modelBindingMiddleware = createModelBindingMiddleware(parameters as any, this.modelBindings as any)
+      const modelBindingMiddleware = createModelBindingMiddleware(parameters, this.modelBindings)
+      // The model-binding middleware's `next` is `() => Promise<Response>`;
+      // the fluent executor always provides one, so the adapter is safe
       finalMiddleware.push(modelBindingMiddleware as unknown as MiddlewareHandler)
     }
 
@@ -150,16 +179,15 @@ export class FluentConditionalBuilder {
 
   middleware(middlewareName: string): this {
     const [name, params] = middlewareName.split(':')
-    const middlewareFactory = (this.router as any).namedMiddleware.get(name)
+    const middlewareFactory = this.router.resolveNamedMiddleware(name)
 
     if (!middlewareFactory) {
       throw new Error(`Unknown middleware: ${name}`)
     }
 
-    const middlewareHandler = middlewareFactory(params)
-    ;(this.router as any).conditionalMiddleware.push({
+    this.router.addConditionalMiddleware({
       condition: this.condition,
-      middleware: [middlewareHandler],
+      middleware: [middlewareFactory(params)],
     })
 
     return this
@@ -230,13 +258,7 @@ export class FluentRouteGroupBuilder {
  * Fluent router with chainable API and advanced features
  */
 export class FluentRouter {
-  private routes: Array<{
-    method: string
-    path: string
-    handler: RouteHandler
-    middleware: MiddlewareHandler[]
-    name?: string
-  }> = []
+  private routes: RegisteredFluentRoute[] = []
 
   private globalMiddleware: MiddlewareHandler[] = []
   private subdomainRouter = new SubdomainRouter()
@@ -286,7 +308,7 @@ export class FluentRouter {
 
     // Auth middleware
     this.namedMiddleware.set('auth', () => {
-      return async (req: EnhancedRequest, next: any) => {
+      return async (req: EnhancedRequest, next: NextFunction) => {
         const token = req.headers.get('Authorization')?.replace('Bearer ', '')
         if (!token) {
           return new Response('Unauthorized', { status: 401 })
@@ -299,7 +321,7 @@ export class FluentRouter {
 
     // CORS middleware
     this.namedMiddleware.set('cors', () => {
-      return async (_req: EnhancedRequest, next: any) => {
+      return async (_req: EnhancedRequest, next: NextFunction) => {
         const response = await next()
         if (response) {
           const headers = new Headers(response.headers)
@@ -348,6 +370,22 @@ export class FluentRouter {
    */
   when(condition: MiddlewareCondition): FluentConditionalBuilder {
     return new FluentConditionalBuilder(this, condition)
+  }
+
+  /**
+   * Look up a named middleware factory.
+   * @internal Used by the fluent builders — avoids `as any` reach-ins.
+   */
+  resolveNamedMiddleware(name: string): ((params?: string) => MiddlewareHandler) | undefined {
+    return this.namedMiddleware.get(name)
+  }
+
+  /**
+   * Register conditional middleware, evaluated per request in {@link handle}.
+   * @internal Used by the fluent builders.
+   */
+  addConditionalMiddleware(conditional: ConditionalMiddleware): void {
+    this.conditionalMiddleware.push(conditional)
   }
 
   /**
@@ -547,7 +585,7 @@ export class FluentRouter {
   /**
    * Create resource routes (Laravel-style)
    */
-  resource(name: string, controller: any, options: {
+  resource(name: string, controller: FluentResourceController, options: {
     only?: string[]
     except?: string[]
     model?: BunQueryBuilderModel
@@ -584,13 +622,7 @@ export class FluentRouter {
   /**
    * Get all registered routes
    */
-  getRoutes(): Array<{
-    method: string
-    path: string
-    handler: RouteHandler
-    middleware: MiddlewareHandler[]
-    name?: string
-  }> {
+  getRoutes(): RegisteredFluentRoute[] {
     return [...this.routes, ...this.subdomainRouter.getAllRoutes()]
   }
 
@@ -598,10 +630,9 @@ export class FluentRouter {
    * Handle incoming request
    */
   async handle(request: EnhancedRequest): Promise<Response | null> {
-    const _url = new URL(request.url)
+    const url = new URL(request.url)
 
     // Try subdomain routing first
-    const url = new URL(request.url)
     const domain = url.hostname
     const match = this.subdomainRouter.findDomainGroup(domain)
     if (match) {
@@ -611,16 +642,18 @@ export class FluentRouter {
 
       // Find matching route in domain group
       for (const route of match.group.getRoutes()) {
-        if (this.matchesRoute(route, request)) {
-          return await this.executeRoute(route, enhancedReq)
+        const params = this.matchRouteParams(route, request.method, url.pathname)
+        if (params) {
+          return await this.executeRoute(route, enhancedReq, params)
         }
       }
     }
 
     // Find matching route
     for (const route of this.routes) {
-      if (this.matchesRoute(route, request)) {
-        return await this.executeRoute(route, request)
+      const params = this.matchRouteParams(route, request.method, url.pathname)
+      if (params) {
+        return await this.executeRoute(route, request, params)
       }
     }
 
@@ -628,32 +661,58 @@ export class FluentRouter {
   }
 
   /**
-   * Check if route matches request
+   * Match a route against the request, extracting path parameters.
+   *
+   * Delegates to the same `matchPath` used by the main `Router`, so the
+   * fluent API has identical semantics for `{param}`, optional `{param?}`,
+   * and wildcard segments (the previous ad-hoc regex neither escaped
+   * static text nor extracted params at all).
+   *
+   * @returns the extracted params, or `null` when the route doesn't match
    */
-  private matchesRoute(route: any, request: EnhancedRequest): boolean {
-    if (route.method !== request.method) {
-      return false
+  private matchRouteParams(
+    route: RegisteredFluentRoute,
+    method: string,
+    pathname: string,
+  ): Record<string, string> | null {
+    if (route.method !== method) {
+      return null
     }
 
-    const url = new URL(request.url)
-    // eslint-disable-next-line regexp/no-super-linear-backtracking
-    const routePattern = route.path.replace(/\{([^:}]+):?([^}]*)\}/g, '([^/]+)')
-    const regex = new RegExp(`^${routePattern}$`)
-
-    return regex.test(url.pathname)
+    const params: Record<string, string> = {}
+    return matchPath(route.path, pathname, params) ? params : null
   }
 
   /**
-   * Execute route with middleware
+   * Execute route with middleware (global → conditional → route-specific)
    */
-  private async executeRoute(route: any, request: EnhancedRequest): Promise<Response> {
-    const allMiddleware = [...this.globalMiddleware, ...route.middleware]
+  private async executeRoute(
+    route: RegisteredFluentRoute,
+    request: EnhancedRequest,
+    params: Record<string, string>,
+  ): Promise<Response> {
+    // Expose extracted path parameters to middleware and the handler
+    ;(request as { params?: Record<string, string> }).params = params
+
+    const allMiddleware = [...this.globalMiddleware]
+
+    // Conditional middleware (registered via `when(...)`) runs when its
+    // condition holds for this request — previously it was collected but
+    // never consulted
+    for (const conditional of this.conditionalMiddleware) {
+      if (await conditional.condition(request)) {
+        allMiddleware.push(...conditional.middleware)
+      }
+    }
+
+    allMiddleware.push(...route.middleware)
 
     let index = 0
     const next = async (): Promise<Response> => {
       if (index < allMiddleware.length) {
         const middleware = allMiddleware[index++]
-        return await middleware(request, next)
+        const result = await middleware(request, next)
+        return result ?? new Response(null)
       }
       return await route.handler(request)
     }
@@ -747,14 +806,24 @@ export const RouteFactory: {
  */
 export const RouterUtils = {
   /**
-   * Generate route URL with parameters
+   * Generate a URL for a named route. Resolves the path from the shared
+   * named-route registry (the same one `router.route()`/`url()` use);
+   * falls back to `/<name>` when the name was never registered.
    */
   route: (name: string, params: Record<string, string> = {}, query: Record<string, string> = {}): string => {
-    // Mock route URL generation
-    let url = `/${name}`
+    let url = getNamedRoutePath(name) ?? `/${name}`
 
     for (const [key, value] of Object.entries(params)) {
-      url = url.replace(`{${key}}`, value)
+      const encoded = encodeURIComponent(value)
+      url = url.replace(`{${key}}`, encoded)
+      url = url.replace(`{${key}?}`, encoded)
+    }
+
+    // Drop unfilled optional placeholders and tidy the slashes they leave
+    if (url.includes('?}')) {
+      url = url.replace(/\{[^}]+\?\}/g, '').replace(/\/{2,}/g, '/')
+      if (url.length > 1 && url.endsWith('/'))
+        url = url.slice(0, -1)
     }
 
     const queryString = new URLSearchParams(query).toString()
@@ -778,7 +847,7 @@ export const RouterUtils = {
   /**
    * JSON response
    */
-  json: (data: any, status: number = 200): Response => {
+  json: (data: unknown, status: number = 200): Response => {
     return new Response(JSON.stringify(data), {
       status,
       headers: { 'Content-Type': 'application/json' },

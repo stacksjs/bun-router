@@ -2,7 +2,7 @@
  * Router Validation Integration
  *
  * Integration layer for validation and macros with the router.
- * Provides RouteBuilder and FluentRouter for building routes with validation support.
+ * Provides RouteBuilder and ValidationFluentRouter for building routes with validation support.
  */
 
 import type { EnhancedRequest, MiddlewareHandler, NextFunction, RouteHandler } from '../types'
@@ -62,9 +62,15 @@ export class RouteBuilder {
 }
 
 /**
- * Fluent router for enhanced routing functionality
+ * Minimal route collector with validation support.
+ *
+ * Renamed from `FluentRouter`: this module used to declare a third class
+ * with that name. It was shadowed by the canonical `FluentRouter` exported
+ * from `fluent-routing.ts` (explicit exports win over `export *`), so
+ * `createFluentRouter()` silently returned a different class than the
+ * public `FluentRouter` symbol. The distinct name removes the ambiguity.
  */
-export class FluentRouter {
+export class ValidationFluentRouter {
   private routes: Array<{
     method: string
     path: string
@@ -320,8 +326,8 @@ export const RouteHelpers: {
 /**
  * Fluent router factory
  */
-export function createFluentRouter(): FluentRouter {
-  return new FluentRouter()
+export function createFluentRouter(): ValidationFluentRouter {
+  return new ValidationFluentRouter()
 }
 
 /**
