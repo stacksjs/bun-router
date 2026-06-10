@@ -86,6 +86,9 @@ export interface InjectMetadata {
  */
 export class Container {
   private bindings = new Map<Token, Binding>()
+  // Tag → tokens index, maintained on register/unbind so tagged lookups
+  // are O(matches) instead of scanning every binding
+  private tagIndex = new Map<string, Set<Token>>()
   private instances = new Map<Token, any>()
   private scopedInstances = new Map<string, Map<Token, any>>()
   private interceptors = new Map<Token, ((..._args: any[]) => any)[]>()
@@ -115,7 +118,26 @@ export class Container {
    * Register a binding
    */
   register<T>(binding: Binding<T>): this {
+    // Re-registering a token replaces its tag index entries
+    const existing = this.bindings.get(binding.token)
+    if (existing?.metadata?.tags) {
+      for (const tag of existing.metadata.tags) {
+        this.tagIndex.get(tag)?.delete(binding.token)
+      }
+    }
+
     this.bindings.set(binding.token, binding)
+
+    if (binding.metadata?.tags) {
+      for (const tag of binding.metadata.tags) {
+        let tokens = this.tagIndex.get(tag)
+        if (!tokens) {
+          tokens = new Set()
+          this.tagIndex.set(tag, tokens)
+        }
+        tokens.add(binding.token)
+      }
+    }
     return this
   }
 
@@ -177,31 +199,48 @@ export class Container {
    * Resolve all instances of a token (useful for arrays of services)
    */
   resolveAll<T>(token: Token): T[] {
-    const bindings = Array.from(this.bindings.values()).filter(
-      binding => binding.token === token || this.hasTag(binding, token as string),
-    )
+    // Direct binding plus anything tagged with the token (when it's a
+    // string), deduplicated by token
+    const tokens = new Set<Token>()
+    if (this.bindings.has(token)) {
+      tokens.add(token)
+    }
+    if (typeof token === 'string') {
+      for (const tagged of this.tagIndex.get(token) ?? []) {
+        tokens.add(tagged)
+      }
+    }
 
-    return bindings.map(binding => this.resolve<T>(binding.token))
+    return Array.from(tokens, t => this.resolve<T>(t))
   }
 
   /**
    * Resolve with tags
    */
   resolveTagged<T>(tag: string): T[] {
-    const bindings = Array.from(this.bindings.values()).filter(
-      binding => this.hasTag(binding, tag),
-    )
-
-    return bindings.map(binding => this.resolve<T>(binding.token))
+    const tokens = this.tagIndex.get(tag)
+    if (!tokens || tokens.size === 0) {
+      return []
+    }
+    return Array.from(tokens, token => this.resolve<T>(token))
   }
 
   /**
    * Get all bindings with a specific tag
    */
   getTaggedBindings<T>(tag: string): Binding<T>[] {
-    return Array.from(this.bindings.values()).filter(
-      (binding): binding is Binding<T> => binding.metadata?.tags?.includes(tag) ?? false,
-    )
+    const tokens = this.tagIndex.get(tag)
+    if (!tokens || tokens.size === 0) {
+      return []
+    }
+    const bindings: Binding<T>[] = []
+    for (const token of tokens) {
+      const binding = this.bindings.get(token)
+      if (binding) {
+        bindings.push(binding as Binding<T>)
+      }
+    }
+    return bindings
   }
 
   /**
@@ -241,6 +280,12 @@ export class Container {
    * Unbind a token
    */
   unbind(token: Token): this {
+    const binding = this.bindings.get(token)
+    if (binding?.metadata?.tags) {
+      for (const tag of binding.metadata.tags) {
+        this.tagIndex.get(tag)?.delete(token)
+      }
+    }
     this.bindings.delete(token)
     this.instances.delete(token)
     return this
@@ -277,6 +322,7 @@ export class Container {
    */
   clear(): this {
     this.bindings.clear()
+    this.tagIndex.clear()
     this.instances.clear()
     this.scopedInstances.clear()
     return this
