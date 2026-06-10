@@ -9,7 +9,9 @@ export interface CacheEntry {
     status: number
     statusText: string
     headers: Record<string, string>
-    body: number[] // Store as number array for JSON serialization
+    // In-memory entries hold the raw bytes; entries round-tripped through
+    // the JSON file cache come back as a plain number array
+    body: Uint8Array | number[]
     contentType: string
   }
   createdAt: number
@@ -73,6 +75,7 @@ export class ResponseCache implements Middleware {
   }
 
   private cleanupInterval?: ReturnType<typeof setInterval>
+  private compiledInvalidationPatterns: RegExp[] = []
 
   constructor(options: ResponseCacheOptions = {}) {
     this.options = {
@@ -121,6 +124,20 @@ export class ResponseCache implements Middleware {
       },
     } as Required<ResponseCacheOptions>
 
+    // Compile invalidation patterns once — matching per request with
+    // `new RegExp(pattern)` recompiled the regex on every invalidation check
+    this.compiledInvalidationPatterns = (this.options.invalidation.patterns ?? [])
+      .map((pattern) => {
+        try {
+          return new RegExp(pattern)
+        }
+        catch {
+          console.warn(`[ResponseCache] Invalid invalidation pattern: ${pattern}`)
+          return null
+        }
+      })
+      .filter((re): re is RegExp => re !== null)
+
     this.initializeStorage()
     this.startCleanupInterval()
   }
@@ -142,6 +159,8 @@ export class ResponseCache implements Middleware {
     this.cleanupInterval = setInterval(() => {
       void this.cleanup()
     }, 60000) // Cleanup every minute
+    // Background housekeeping must not keep the process alive
+    this.cleanupInterval.unref?.()
   }
 
   public async cleanup(): Promise<void> {
@@ -370,7 +389,12 @@ export class ResponseCache implements Middleware {
 
     try {
       const filePath = join(this.options.storage.directory, `${key}.cache`)
-      const content = JSON.stringify(entry)
+      // Uint8Array doesn't JSON-serialize as an array — convert at the
+      // file boundary only (memory entries keep the compact byte view)
+      const serializable = entry.response.body instanceof Uint8Array
+        ? { ...entry, response: { ...entry.response, body: Array.from(entry.response.body) } }
+        : entry
+      const content = JSON.stringify(serializable)
       await Bun.write(filePath, content)
     }
     catch (error) {
@@ -574,9 +598,11 @@ export class ResponseCache implements Middleware {
   }
 
   private async createCacheEntry(req: EnhancedRequest, res: Response): Promise<{ entry: CacheEntry, response: Response }> {
-    // Clone the response to avoid consuming the original stream
-    const clonedRes = res.clone()
-    const body = await clonedRes.arrayBuffer()
+    // Read the body once and rebuild the outgoing response from the same
+    // bytes — cheaper than clone(), which tees the stream and buffers it
+    // twice. Bytes are kept as a Uint8Array (the old number[] conversion
+    // boxed every byte into a JS number array element).
+    const body = await res.arrayBuffer()
     const bodyBytes = new Uint8Array(body)
     const ttl = this.getTTL(req)
     const now = Date.now()
@@ -587,7 +613,7 @@ export class ResponseCache implements Middleware {
         status: res.status,
         statusText: res.statusText,
         headers: Object.fromEntries(res.headers.entries()),
-        body: Array.from(bodyBytes), // Convert to regular array for JSON serialization
+        body: bodyBytes,
         contentType: res.headers.get('Content-Type') || 'text/plain',
       },
       createdAt: now,
@@ -595,21 +621,31 @@ export class ResponseCache implements Middleware {
       size: bodyBytes.length,
     }
 
+    const outHeaders = new Headers(res.headers)
+
     // Generate ETag if enabled
     if (this.options.etag && this.options.etag.enabled) {
       entry.etag = this.generateETag(bodyBytes)
       if (entry.etag) {
         entry.response.headers.ETag = entry.etag
-        res.headers.set('ETag', entry.etag)
+        outHeaders.set('ETag', entry.etag)
       }
     }
 
     // Set Last-Modified
     entry.lastModified = new Date(now).toUTCString()
     entry.response.headers['Last-Modified'] = entry.lastModified
-    res.headers.set('Last-Modified', entry.lastModified)
+    outHeaders.set('Last-Modified', entry.lastModified)
 
-    return { entry, response: res }
+    const outBody = res.status === 204 || res.status === 304 ? null : bodyBytes
+    return {
+      entry,
+      response: new Response(outBody, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: outHeaders,
+      }),
+    }
   }
 
   private createResponseFromEntry(entry: CacheEntry): Response {
@@ -645,13 +681,12 @@ export class ResponseCache implements Middleware {
 
   async invalidateCache(req?: EnhancedRequest): Promise<void> {
     if (req) {
-      const patterns = this.options.invalidation.patterns
-      if (patterns && patterns.length > 0) {
+      if (this.compiledInvalidationPatterns.length > 0) {
         // Invalidate specific patterns
         const url = new URL(req.url)
 
-        for (const pattern of patterns) {
-          if (url.pathname.match(new RegExp(pattern))) {
+        for (const pattern of this.compiledInvalidationPatterns) {
+          if (pattern.test(url.pathname)) {
             await this.clearCache()
             return
           }
