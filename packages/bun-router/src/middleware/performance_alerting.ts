@@ -182,6 +182,8 @@ export default class PerformanceAlerting {
       this.cleanupOldNotifications()
       this.autoResolveAlerts()
     }, 10000) // Check every 10 seconds
+    // Background checks must not keep the process alive
+    this.checkInterval.unref?.()
   }
 
   private evaluateRules(): void {

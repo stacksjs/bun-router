@@ -149,6 +149,8 @@ export class InMemoryNonceStore implements NonceStore {
 
   constructor(cleanupIntervalMs: number = 60000) {
     this.cleanupInterval = setInterval(() => this.cleanup(), cleanupIntervalMs)
+    // Background housekeeping must not keep the process alive
+    this.cleanupInterval.unref?.()
   }
 
   has(nonce: string): boolean {

@@ -269,6 +269,8 @@ export default class PerformanceMonitor implements Middleware {
     this.cleanupInterval = setInterval(() => {
       this.cleanupOldMetrics()
     }, 60000) // Cleanup every minute
+    // Background housekeeping must not keep the process alive
+    this.cleanupInterval.unref?.()
   }
 
   private cleanupOldMetrics(): void {

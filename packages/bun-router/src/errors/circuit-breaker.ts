@@ -87,8 +87,9 @@ export class CircuitBreaker {
       consecutiveSuccesses: 0,
     }
 
-    // Clean up old requests periodically
-    setInterval(() => this.cleanupOldRequests(), this.config.monitoringPeriod / 4)
+    // Clean up old requests periodically (unref'd so the timer never
+    // keeps the process alive)
+    setInterval(() => this.cleanupOldRequests(), this.config.monitoringPeriod / 4).unref?.()
   }
 
   /**

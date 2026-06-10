@@ -119,6 +119,8 @@ export class ServiceHealthMonitor {
         () => this.performHealthCheck(serviceName, healthConfig),
         healthConfig.interval,
       )
+      // Health checks must not keep the process alive on shutdown
+      interval.unref?.()
       this.healthCheckIntervals.set(serviceName, interval)
     }
   }

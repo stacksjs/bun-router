@@ -520,7 +520,7 @@ export class MetricsRegistry {
     if (this.config.collectInterval && this.config.collectInterval > 0) {
       setInterval(() => {
         this.collectSystemMetrics()
-      }, this.config.collectInterval)
+      }, this.config.collectInterval).unref?.()
     }
   }
 
