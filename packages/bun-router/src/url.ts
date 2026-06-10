@@ -100,8 +100,13 @@ export function url(
     }
   }
 
-  // Strip any unfilled optional placeholders (e.g. `/posts/{slug?}` → `/posts/`)
-  resolved = resolved.replace(/\/\{[^}]+\?\}/g, '')
+  // Strip any unfilled optional placeholders and tidy the slashes they
+  // leave behind (`/posts/{slug?}` → `/posts`, `/a/{v?}/b` → `/a/b`)
+  if (resolved.includes('?}')) {
+    resolved = resolved.replace(/\{[^}]+\?\}/g, '').replace(/\/{2,}/g, '/')
+    if (resolved.length > 1 && resolved.endsWith('/'))
+      resolved = resolved.slice(0, -1)
+  }
 
   // Throw on unfilled required placeholders so the caller sees the bug.
   const missing = resolved.match(/\{([^}?]+)\}/g)
