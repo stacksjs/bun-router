@@ -28,6 +28,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./container": {
+      "bun": "./dist/container/index.js",
+      "types": "./dist/container/index.d.ts",
+      "import": "./dist/container/index.js"
+    },
     "./*": {
       "bun": "./dist/*",
       "import": "./dist/*"
@@ -39,6 +44,11 @@
         "bun": "./dist/index.js",
         "types": "./dist/index.d.ts",
         "import": "./dist/index.js"
+      },
+      "./container": {
+        "bun": "./dist/container/index.js",
+        "types": "./dist/container/index.d.ts",
+        "import": "./dist/container/index.js"
       },
       "./*": {
         "bun": "./dist/*",
