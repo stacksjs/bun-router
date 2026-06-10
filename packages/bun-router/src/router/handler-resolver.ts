@@ -289,3 +289,39 @@ async function resolveStringHandler(
 export function createHandlerResolver(config: RouterConfig): (handler: unknown, req: EnhancedRequest) => Promise<Response> {
   return (handler: unknown, req: EnhancedRequest) => resolveHandler(handler, req, config)
 }
+
+/**
+ * Precompile the dispatch branch for a handler whose shape never changes
+ * (a registered route's handler). `resolveHandler` re-sniffs the handler
+ * type — instanceof / typeof / prototype checks — on every request; this
+ * resolves the branch once and returns a specialized invoker for the
+ * per-request hot path.
+ */
+export function createHandlerInvoker(
+  handler: unknown,
+  config: RouterConfig,
+): (req: EnhancedRequest) => Promise<Response> {
+  // Static Response routes
+  if (handler instanceof Response) {
+    return async () => handler.clone() as Response
+  }
+
+  // Plain function handlers (the common case)
+  if (isCallableHandler(handler)) {
+    return async (req: EnhancedRequest) => wrapResponse(await handler(req))
+  }
+
+  // Class constructors with a handle() method
+  if (
+    typeof handler === 'function'
+    && handler.prototype
+    && typeof handler.prototype.handle === 'function'
+  ) {
+    const HandlerClass = handler as new () => { handle: (req: EnhancedRequest) => unknown }
+    return async (req: EnhancedRequest) => wrapResponse(await new HandlerClass().handle(req))
+  }
+
+  // Strings (action paths, Controller@method) and anything exotic keep
+  // the full resolution flow
+  return (req: EnhancedRequest) => resolveHandler(handler, req, config)
+}

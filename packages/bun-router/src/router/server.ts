@@ -1,8 +1,9 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
-import { getParsedCookies, RequestWithMacros } from '../request/macros'
+import { getParsedCookies, getParsedURL, RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
+import { createHandlerInvoker } from './handler-resolver'
 
 // Helpers that frameworks layered on bun-router treat as guaranteed but
 // that aren't shaped as built-in macros. Registered once at module load —
@@ -19,7 +20,7 @@ if (!RequestWithMacros.hasMacro('getParam')) {
 // when no macro already claimed the name.
 if (!RequestWithMacros.hasMacro('get')) {
   RequestWithMacros.macro('get', function (this: EnhancedRequest, key: string, defaultValue?: unknown) {
-    const value = new URL(this.url).searchParams.get(key)
+    const value = getParsedURL(this).searchParams.get(key)
     return value !== null && value !== undefined ? value : defaultValue
   })
 }
@@ -196,8 +197,11 @@ export function registerServerHandling(RouterClass: typeof Router): void {
     handleRequestImpl: {
       async value(req: Request): Promise<Response> {
         try {
-          // Create URL for route matching
+          // Create URL for route matching, and share it with the request
+          // macros (path()/root()/get()/fingerprint() reuse it instead of
+          // reparsing req.url)
           const url = new URL(req.url)
+          ;(req as any)._parsedURL = url
 
           // Get domain from the host header
           const hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
@@ -248,13 +252,22 @@ export function registerServerHandling(RouterClass: typeof Router): void {
 
             let chain = route._compiledChain
             if (!chain || route._chainEpoch !== epoch || route._chainMwLen !== routeMwLen) {
-              const middlewareStack = routeMwLen > 0
-                ? [...this.globalMiddleware, ...route.middleware]
-                : [...this.globalMiddleware]
-              middlewareStack.push(async (handlerReq: EnhancedRequest, _next: any) => {
-                return await this.resolveHandler(route.handler, handlerReq)
-              })
-              chain = this.buildMiddlewareChain(middlewareStack)!
+              // The handler's dispatch branch (function vs class vs string
+              // action) is resolved once here instead of per request
+              const invoke = createHandlerInvoker(route.handler, this.config)
+
+              if (routeMwLen === 0 && this.globalMiddleware.length === 0) {
+                // No middleware: the chain is the bare invoker — no
+                // closure tower, no next() allocations per request
+                chain = invoke
+              }
+              else {
+                const middlewareStack = routeMwLen > 0
+                  ? [...this.globalMiddleware, ...route.middleware]
+                  : [...this.globalMiddleware]
+                middlewareStack.push((handlerReq: EnhancedRequest, _next: any) => invoke(handlerReq))
+                chain = this.buildMiddlewareChain(middlewareStack)!
+              }
               route._compiledChain = chain
               route._chainEpoch = epoch
               route._chainMwLen = routeMwLen
@@ -377,7 +390,8 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     enhanceRequest: {
       value(req: Request, params: Record<string, string> = {}): EnhancedRequest {
-        const enhancedReq = Object.assign(req, { params }) as unknown as EnhancedRequest
+        const enhancedReq = req as unknown as EnhancedRequest
+        enhancedReq.params = params
         RequestWithMacros.applyMacros(enhancedReq)
         return enhancedReq
       },

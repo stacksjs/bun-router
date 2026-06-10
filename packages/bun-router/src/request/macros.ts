@@ -28,7 +28,7 @@ interface RequestParseCache {
   _parsedCookies?: Record<string, string>
 }
 
-function getParsedURL(req: EnhancedRequest): URL {
+export function getParsedURL(req: EnhancedRequest): URL {
   const cache = req as EnhancedRequest & RequestParseCache
   if (!cache._parsedURL) {
     cache._parsedURL = new URL(req.url)
