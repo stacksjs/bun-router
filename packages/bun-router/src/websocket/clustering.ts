@@ -539,8 +539,13 @@ export class WebSocketCluster {
         break
 
       case 'stats':
-        // Handle stats updates from other workers
+        // Handle stats updates from other workers. Bounded: with worker
+        // churn the per-worker entries would otherwise accumulate forever.
         if (message.data && message.workerId) {
+          const workerIds = Object.keys(this.stats.workerStats)
+          if (workerIds.length >= 1000 && !(message.workerId in this.stats.workerStats)) {
+            delete this.stats.workerStats[workerIds[0]]
+          }
           this.stats.workerStats[message.workerId] = message.data
         }
         break
@@ -623,6 +628,8 @@ export class WebSocketCluster {
         timestamp: now,
       })
     }, this.config.heartbeatInterval)
+    // The heartbeat must not keep the process alive on shutdown
+    this.heartbeatTimer.unref?.()
   }
 
   /**

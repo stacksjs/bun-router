@@ -15,7 +15,7 @@ export interface DDoSProtectionOptions {
   skipSuccessfulRequests?: boolean
   skipFailedRequests?: boolean
   keyGenerator?: (req: EnhancedRequest) => string
-  onLimitReached?: (req: EnhancedRequest, rateLimitInfo: any) => Response | Promise<Response>
+  onLimitReached?: (req: EnhancedRequest, rateLimitInfo: DDoSRateLimitInfo) => Response | Promise<Response>
   store?: 'memory' | 'redis'
   redis?: {
     url: string
@@ -29,6 +29,14 @@ interface RequestInfo {
   lastRequest: number
   blocked: boolean
   blockExpires?: number
+}
+
+/**
+ * Rate-limit details passed to `onLimitReached` when a client is blocked.
+ */
+export interface DDoSRateLimitInfo extends RequestInfo {
+  /** Seconds until the block lifts (mirrors the Retry-After header) */
+  retryAfter: number
 }
 
 export default class DDoSProtection {
@@ -91,6 +99,8 @@ export default class DDoSProtection {
         }
       }
     }, this.options.windowSize! / 2) // Cleanup every half window
+    // Background housekeeping must not keep the process alive
+    this.cleanupInterval.unref?.()
   }
 
   private isWhitelisted(ip: string): boolean {
@@ -105,6 +115,20 @@ export default class DDoSProtection {
     let info = this.requestStore.get(key)
 
     if (!info) {
+      // Hard cap on tracked clients: a spoofed-IP flood would otherwise
+      // grow the store faster than the interval cleanup can drain it.
+      // Evicting the oldest entries (Map insertion order) only resets
+      // counters for long-idle clients.
+      if (this.requestStore.size >= 100_000) {
+        let toEvict = Math.ceil(this.requestStore.size / 10)
+        for (const oldestKey of this.requestStore.keys()) {
+          this.requestStore.delete(oldestKey)
+          if (--toEvict <= 0) {
+            break
+          }
+        }
+      }
+
       info = {
         count: 0,
         firstRequest: now,
@@ -149,7 +173,7 @@ export default class DDoSProtection {
     info.blockExpires = now + this.options.blockDuration!
   }
 
-  private createBlockedResponse(req: EnhancedRequest, info: RequestInfo): Response {
+  private createBlockedResponse(req: EnhancedRequest, info: RequestInfo): Response | Promise<Response> {
     const retryAfter = Math.ceil((info.blockExpires! - Date.now()) / 1000)
 
     const headers = {
@@ -160,7 +184,7 @@ export default class DDoSProtection {
     }
 
     if (this.options.onLimitReached) {
-      return this.options.onLimitReached(req, { ...info, retryAfter }) as Response
+      return this.options.onLimitReached(req, { ...info, retryAfter })
     }
 
     return new Response(JSON.stringify({

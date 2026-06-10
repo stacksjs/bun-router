@@ -9,16 +9,28 @@ export interface TraceSpan {
   startTime: number
   endTime?: number
   duration?: number
-  tags: Record<string, any>
+  tags: Record<string, unknown>
   logs: Array<{
     timestamp: number
     level: 'debug' | 'info' | 'warn' | 'error'
     message: string
-    fields?: Record<string, any>
+    fields?: Record<string, unknown>
   }>
   status: 'ok' | 'error' | 'timeout'
   error?: string
   stackTrace?: string[]
+}
+
+/**
+ * Destination for exported spans. `endpoint`/`headers` configure the
+ * HTTP-based exporters (jaeger/zipkin/otlp); `customExporter` receives
+ * the spans directly.
+ */
+export interface TraceExporterConfig {
+  type: 'console' | 'jaeger' | 'zipkin' | 'otlp' | 'custom'
+  endpoint?: string
+  headers?: Record<string, string>
+  customExporter?: (spans: TraceSpan[]) => Promise<void>
 }
 
 export interface TracingOptions {
@@ -30,12 +42,7 @@ export interface TracingOptions {
   includeRequestBody?: boolean
   includeResponseBody?: boolean
   maxBodySize?: number
-  exporters?: Array<{
-    type: 'console' | 'jaeger' | 'zipkin' | 'otlp' | 'custom'
-    endpoint?: string
-    headers?: Record<string, string>
-    customExporter?: (spans: TraceSpan[]) => Promise<void>
-  }>
+  exporters?: TraceExporterConfig[]
   propagation?: {
     enabled?: boolean
     headers?: string[]
@@ -83,6 +90,8 @@ export default class RequestTracer {
         console.warn('Error exporting spans:', error)
       }
     }, 100) // Export every 100ms for faster testing
+    // Background export must not keep the process alive
+    this.exportInterval.unref?.()
   }
 
   private shouldSample(): boolean {
@@ -120,7 +129,7 @@ export default class RequestTracer {
     return { traceId, parentSpanId }
   }
 
-  private async captureRequestBody(req: EnhancedRequest): Promise<any> {
+  private async captureRequestBody(req: EnhancedRequest): Promise<unknown> {
     if (!this.options.includeRequestBody)
       return undefined
 
@@ -157,7 +166,7 @@ export default class RequestTracer {
     return undefined
   }
 
-  private async captureResponseBody(response: Response): Promise<any> {
+  private async captureResponseBody(response: Response): Promise<unknown> {
     if (!this.options.includeResponseBody)
       return undefined
 
@@ -203,7 +212,7 @@ export default class RequestTracer {
     }
   }
 
-  private addSpanTag(spanId: string, key: string, value: any): void {
+  private addSpanTag(spanId: string, key: string, value: unknown): void {
     const span = this.spans.get(spanId)
     if (span) {
       span.tags[key] = value
@@ -247,15 +256,23 @@ export default class RequestTracer {
   }
 
   private async exportSpans(): Promise<void> {
-    // For debugging
-    console.warn(`[RequestTracer] Exporting spans, queue size: ${this.exportQueue.length}, active spans: ${this.spans.size}`)
+    // Drop orphaned spans: anything unfinished for over a minute will
+    // never be completed (its request died mid-flight) and would pin the
+    // map forever
+    if (this.spans.size > 0) {
+      const cutoff = performance.now() - 60_000
+      for (const [spanId, span] of this.spans) {
+        if (span.endTime === undefined && span.startTime < cutoff) {
+          this.spans.delete(spanId)
+        }
+      }
+    }
 
     if (this.exportQueue.length === 0) {
       // Also check if there are any finished spans that need to be exported
       // This ensures spans are exported even if they weren't properly moved to the queue
       const finishedSpans = Array.from(this.spans.values()).filter(span => span.endTime !== undefined)
       if (finishedSpans.length > 0) {
-        console.warn(`[RequestTracer] Found ${finishedSpans.length} finished spans to export`)
         // Move finished spans to export queue
         this.exportQueue.push(...finishedSpans)
         // Remove them from the spans map
@@ -323,7 +340,7 @@ export default class RequestTracer {
     }
   }
 
-  private async exportToJaeger(spans: TraceSpan[], exporter: any): Promise<void> {
+  private async exportToJaeger(spans: TraceSpan[], exporter: TraceExporterConfig): Promise<void> {
     if (!exporter.endpoint)
       return
 
@@ -366,7 +383,7 @@ export default class RequestTracer {
     })
   }
 
-  private async exportToZipkin(spans: TraceSpan[], exporter: any): Promise<void> {
+  private async exportToZipkin(spans: TraceSpan[], exporter: TraceExporterConfig): Promise<void> {
     if (!exporter.endpoint)
       return
 
@@ -590,7 +607,7 @@ export default class RequestTracer {
     return childSpanId
   }
 
-  addTag(spanId: string, key: string, value: any): void {
+  addTag(spanId: string, key: string, value: unknown): void {
     this.addSpanTag(spanId, key, value)
   }
 
