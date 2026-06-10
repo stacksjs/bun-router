@@ -155,8 +155,9 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
           this.addRouteToCompiler(route)
         }
 
-        // Clear route cache when new routes are added
+        // Clear route caches when new routes are added
         this.routeCache.clear()
+        this._allowedMethodsCache?.clear()
 
         return this
       },

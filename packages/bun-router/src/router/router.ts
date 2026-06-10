@@ -85,6 +85,10 @@ export class Router {
   // cache against this epoch and rebuild when it moves
   _mwEpoch = 0
 
+  // Memoized getAllowedMethods results (the 405-vs-404 scan), keyed by
+  // domain:pathname. Cleared whenever routes change.
+  _allowedMethodsCache: Map<string, string[]> = new Map()
+
   config: RouterConfig = {
     verbose: false,
     routesPath: 'routes',
@@ -237,6 +241,7 @@ export class Router {
    */
   invalidateCache(): void {
     this.routeCache.clear()
+    this._allowedMethodsCache.clear()
   }
 
   /**
@@ -762,6 +767,15 @@ export class Router {
    */
   getAllowedMethods(path: string, domain?: string): string[] {
     const url = new URL(path, 'http://localhost')
+
+    // Memoized per path: every unmatched request pays this scan for its
+    // 405-vs-404 decision, and 404 floods tend to hammer the same paths
+    const cacheKey = `${domain || ''}:${url.pathname}`
+    const cached = this._allowedMethodsCache.get(cacheKey)
+    if (cached) {
+      return cached
+    }
+
     const methods: Set<string> = new Set()
 
     // Static routes: one map lookup per registered method
@@ -801,7 +815,12 @@ export class Router {
       methods.add('HEAD')
     }
 
-    return Array.from(methods)
+    const result = Array.from(methods)
+    if (this._allowedMethodsCache.size >= 10_000) {
+      this._allowedMethodsCache.clear()
+    }
+    this._allowedMethodsCache.set(cacheKey, result)
+    return result
   }
 
   /**
