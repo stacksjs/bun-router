@@ -433,8 +433,21 @@ export function enhanceRequestWithMethods(request: EnhancedRequest): EnhancedReq
     _oldInput?: RequestInput
   }
 
-  // Get all input data
+  // Merged input (query + JSON body + form body + route params).
+  // Memoized: many of the helpers below call this several times per
+  // request, and the merge result only changes when a body is parsed
+  // later — so the cache keys off the body object identities.
+  let cachedInput: RequestInput | null = null
+  let cachedJsonBody: unknown
+  let cachedFormBody: unknown
+
   const getAllInput = (): RequestInput => {
+    if (cachedInput
+      && cachedJsonBody === request.jsonBody
+      && cachedFormBody === request.formBody) {
+      return cachedInput
+    }
+
     const input: RequestInput = {}
 
     // Query parameters
@@ -465,6 +478,9 @@ export function enhanceRequestWithMethods(request: EnhancedRequest): EnhancedReq
       }
     }
 
+    cachedInput = input
+    cachedJsonBody = request.jsonBody
+    cachedFormBody = request.formBody
     return input
   }
 
@@ -827,6 +843,9 @@ export function enhanceRequestWithMethods(request: EnhancedRequest): EnhancedReq
     else {
       (request as any).jsonBody = data
     }
+    // In-place mutation doesn't change jsonBody's identity, so drop the
+    // memoized merge explicitly
+    cachedInput = null
   }
 
   /**

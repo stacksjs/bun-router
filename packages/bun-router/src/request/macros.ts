@@ -11,6 +11,52 @@ export interface RequestMacro {
   handler: (this: EnhancedRequest, ...args: any[]) => any
 }
 
+// Hoisted hot-path helpers — compiled once instead of per call
+const MOBILE_REGEX = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+const BOT_REGEX = /bot|crawler|spider|crawling/i
+const GLOB_PATTERN_CACHE = new Map<string, RegExp>()
+
+/** Parsed-state cache slots attached to a request on first use. */
+interface RequestParseCache {
+  _parsedURL?: URL
+  _parsedCookies?: Record<string, string>
+}
+
+function getParsedURL(req: EnhancedRequest): URL {
+  const cache = req as EnhancedRequest & RequestParseCache
+  if (!cache._parsedURL) {
+    cache._parsedURL = new URL(req.url)
+  }
+  return cache._parsedURL
+}
+
+function getParsedCookies(req: EnhancedRequest): Record<string, string> {
+  const cache = req as EnhancedRequest & RequestParseCache
+  if (!cache._parsedCookies) {
+    const cookies: Record<string, string> = {}
+    const cookieHeader = req.headers.get('cookie')
+    if (cookieHeader) {
+      for (const cookie of cookieHeader.split(';')) {
+        const eqIndex = cookie.indexOf('=')
+        if (eqIndex === -1)
+          continue
+        const key = cookie.slice(0, eqIndex).trim()
+        if (!key)
+          continue
+        const value = cookie.slice(eqIndex + 1).trim()
+        try {
+          cookies[key] = decodeURIComponent(value)
+        }
+        catch {
+          cookies[key] = value
+        }
+      }
+    }
+    cache._parsedCookies = cookies
+  }
+  return cache._parsedCookies
+}
+
 /**
  * Request macro registry
  */
@@ -150,18 +196,14 @@ export const BuiltInRequestMacros = {
    * Check if request is from mobile device
    */
   isMobile(this: EnhancedRequest): boolean {
-    const userAgent = this.headers.get('user-agent') || ''
-    const mobileRegex = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
-    return mobileRegex.test(userAgent)
+    return MOBILE_REGEX.test(this.headers.get('user-agent') || '')
   },
 
   /**
    * Check if request is from bot/crawler
    */
   isBot(this: EnhancedRequest): boolean {
-    const userAgent = this.headers.get('user-agent') || ''
-    const botRegex = /bot|crawler|spider|crawling/i
-    return botRegex.test(userAgent)
+    return BOT_REGEX.test(this.headers.get('user-agent') || '')
   },
 
   /**
@@ -398,38 +440,15 @@ export const BuiltInRequestMacros = {
    * Get cookie value
    */
   cookie(this: EnhancedRequest, name: string, defaultValue?: string): string | null {
-    const cookies = this.headers.get('cookie')
-    if (!cookies)
-      return defaultValue || null
-
-    const cookieArray = cookies.split(';')
-    for (const cookie of cookieArray) {
-      const [key, value] = cookie.trim().split('=')
-      if (key === name) {
-        return decodeURIComponent(value)
-      }
-    }
-
-    return defaultValue || null
+    const value = getParsedCookies(this)[name]
+    return value !== undefined ? value : (defaultValue || null)
   },
 
   /**
    * Get all cookies
    */
   cookies(this: EnhancedRequest): Record<string, string> {
-    const cookies: Record<string, string> = {}
-    const cookieHeader = this.headers.get('cookie')
-
-    if (cookieHeader) {
-      cookieHeader.split(';').forEach((cookie) => {
-        const [key, value] = cookie.trim().split('=')
-        if (key && value) {
-          cookies[key] = decodeURIComponent(value)
-        }
-      })
-    }
-
-    return cookies
+    return { ...getParsedCookies(this) }
   },
 
   /**
@@ -450,7 +469,7 @@ export const BuiltInRequestMacros = {
    * Get request path without query string
    */
   path(this: EnhancedRequest): string {
-    return new URL(this.url).pathname
+    return getParsedURL(this).pathname
   },
 
   /**
@@ -464,7 +483,7 @@ export const BuiltInRequestMacros = {
    * Get request root URL
    */
   root(this: EnhancedRequest): string {
-    const url = new URL(this.url)
+    const url = getParsedURL(this)
     return `${url.protocol}//${url.host}`
   },
 
@@ -474,12 +493,19 @@ export const BuiltInRequestMacros = {
   is(this: EnhancedRequest, pattern: string): boolean {
     const path = this.path()
 
-    // Convert pattern to regex
-    const regexPattern = pattern
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.')
-
-    const regex = new RegExp(`^${regexPattern}$`)
+    // Compiled glob patterns are memoized — route checks tend to reuse a
+    // small set of patterns across many requests
+    let regex = GLOB_PATTERN_CACHE.get(pattern)
+    if (!regex) {
+      const regexPattern = pattern
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.')
+      regex = new RegExp(`^${regexPattern}$`)
+      if (GLOB_PATTERN_CACHE.size >= 1000) {
+        GLOB_PATTERN_CACHE.clear()
+      }
+      GLOB_PATTERN_CACHE.set(pattern, regex)
+    }
     return regex.test(path)
   },
 
@@ -494,7 +520,7 @@ export const BuiltInRequestMacros = {
    * Get request fingerprint for caching
    */
   fingerprint(this: EnhancedRequest): string {
-    const url = new URL(this.url)
+    const url = getParsedURL(this)
     const data = {
       method: this.method,
       path: url.pathname,
