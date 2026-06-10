@@ -1,5 +1,5 @@
 import type { Server } from 'bun'
-import type { EnhancedRequest, HTTPMethod, ServerOptions } from '../types'
+import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
 import { RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
@@ -133,32 +133,31 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // Create URL for route matching
           const url = new URL(req.url)
 
-          // Handle CORS preflight OPTIONS requests - but check for registered OPTIONS routes first
-          // This ensures explicitly registered OPTIONS routes work while still providing CORS support
-          if (req.method === 'OPTIONS') {
-            const hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
-            const optionsMatch = this.matchRoute(url.pathname, 'OPTIONS', hostname)
-            if (!optionsMatch) {
-              // No explicit OPTIONS route - return generic CORS preflight response
-              return new Response(null, {
-                status: 204,
-                headers: {
-                  'Access-Control-Allow-Origin': '*',
-                  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-                  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-                  'Access-Control-Max-Age': '86400',
-                  'Access-Control-Allow-Credentials': 'true',
-                },
-              })
-            }
-            // Let the registered OPTIONS route handle it (fall through to normal route matching)
-          }
-
           // Get domain from the host header
           const hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
 
           // Find a matching route
           const match = this.matchRoute(url.pathname, req.method as HTTPMethod, hostname)
+
+          // CORS preflight: when no explicit OPTIONS route is registered,
+          // answer with a generic preflight response. A request with an
+          // Origin header gets that origin reflected (plus Vary: Origin)
+          // so credentials stay usable — `Access-Control-Allow-Credentials`
+          // combined with a wildcard origin is rejected by browsers.
+          if (req.method === 'OPTIONS' && !match) {
+            const origin = req.headers.get('origin')
+            const preflightHeaders: Record<string, string> = {
+              'Access-Control-Allow-Origin': origin || '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+              'Access-Control-Max-Age': '86400',
+            }
+            if (origin) {
+              preflightHeaders['Access-Control-Allow-Credentials'] = 'true'
+              preflightHeaders.Vary = 'Origin'
+            }
+            return new Response(null, { status: 204, headers: preflightHeaders })
+          }
 
           // Enhance the request with params and other utilities
           const enhancedReq = this.enhanceRequest(req, match?.params || {})
@@ -168,24 +167,45 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             // Add the matched route to the request
             enhancedReq.route = match.route
 
-            // Collect all middleware to run
-            const middlewareStack = [...this.globalMiddleware]
+            // Resolve the middleware chain for this route. The composed
+            // chain (global middleware + route middleware + handler) is
+            // cached on the route and only rebuilt when `use()` registers
+            // new global middleware or the route's own stack changes —
+            // building the closure chain per request was a hot-path cost.
+            const route = match.route as Route & {
+              _compiledChain?: (req: EnhancedRequest) => Promise<Response | null>
+              _chainEpoch?: number
+              _chainMwLen?: number
+            }
+            const epoch: number = this._mwEpoch || 0
+            const routeMwLen = route.middleware ? route.middleware.length : 0
 
-            // Add route-specific middleware
-            if (match.route.middleware && match.route.middleware.length > 0) {
-              middlewareStack.push(...match.route.middleware)
+            let chain = route._compiledChain
+            if (!chain || route._chainEpoch !== epoch || route._chainMwLen !== routeMwLen) {
+              const middlewareStack = routeMwLen > 0
+                ? [...this.globalMiddleware, ...route.middleware]
+                : [...this.globalMiddleware]
+              middlewareStack.push(async (handlerReq: EnhancedRequest, _next: any) => {
+                return await this.resolveHandler(route.handler, handlerReq)
+              })
+              chain = this.buildMiddlewareChain(middlewareStack)!
+              route._compiledChain = chain
+              route._chainEpoch = epoch
+              route._chainMwLen = routeMwLen
             }
 
-            // Create a final middleware that executes the route handler
-            const routeHandlerMiddleware = async (req: EnhancedRequest, _next: any) => {
-              return await this.resolveHandler(match.route.handler, req)
+            let response: Response | null
+            try {
+              response = await chain!(enhancedReq)
             }
-
-            // Add the route handler as the final middleware
-            middlewareStack.push(routeHandlerMiddleware)
-
-            // Run middleware stack with the route handler at the end
-            const response = await this.runMiddleware(enhancedReq, middlewareStack)
+            catch (error) {
+              if (this.errorHandler) {
+                response = await this.errorHandler(error as Error)
+              }
+              else {
+                throw error
+              }
+            }
 
             // Apply modified cookies to the response
             if (response) {
@@ -286,28 +306,38 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     enhanceRequest: {
       value(req: Request, params: Record<string, string> = {}): EnhancedRequest {
-        // Lazy cookie parsing
+        // Lazy cookie parsing — most requests never read a cookie, so the
+        // header is only parsed (and decoded) on first access. Malformed
+        // percent-encoding falls back to the raw value instead of throwing.
         let parsedCookies: Record<string, string> | null = null
 
         const getCookies = () => {
           if (parsedCookies === null) {
             parsedCookies = {}
-            const cookieHeader = req.headers.get('cookie') || ''
-
-            cookieHeader.split(';').forEach((cookie) => {
-              const parts = cookie.trim().split('=')
-              if (parts.length >= 2) {
-                const name = parts[0].trim()
-                const value = parts.slice(1).join('=').trim()
-                parsedCookies![name] = decodeURIComponent(value)
+            const cookieHeader = req.headers.get('cookie')
+            if (cookieHeader) {
+              for (const cookie of cookieHeader.split(';')) {
+                const eqIndex = cookie.indexOf('=')
+                if (eqIndex === -1)
+                  continue
+                const name = cookie.slice(0, eqIndex).trim()
+                if (!name)
+                  continue
+                const value = cookie.slice(eqIndex + 1).trim()
+                try {
+                  parsedCookies[name] = decodeURIComponent(value)
+                }
+                catch {
+                  parsedCookies[name] = value
+                }
               }
-            })
+            }
           }
           return parsedCookies
         }
 
-        // Create cookie utilities with lazy parsing
-        const cookies = {
+        // Cookie utility methods (get/set/delete/getAll)
+        const cookieMethods = {
           get: (name: string) => getCookies()[name],
           set: (name: string, value: string, options: any = {}) => {
             const enhancedRequest = req as EnhancedRequest
@@ -329,7 +359,6 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // Create enhanced request
         const enhancedReq = Object.assign(req, {
           params,
-          cookies: getCookies(), // Set cookies as plain object for direct access
           _cookiesToSet: [],
           _cookiesToDelete: [],
         }) as unknown as EnhancedRequest
@@ -366,8 +395,23 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           }
         }
 
-        // Add cookie methods to the request (overrides any macro named `cookies`).
-        Object.assign(enhancedReq, { cookies: { ...getCookies(), ...cookies } })
+        // `cookies` is both a plain name→value map (direct access) and the
+        // get/set/delete/getAll utility. The merged object is materialized
+        // lazily on first access so requests that never touch cookies skip
+        // header parsing entirely.
+        // Name→value map merged with the get/set/delete/getAll helpers; the
+        // function-valued keys make a strict Record<string, string> impossible
+        let cookiesObject: Record<string, unknown> | null = null
+        Object.defineProperty(enhancedReq, 'cookies', {
+          get() {
+            if (cookiesObject === null) {
+              cookiesObject = { ...getCookies(), ...cookieMethods }
+            }
+            return cookiesObject
+          },
+          configurable: true,
+          enumerable: true,
+        })
 
         return enhancedReq
       },
@@ -380,6 +424,14 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      */
     applyModifiedCookies: {
       value(response: Response, req: EnhancedRequest): Response {
+        // Fast path: nothing to apply — return the response untouched
+        // instead of paying for a clone on every request
+        const hasSet = req._cookiesToSet && req._cookiesToSet.length > 0
+        const hasDelete = req._cookiesToDelete && req._cookiesToDelete.length > 0
+        if (!hasSet && !hasDelete) {
+          return response
+        }
+
         // Clone the response to modify headers
         const newResponse = new Response(response.body, {
           status: response.status,

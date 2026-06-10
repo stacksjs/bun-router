@@ -18,6 +18,9 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
             this.globalMiddleware.push(resolvedMiddleware)
           }
         }
+        // Invalidate per-route compiled middleware chains — they bake in
+        // the global middleware stack as of build time
+        this._mwEpoch = (this._mwEpoch || 0) + 1
         return this
       },
       writable: true,

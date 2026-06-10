@@ -81,6 +81,10 @@ export class Router {
   // Middleware pipeline for advanced features
   _middlewarePipeline?: MiddlewarePipeline
 
+  // Bumped whenever global middleware changes; per-route compiled chains
+  // cache against this epoch and rebuild when it moves
+  _mwEpoch = 0
+
   config: RouterConfig = {
     verbose: false,
     routesPath: 'routes',
@@ -759,60 +763,36 @@ export class Router {
   getAllowedMethods(path: string, domain?: string): string[] {
     const url = new URL(path, 'http://localhost')
     const methods: Set<string> = new Set()
-    const allMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
 
-    for (const method of allMethods) {
-      // Check static routes
-      if (this.staticRoutes.has(method)) {
-        const staticRoute = this.staticRoutes.get(method)!.get(url.pathname)
-        if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
-          methods.add(method)
-          continue
-        }
+    // Static routes: one map lookup per registered method
+    for (const [method, routesByPath] of this.staticRoutes) {
+      const staticRoute = routesByPath.get(url.pathname)
+      if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
+        methods.add(method)
       }
+    }
 
-      // Get potential routes
-      const potentialRoutes: Route[] = domain && this.domains[domain]
-        ? this.domains[domain]
-        : this.routes
+    // Dynamic routes: a single pass over the candidate pool covers exact,
+    // pattern, and wildcard matches for every method at once (the old
+    // implementation re-scanned the table once per HTTP method)
+    const potentialRoutes: Route[] = domain && this.domains[domain]
+      ? this.domains[domain]
+      : this.routes
 
-      // Filter routes to only those matching the HTTP method
-      const methodRoutes = potentialRoutes.filter((route: Route) => route.method === method)
-
-      // Check exact match
-      for (const route of methodRoutes) {
-        if (route.path === url.pathname) {
-          methods.add(method)
-          break
-        }
+    for (const route of potentialRoutes) {
+      if (methods.has(route.method)) {
+        continue
       }
-
-      // Check pattern match if not already found
-      if (!methods.has(method)) {
-        for (const route of methodRoutes) {
-          if (route.pattern) {
-            const match = route.pattern.exec(url)
-            if (match) {
-              methods.add(method)
-              break
-            }
-          }
-        }
+      if (route.path === url.pathname) {
+        methods.add(route.method)
+        continue
       }
-
-      // Check wildcard routes if not already found
-      if (!methods.has(method)) {
-        const wildcardRoutes = potentialRoutes.filter((route: Route) =>
-          route.method === method && route.path.endsWith('*'),
-        )
-
-        for (const route of wildcardRoutes) {
-          const basePath = route.path.slice(0, -1)
-          if (url.pathname.startsWith(basePath)) {
-            methods.add(method)
-            break
-          }
-        }
+      if (route.pattern && route.pattern.exec(url)) {
+        methods.add(route.method)
+        continue
+      }
+      if (route.path.endsWith('*') && url.pathname.startsWith(route.path.slice(0, -1))) {
+        methods.add(route.method)
       }
     }
 
