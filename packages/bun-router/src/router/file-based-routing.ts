@@ -538,19 +538,26 @@ export function registerFileBasedRouting(RouterClass: typeof Router): void {
         // Store viewsDir for use in handlers
         this._viewsDir = viewsDir
 
-        // Register each discovered route
-        for (const route of routes) {
-          const handler = createViewHandler(route.filePath, viewsDir, config, this.config.queryPreservation)
-
-          // Only register if no explicit route exists for this path
-          const existingRoute = this.routes.find(
-            (r: { path: string; method: string }) => r.path === route.routePath && r.method === 'GET'
-          )
-
-          if (!existingRoute) {
-            this.get(route.routePath, handler, 'web')
-            this._fileBasedRoutes.push(route)
+        // Register each discovered route. The existing GET paths are
+        // collected once — the previous per-route `.find()` scan made
+        // startup O(routes²) for large route tables.
+        const existingGetPaths = new Set<string>()
+        for (const r of this.routes as Array<{ path: string, method: string }>) {
+          if (r.method === 'GET') {
+            existingGetPaths.add(r.path)
           }
+        }
+
+        for (const route of routes) {
+          // Only register if no explicit route exists for this path
+          if (existingGetPaths.has(route.routePath)) {
+            continue
+          }
+
+          const handler = createViewHandler(route.filePath, viewsDir, config, this.config.queryPreservation)
+          this.get(route.routePath, handler, 'web')
+          this._fileBasedRoutes.push(route)
+          existingGetPaths.add(route.routePath)
         }
 
         this._fileRoutesInitialized = true
