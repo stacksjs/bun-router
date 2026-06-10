@@ -37,8 +37,8 @@ export * as Errors from './errors'
 // Built-in middleware (CORS, CSRF, sessions, rate limiting, …)
 export * from './middleware'
 
-// Request context (AsyncLocalStorage-backed current request)
-export { getCurrentRequest, request, runWithRequest, setCurrentRequest } from './request/context'
+// Request context (AsyncLocalStorage-backed current request; lazy — see enableRequestContext)
+export { enableRequestContext, getCurrentRequest, request, runWithRequest, setCurrentRequest } from './request/context'
 
 // Session stores and manager
 export * from './session'
