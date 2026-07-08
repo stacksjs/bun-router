@@ -44,11 +44,13 @@ export class AuthTester {
   withJWT(token: string, type: 'Bearer' | 'Basic' = 'Bearer'): AuthTester {
     const headers = new Headers(this.request.headers)
     headers.set('Authorization', `${type} ${token}`)
-    // Create a new request object with updated headers
+    // Create a new request object with updated headers. The spread drops
+    // prototype methods (e.g. `clone`) from the inferred type, so re-assert
+    // the shape — the mock still carries them at runtime.
     this.request = {
       ...this.request,
       headers,
-    }
+    } as EnhancedRequest
     return this
   }
 
@@ -66,7 +68,7 @@ export class AuthTester {
   withApiKey(apiKey: string, headerName: string = 'X-API-Key'): AuthTester {
     const headers = new Headers(this.request.headers)
     headers.set(headerName, apiKey)
-    this.request = { ...this.request, headers }
+    this.request = { ...this.request, headers } as EnhancedRequest
     return this
   }
 
@@ -77,7 +79,7 @@ export class AuthTester {
     const credentials = btoa(`${username}:${password}`)
     const headers = new Headers(this.request.headers)
     headers.set('Authorization', `Basic ${credentials}`)
-    this.request = { ...this.request, headers }
+    this.request = { ...this.request, headers } as EnhancedRequest
     return this
   }
 
