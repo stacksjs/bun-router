@@ -809,6 +809,12 @@ export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip'
    */
   jsonBody?: Record<string, unknown>
   /**
+   * Raw unparsed request body cache, populated on first `rawBody()` read (or up
+   * front by a framework body parser). Kept so webhook signature checks get the
+   * exact bytes the client sent.
+   */
+  _rawBody?: string
+  /**
    * Form body data (if Content-Type is multipart/form-data or application/x-www-form-urlencoded)
    */
   formBody?: FormBody
@@ -1979,6 +1985,9 @@ export interface RequestMacroMethods {
   // Authentication
   bearerToken: () => string | null
   basicAuth: () => { username: string, password: string } | null
+
+  /** Raw unparsed request body as a string (cached). Needed for webhook signature verification (Stripe/GitHub/Slack), where a re-serialized jsonBody won't match the HMAC. */
+  rawBody: () => Promise<string>
 
   // Headers
   hasHeader: (name: string) => boolean

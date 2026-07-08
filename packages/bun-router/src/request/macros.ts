@@ -348,6 +348,29 @@ export const BuiltInRequestMacros = {
   },
 
   /**
+   * Get the raw, unparsed request body as a string.
+   *
+   * The body stream can only be consumed once, so this caches the result on
+   * `_rawBody`. Signature-verifying callbacks (Stripe/GitHub/Slack webhooks)
+   * need the exact bytes the client sent, before any JSON parsing — a parsed
+   * `jsonBody` re-serialized is NOT byte-identical and will fail HMAC checks.
+   * A framework body parser that has already read the body may populate
+   * `_rawBody` up front so this returns without re-reading.
+   */
+  async rawBody(this: EnhancedRequest): Promise<string> {
+    if (typeof this._rawBody === 'string')
+      return this._rawBody
+    try {
+      const text = await this.clone().text()
+      this._rawBody = text
+      return text
+    }
+    catch {
+      return ''
+    }
+  },
+
+  /**
    * Get basic auth credentials
    */
   basicAuth(this: EnhancedRequest): { username: string, password: string } | null {
