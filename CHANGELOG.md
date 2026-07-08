@@ -1,3 +1,68 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.16...v0.0.17)
+
+## 🚀 Features
+
+- **request**: add rawBody() macro for webhook signature verification ([fcf62a6](https://github.com/stacksjs/bun-router/commit/fcf62a6)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **serve**: per-route native-dispatch opt-out; lock discovery ordering ([2f8186c](https://github.com/stacksjs/bun-router/commit/2f8186c)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **serve**: opt-in native Bun route dispatch ([e4844d7](https://github.com/stacksjs/bun-router/commit/e4844d7)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **exports**: organize the public surface, export Container and validation ([d25531e](https://github.com/stacksjs/bun-router/commit/d25531e)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **container**: real ./container subpath entrypoint ([650858f](https://github.com/stacksjs/bun-router/commit/650858f)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **types**: full param grammar in ExtractRouteParams, narrower defaults ([1e94d14](https://github.com/stacksjs/bun-router/commit/1e94d14)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **static**: stream large files with Range support; harden path handling ([cbed3fe](https://github.com/stacksjs/bun-router/commit/cbed3fe)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: add head(), tidy optional-param URLs, keep domain routes out of the trie ([1e01e23](https://github.com/stacksjs/bun-router/commit/1e01e23)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🐛 Bug Fixes
+
+- **testing**: restore EnhancedRequest type on spread mock requests ([46b50b9](https://github.com/stacksjs/bun-router/commit/46b50b9)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **container**: share injection metadata symbols with the container ([c7e9b13](https://github.com/stacksjs/bun-router/commit/c7e9b13)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **url**: clean up slashes left by unfilled optional params ([75bda11](https://github.com/stacksjs/bun-router/commit/75bda11)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **observability**: bound in-memory stores and quiet the tracer ([5ad1da2](https://github.com/stacksjs/bun-router/commit/5ad1da2)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **middleware**: unref background timers so they cannot block shutdown ([523e3eb](https://github.com/stacksjs/bun-router/commit/523e3eb)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **auth**: timing-safe JWT verification and typed JWT/OAuth2 API ([b507d42](https://github.com/stacksjs/bun-router/commit/b507d42)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **csrf**: constant-time compare, bounded token store, working token issuance ([22002c7](https://github.com/stacksjs/bun-router/commit/22002c7)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: keep route groups active across async callbacks ([c7c9c51](https://github.com/stacksjs/bun-router/commit/c7c9c51)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: restore HEAD/wildcard fallbacks in optimized matching ([66ea12a](https://github.com/stacksjs/bun-router/commit/66ea12a)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **cors**: never pair wildcard origin with credentials; enforce allowlist ([af2afce](https://github.com/stacksjs/bun-router/commit/af2afce)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## ⚡ Performance Improvements
+
+- **router**: precompile handler invokers; share the parsed URL ([ca1924d](https://github.com/stacksjs/bun-router/commit/ca1924d)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **context**: make the AsyncLocalStorage request context lazy ([bac954f](https://github.com/stacksjs/bun-router/commit/bac954f)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **request**: materialize cookies lazily via a prototype accessor ([98b4220](https://github.com/stacksjs/bun-router/commit/98b4220)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: memoize the 405-vs-404 allowed-methods scan ([8098ee6](https://github.com/stacksjs/bun-router/commit/8098ee6)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **request**: attach macros via a shared prototype ([04744c3](https://github.com/stacksjs/bun-router/commit/04744c3)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **routing**: collect existing GET paths once during file-route discovery ([51f0624](https://github.com/stacksjs/bun-router/commit/51f0624)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **container**: index bindings by tag ([5553976](https://github.com/stacksjs/bun-router/commit/5553976)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **validation**: hoist format regexes; fix duplicate and lax checks ([665d66b](https://github.com/stacksjs/bun-router/commit/665d66b)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **response-cache**: store raw bytes, drop clone(), precompile patterns ([151ab4d](https://github.com/stacksjs/bun-router/commit/151ab4d)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **request**: memoize per-request parsing in macros and input helpers ([eb585d7](https://github.com/stacksjs/bun-router/commit/eb585d7)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: cut per-request work on the dispatch hot path ([d547034](https://github.com/stacksjs/bun-router/commit/d547034)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: optimize trie matching and compiler caches ([9f0ba1a](https://github.com/stacksjs/bun-router/commit/9f0ba1a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## ♻️ Code Refactoring
+
+- **types**: drop any-casts from middleware options and helpers ([b0240fe](https://github.com/stacksjs/bun-router/commit/b0240fe)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **fluent**: consolidate three FluentRouter classes into one ([5892fe2](https://github.com/stacksjs/bun-router/commit/5892fe2)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 📚 Documentation
+
+- add validation and static-files guides ([99042ab](https://github.com/stacksjs/bun-router/commit/99042ab)) _(by Chris <chrisbreuer93@gmail.com>)_
+- fix package name, param syntax, and broken examples ([55fc0c7](https://github.com/stacksjs/bun-router/commit/55fc0c7)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.17 ([5c87345](https://github.com/stacksjs/bun-router/commit/5c87345)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: refresh bun.lock to pick up pickier 0.1.37 ([2e9a9b6](https://github.com/stacksjs/bun-router/commit/2e9a9b6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **deps**: refresh bun.lock to pick up pickier 0.1.35 ([0e795e1](https://github.com/stacksjs/bun-router/commit/0e795e1)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- **bench**: add router hot-path micro-benchmark ([d590700](https://github.com/stacksjs/bun-router/commit/d590700)) _(by Chris <chrisbreuer93@gmail.com>)_
+- remove committed CLI output artifacts ([f49984f](https://github.com/stacksjs/bun-router/commit/f49984f)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: refresh bun.lock to pick up pickier 0.1.33 ([d4ad4f6](https://github.com/stacksjs/bun-router/commit/d4ad4f6)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.15...v0.0.16)
 
 ### 🐛 Bug Fixes
