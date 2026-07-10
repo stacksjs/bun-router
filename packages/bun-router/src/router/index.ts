@@ -120,8 +120,8 @@ declare module './router' {
     }
 
     // Optimized route matching methods
-    matchRoute: (path: string, method: string, domain?: string) => { route: Route, params: Record<string, string> } | undefined
-    getAllowedMethods: (path: string, domain?: string) => string[]
+    matchRoute(path: string, method: string, domain?: string): { route: Route, params: Record<string, string> } | undefined
+    getAllowedMethods(path: string, domain?: string): string[]
     clearRouteCache: () => void
     getCacheStats: () => any
     getRouteStats: () => any
@@ -169,11 +169,11 @@ declare module './router' {
     head: (path: string, handler: ActionHandler, type?: 'api' | 'web', name?: string, middleware?: any[]) => Router
 
     // Redirect and utility methods
-    onError: (handler: (error: Error) => Response | Promise<Response>) => Router
-    redirect: (url: string, status?: 301 | 302 | 303 | 307 | 308) => Response
-    permanentRedirect: (url: string) => Response
-    fallback: (handler: ActionHandler) => Router
-    route: (name: string, params?: Record<string, string>) => string
+    onError(handler: (error: Error) => Response | Promise<Response>): Router
+    redirect(url: string, status?: 301 | 302 | 303 | 307 | 308): Response
+    permanentRedirect(url: string): Response
+    fallback(handler: ActionHandler): Router
+    route(name: string, params?: Record<string, string>): string
   }
 }
 export { Dependencies, FluentRouteBuilder, FluentRouter, globalMiddlewarePipeline, MiddlewareFactory, MiddlewarePipeline, RouteFactory, router, RouterUtils, SkipConditions }

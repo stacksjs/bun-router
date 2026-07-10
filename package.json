@@ -85,5 +85,8 @@
       }
     },
     "commit-msg": "bunx gitlint --edit .git/COMMIT_EDITMSG"
+  },
+  "overrides": {
+    "typescript": "^7.0.2"
   }
 }
