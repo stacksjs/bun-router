@@ -2,7 +2,7 @@
   "name": "@stacksjs/bun-router",
   "type": "module",
   "sideEffects": false,
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "A fast, type-safe router for Bun.",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",

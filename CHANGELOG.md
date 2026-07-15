@@ -1,3 +1,14 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.18...v0.0.19)
+
+## 🧹 Chores
+
+- release v0.0.19 ([50b85c8](https://github.com/stacksjs/bun-router/commit/50b85c8)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **pkg**: publint clean — types-first exports, sideEffects, bin shebang ([f3feba0](https://github.com/stacksjs/bun-router/commit/f3feba0)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.17...v0.0.18)
 
 ## ⚡ Performance Improvements
