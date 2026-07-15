@@ -1,6 +1,7 @@
 {
   "name": "@stacksjs/bun-router",
   "type": "module",
+  "sideEffects": false,
   "version": "0.0.18",
   "description": "A fast, type-safe router for Bun.",
   "author": "Chris Breuer <chris@stacksjs.org>",
@@ -24,13 +25,13 @@
   ],
   "exports": {
     ".": {
-      "bun": "./dist/index.js",
       "types": "./dist/index.d.ts",
+      "bun": "./dist/index.js",
       "import": "./dist/index.js"
     },
     "./container": {
-      "bun": "./dist/container/index.js",
       "types": "./dist/container/index.d.ts",
+      "bun": "./dist/container/index.js",
       "import": "./dist/container/index.js"
     },
     "./*": {
@@ -41,13 +42,13 @@
   "publishConfig": {
     "exports": {
       ".": {
-        "bun": "./dist/index.js",
         "types": "./dist/index.d.ts",
+        "bun": "./dist/index.js",
         "import": "./dist/index.js"
       },
       "./container": {
-        "bun": "./dist/container/index.js",
         "types": "./dist/container/index.d.ts",
+        "bun": "./dist/container/index.js",
         "import": "./dist/container/index.js"
       },
       "./*": {
