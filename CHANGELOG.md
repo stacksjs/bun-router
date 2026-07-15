@@ -1,3 +1,18 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.17...v0.0.18)
+
+## ⚡ Performance Improvements
+
+- **pkg**: drop src/ from published files (dist-only) ([fd8d4b7](https://github.com/stacksjs/bun-router/commit/fd8d4b7)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.18 ([b318391](https://github.com/stacksjs/bun-router/commit/b318391)) _(by Chris <chrisbreuer93@gmail.com>)_
+- upgrade to TypeScript 7 ([1303d0d](https://github.com/stacksjs/bun-router/commit/1303d0d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.16...v0.0.17)
 
 ## 🚀 Features
