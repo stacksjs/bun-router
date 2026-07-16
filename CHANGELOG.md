@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.19...v0.0.20)
+
+## 🐛 Bug Fixes
+
+- **pkg**: drop sideEffects:false, which broke the 0.0.19 bundle ([3ca8ce2](https://github.com/stacksjs/bun-router/commit/3ca8ce2)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.20 ([895c849](https://github.com/stacksjs/bun-router/commit/895c849)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.18...v0.0.19)
 
 ## 🧹 Chores
