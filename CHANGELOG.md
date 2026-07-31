@@ -1,3 +1,21 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.20...v0.0.21)
+
+## 🐛 Bug Fixes
+
+- **request**: attach integer route params ([d8c10b7](https://github.com/stacksjs/bun-router/commit/d8c10b7)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 📚 Documentation
+
+- link the community as stacksjs.com/discord ([312ee5e](https://github.com/stacksjs/bun-router/commit/312ee5e)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.21 ([fe117e8](https://github.com/stacksjs/bun-router/commit/fe117e8)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.19...v0.0.20)
 
 ## 🐛 Bug Fixes
