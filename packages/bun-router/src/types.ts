@@ -801,6 +801,11 @@ export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip'
    */
   getParam: <T = string>(name: string, defaultValue?: T) => T | undefined
   /**
+   * Read a route parameter as a safe integer. Missing, fractional, and
+   * otherwise invalid numeric values return null.
+   */
+  getParamAsInt: (name: string) => number | null
+  /**
    * Query parameters from the URL
    */
   query: Record<string, string | string[]>

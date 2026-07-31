@@ -15,6 +15,16 @@ if (!RequestWithMacros.hasMacro('getParam')) {
     return value !== undefined ? value : defaultValue
   })
 }
+if (!RequestWithMacros.hasMacro('getParamAsInt')) {
+  RequestWithMacros.macro('getParamAsInt', function (this: EnhancedRequest, name: string) {
+    const value = this.params?.[name]
+    if (value === undefined || value.trim() === '')
+      return null
+
+    const parsed = Number(value)
+    return Number.isSafeInteger(parsed) ? parsed : null
+  })
+}
 // `get(key)` — read query params (and only query params; the full input
 // merge with body etc. is provided by the `input` macro). Only registered
 // when no macro already claimed the name.

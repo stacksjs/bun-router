@@ -1183,6 +1183,15 @@ export class Router {
       return value !== undefined ? value : defaultValue
     }
 
+    ;(enhancedReq as any).getParamAsInt = (name: string): number | null => {
+      const value = params?.[name]
+      if (value === undefined || value.trim() === '')
+        return null
+
+      const parsed = Number(value)
+      return Number.isSafeInteger(parsed) ? parsed : null
+    }
+
     ;(enhancedReq as any).params = params || {}
 
     return enhancedReq as EnhancedRequest
