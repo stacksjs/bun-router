@@ -148,6 +148,18 @@ export class RouteTrie {
           value: '*',
         })
       }
+      // A named catch-all, `{name}*`, is what file-based routing emits for
+      // `[...name]`. Without this it fell through to the mixed
+      // static/dynamic branch below, which builds a pattern tested against
+      // one already-split segment — so it matched `/files/a` and declined
+      // `/files/a/b`, which is the shape no catch-all should ever have.
+      else if (/^\{[^{}/]+\}\*$/.test(part)) {
+        segments.push({
+          type: 'wildcard',
+          value: part,
+          paramName: part.slice(1, part.indexOf('}')),
+        })
+      }
       else if (part.startsWith('{') && part.endsWith('}')) {
         const paramPart = part.slice(1, -1)
         const [paramName, pattern] = paramPart.split(':')
@@ -265,6 +277,7 @@ export class RouteTrie {
       case 'wildcard':
         if (!node.wildcardChild) {
           node.wildcardChild = new TrieNode()
+          node.wildcardChild.paramName = segment.paramName ?? null
         }
         this.insertRoute(node.wildcardChild, compiled, segmentIndex + 1)
         break
@@ -348,7 +361,7 @@ export class RouteTrie {
     if (node.wildcardChild) {
       const compiled = node.wildcardChild.getRoute(method)
       if (compiled) {
-        params.wildcard = segments.slice(segmentIndex).join('/')
+        params[node.wildcardChild.paramName ?? 'wildcard'] = segments.slice(segmentIndex).join('/')
         return {
           route: compiled.route,
           params,

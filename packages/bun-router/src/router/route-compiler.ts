@@ -189,11 +189,32 @@ export class RouteCompiler {
     path: string,
     constraints?: Record<string, string>,
   ): { exec: (pathname: string) => { groups?: Record<string, string> } | null } {
+    // A trailing catch-all binds the rest of the path, separators and all,
+    // so it has to come off before the static text is escaped: `*` is a
+    // regex metacharacter, and escaping it compiles the catch-all into a
+    // literal asterisk that no request ever carries. `{name}*` binds to
+    // `name` — this is what file-based routing emits for `[...name]` — and
+    // a bare `*` binds to `wildcard`, which is what the uncompiled path
+    // has always done. Only a trailing catch-all is recognized, because a
+    // catch-all with anything after it cannot be satisfied.
+    let staticPath = path
+    let catchAll: string | null = null
+
+    const namedCatchAll = staticPath.match(/\{([^{}/]+)\}\*$/)
+    if (namedCatchAll) {
+      catchAll = namedCatchAll[1]
+      staticPath = staticPath.slice(0, namedCatchAll.index)
+    }
+    else if (staticPath.endsWith('*')) {
+      catchAll = 'wildcard'
+      staticPath = staticPath.slice(0, -1)
+    }
+
     // Pull params out as placeholder tokens so the static text can be
     // regex-escaped safely — without this, a literal dot in a path like
     // `/api/v1.0/users` would match any character.
     const paramTokens: string[] = []
-    const withTokens = path.replace(/\{([^}]+)\}/g, (_m, inner: string) => {
+    const withTokens = staticPath.replace(/\{([^}]+)\}/g, (_m, inner: string) => {
       paramTokens.push(inner)
       return `\u0000${paramTokens.length - 1}\u0000`
     })
@@ -214,6 +235,12 @@ export class RouteCompiler {
       const leadingSlash = token.startsWith('/') ? '/' : ''
       return isOptional ? `(?:${leadingSlash}${group})?` : `${leadingSlash}${group}`
     })
+
+    // The catch-all goes back on last, unescaped and crossing separators.
+    // It requires at least one character, so `/files/*` still declines
+    // `/files` and `/files/` exactly as it did before it was compiled.
+    if (catchAll !== null)
+      regexPattern += `(?<${catchAll}>${constraints?.[catchAll] ?? '.+'})`
 
     const regex = new RegExp(`^${regexPattern}$`)
 
