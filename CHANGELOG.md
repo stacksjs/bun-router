@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.21...v0.0.22)
+
+## 🐛 Bug Fixes
+
+- **router**: a catch-all matches the whole path, not its first segment ([475d4aa](https://github.com/stacksjs/bun-router/commit/475d4aa)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.22 ([4dfcbc9](https://github.com/stacksjs/bun-router/commit/4dfcbc9)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.20...v0.0.21)
 
 ## 🐛 Bug Fixes
