@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.22...v0.0.23)
+
+## 🚀 Features
+
+- **router**: a view can answer with the status it found, and see who is asking ([71ba91c](https://github.com/stacksjs/bun-router/commit/71ba91c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.23 ([17e179c](https://github.com/stacksjs/bun-router/commit/17e179c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.21...v0.0.22)
 
 ## 🐛 Bug Fixes
