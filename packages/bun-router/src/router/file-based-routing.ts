@@ -305,14 +305,59 @@ function findPrebuiltView(stxFilePath: string, viewsDir: string): string | null 
 }
 
 /**
+ * What a rendered page asked the response to be.
+ *
+ * A page cannot decide its own status until it has looked something up - a
+ * repository, an order, a user - so a status declared in the file is no use to
+ * a dynamic route. stx gives a server script `setResponseStatus`, `notFound`
+ * and `setResponseHeader` for exactly this, and records what they asked for on
+ * the render context; this is that answer, carried back to the handler which
+ * builds the Response.
+ */
+interface RenderedView {
+  html: string
+  status: number
+  headers: Record<string, string>
+}
+
+/** A `Cookie` header, parsed into the record a server script reads. */
+function parseCookies(header: string): Record<string, string> {
+  const jar: Record<string, string> = {}
+
+  for (const part of String(header ?? '').split(';')) {
+    const cut = part.indexOf('=')
+    if (cut < 0)
+      continue
+
+    try {
+      jar[part.slice(0, cut).trim()] = decodeURIComponent(part.slice(cut + 1).trim())
+    }
+    catch {
+      // A malformed escape in one cookie is not a reason to drop the others.
+    }
+  }
+
+  return jar
+}
+
+/**
  * Render an STX file using the @stacksjs/stx library
  */
+// `filePath` is used five times below, and pickier's no-unused-vars says it is
+// not: its scanner finds the function body by counting braces over the source
+// text, and the prose comments inside this function move where it thinks the
+// body ends. Removing a single apostrophe from any one of them makes the
+// report go away, which is the tell that it is the scanner and not the code.
+// Reported rather than worked around by renaming - a parameter called
+// `_filePath` used five times would be a lie that outlives the bug.
+// eslint-disable-next-line pickier/no-unused-vars
 async function renderStxFile(
   filePath: string,
   viewsDir: string,
   data: Record<string, unknown>,
   routingConfig?: FileBasedRoutingConfig,
-): Promise<string> {
+  request?: Request,
+): Promise<RenderedView> {
   // Dynamic import to avoid build-time resolution
   const stxModule = '@stacksjs/stx'
   const stx = await import(/* @vite-ignore */ stxModule)
@@ -333,12 +378,69 @@ async function renderStxFile(
   // Replace <script client> with regular <script>
   templateContent = templateContent.replace(/<script\s+client\s*>/gi, '<script>')
 
+  const asked: { status: number, headers: Record<string, string> } = { status: 200, headers: {} }
+
+  const headerBag = (data.headers ?? {}) as Record<string, string>
+  const cookieHeader = String(headerBag.cookie ?? headerBag.Cookie ?? '')
+  const requestUrl = String(data.url ?? '')
+  const search = requestUrl.includes('?') ? requestUrl.slice(requestUrl.indexOf('?')) : ''
+
+  /*
+   * The server context, the same shape stx's own `serve()` provides.
+   *
+   * Without it a `<script server>` that reads `__stxServeContext` throws a
+   * ReferenceError inside its own IIFE - and that takes every other binding in
+   * the file down with it, so the page renders its empty branch and reads as a
+   * correct answer rather than as a failure. The most common thing a page reads
+   * from it is the reader's cookies, which is to say the reader: every signed-in
+   * visitor was rendered as a stranger on this path, so a private page looked
+   * missing to the person who owns it and every permission-gated control was
+   * simply absent.
+   */
+  const serveContext = {
+    url: requestUrl,
+    path: String(data.path ?? ''),
+    search,
+    host: String(headerBag.host ?? ''),
+    cookieHeader,
+    cookies: parseCookies(cookieHeader),
+    ip: '',
+    locale: null,
+    params: (data.params ?? {}) as Record<string, string>,
+    method: String(data.method ?? 'GET'),
+    request,
+  }
+
   // Build context with data
   const context: Record<string, unknown> = {
     __filename: filePath,
     __dirname: dirname(filePath),
     props: data,
     ...data,
+    __stxServeContext: serveContext,
+
+    /*
+     * What a page uses to say what it found.
+     *
+     * Range-checked rather than trusted, and ignored when it is out of range: a
+     * status is not worth failing a page over, and a typo that became a 500
+     * from the host reading it back would be worse than the 200 this replaces.
+     */
+    setResponseStatus: (status: number) => {
+      if (Number.isInteger(status) && status >= 100 && status <= 599)
+        asked.status = status
+    },
+    notFound: (status: number = 404) => {
+      asked.status = Number.isInteger(status) && status >= 400 && status <= 599 ? status : 404
+    },
+    setResponseHeader: (name: string, value: string) => {
+      if (name)
+        asked.headers[String(name)] = String(value)
+    },
+    // Declared so a page that calls it does not take its own bindings down.
+    // The static metadata it carries belongs to a build step this path has not
+    // got, so doing nothing is the honest answer.
+    definePageMeta: () => {},
   }
 
   // Extract variables from server script
@@ -367,7 +469,23 @@ async function renderStxFile(
     partialsDir: resolvedPartialsDir,
   }
 
-  return stx.processDirectives(templateContent, context, filePath, config, new Set())
+  const html = await stx.processDirectives(templateContent, context, filePath, config, new Set())
+
+  /*
+   * Read from the context as well as from the closure. stx's own
+   * `renderTemplate` records the same intent under these keys, so a page that
+   * reaches the defaults there rather than the ones above is still honoured.
+   */
+  const recordedStatus = Number((context as Record<string, unknown>).__stxResponseStatus)
+  const recordedHeaders = (context as Record<string, unknown>).__stxResponseHeaders as Record<string, string> | undefined
+
+  return {
+    html,
+    status: Number.isInteger(recordedStatus) && recordedStatus >= 100 && recordedStatus <= 599
+      ? recordedStatus
+      : asked.status,
+    headers: { ...asked.headers, ...(recordedHeaders ?? {}) },
+  }
 }
 
 /**
@@ -416,11 +534,16 @@ function createViewHandler(
 
       // 2. Render STX file
       if (filePath.endsWith('.stx')) {
-        let html = await renderStxFile(filePath, viewsDir, data, config)
-        html = applyQueryPreservation(html)
+        const rendered = await renderStxFile(filePath, viewsDir, data, config, req as unknown as Request)
+        const html = applyQueryPreservation(rendered.html)
+
         return new Response(html, {
-          status: 200,
-          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          // What the page asked for while rendering, not a fixed 200. A page
+          // whose record does not exist renders its not-found branch, and
+          // answering 200 tells a crawler and a cache that a URL naming nothing
+          // is a real page.
+          status: rendered.status,
+          headers: { 'Content-Type': 'text/html; charset=utf-8', ...rendered.headers },
         })
       }
 
