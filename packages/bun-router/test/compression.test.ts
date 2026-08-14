@@ -10,7 +10,7 @@
 // serve the wrong copy to the next client.
 
 import { describe, expect, test } from 'bun:test'
-import { appendVary, compressResponse, isCompressible, negotiateEncoding, shouldCompress } from '../src/response/compression'
+import { appendVary, compressResponse, isCompressible, negotiateEncoding, peekBody, shouldCompress } from '../src/response/compression'
 
 const LONG = 'ReviewOS renders its pages on the server. '.repeat(200)
 
@@ -123,7 +123,10 @@ describe('compressing', () => {
    * wait - a worse trade than the bytes are worth.
    */
   test('a stream stays a stream, and comes out compressed', async () => {
-    const chunks = ['{"file":"one"}\n', '{"file":"two"}\n', '{"file":"three"}\n']
+    // Above the threshold, because below it the right answer is not to
+    // compress at all - a manifest of three short lines is not worth a gzip
+    // header. A real one carries a record per file.
+    const chunks = Array.from({ length: 40 }, (_, at) => `${JSON.stringify({ type: 'file', at, path: `app/Actions/Deep/Nested/File${at}.ts`, additions: at, deletions: at })}\n`)
 
     let closed = false
     const source = new ReadableStream<Uint8Array>({
@@ -206,5 +209,86 @@ describe('turning it off', () => {
 
     expect(answer.headers.get('content-encoding')).toBeNull()
     expect(answer.headers.get('vary')).toBeNull()
+  })
+})
+
+describe('the threshold without a length', () => {
+  /*
+   * Bun sets no `Content-Length` on a string body, so "is this worth
+   * compressing" cannot be answered from the headers. Reading a kilobyte
+   * answers it without buffering the response: a stream that carries on keeps
+   * its prefix and keeps streaming, and one that ended inside that kilobyte
+   * was a small answer all along. `/api/health` is 356 bytes, and it was being
+   * compressed.
+   */
+  test('a small answer with no declared length is left alone', async () => {
+    const small = new Response(JSON.stringify({ ok: true, uptime: 1234 }), { headers: { 'content-type': 'application/json' } })
+
+    expect(small.headers.get('content-length')).toBeNull()
+
+    const answer = await compressResponse(small, asked())
+
+    expect(answer.headers.get('content-encoding')).toBeNull()
+    expect(await answer.json()).toEqual({ ok: true, uptime: 1234 })
+  })
+
+  test('and a long one is compressed', async () => {
+    const answer = await compressResponse(
+      new Response(LONG, { headers: { 'content-type': 'text/html' } }),
+      asked(),
+    )
+
+    expect(answer.headers.get('content-encoding')).toBe('gzip')
+    expect(new TextDecoder().decode(Bun.gunzipSync(new Uint8Array(await answer.arrayBuffer())))).toBe(LONG)
+  })
+
+  test('peeking keeps every byte, and says whether the body ended', async () => {
+    const chunks = ['one:', 'two:', 'three']
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const chunk of chunks)
+          controller.enqueue(new TextEncoder().encode(chunk))
+
+        controller.close()
+      },
+    })
+
+    const peeked = await peekBody(source, 1024)
+
+    expect(peeked.ended).toBe(true)
+    expect(peeked.size).toBe(13)
+    expect(await new Response(peeked.stream).text()).toBe('one:two:three')
+  })
+
+  test('and stops reading once it has enough', async () => {
+    let produced = 0
+    const source = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        produced += 1
+        controller.enqueue(new TextEncoder().encode('x'.repeat(64)))
+      },
+    })
+
+    const peeked = await peekBody(source, 128)
+
+    // Two chunks reach the limit; a third would mean the peek is reading the
+    // whole body, which is the thing it exists not to do.
+    expect(produced).toBeLessThanOrEqual(3)
+    expect(peeked.ended).toBe(false)
+    expect(peeked.size).toBeGreaterThanOrEqual(128)
+  })
+})
+
+describe('an event stream', () => {
+  test('is never compressed, because it is a live channel', async () => {
+    // Compression holds bytes back until it has something worth emitting, so a
+    // compressed event stream arrives in clumps - or, on a quiet channel, not
+    // until it closes.
+    expect(isCompressible('text/event-stream')).toBe(false)
+
+    const events = new Response(new ReadableStream(), { headers: { 'content-type': 'text/event-stream' } })
+    const answer = await compressResponse(events, asked())
+
+    expect(answer.headers.get('content-encoding')).toBeNull()
   })
 })

@@ -68,6 +68,17 @@ export function isCompressible(contentType: string | null): boolean {
 
   const type = contentType.split(';')[0]?.trim().toLowerCase() ?? ''
 
+  /*
+   * Never server-sent events.
+   *
+   * An event stream is a live channel: the point is that an event reaches the
+   * reader the moment it happens. Compression holds bytes back until it has
+   * something worth emitting, so a compressed event stream is a stream that
+   * arrives in clumps - or, with a quiet channel, not until it closes.
+   */
+  if (type === 'text/event-stream')
+    return false
+
   if (type.startsWith('text/'))
     return true
 
@@ -189,6 +200,28 @@ export async function compressResponse(
     return response
   }
 
+  /*
+   * Enough of the body to apply the threshold, and no more.
+   *
+   * Without a `Content-Length` the only way to know whether a body is worth
+   * compressing is to look at some of it. Reading a kilobyte is not buffering
+   * the response: a stream that carries on is handed back with its prefix
+   * re-attached and keeps streaming, and one that ended inside the first
+   * kilobyte was never a stream at all - it was a small answer that gzip would
+   * have made bigger. `/api/health` is 356 bytes, and it was being compressed.
+   */
+  const known = Number(response.headers.get('content-length') ?? Number.NaN)
+  const body = Number.isFinite(known)
+    ? { stream: response.body as ReadableStream<Uint8Array>, size: known, ended: false }
+    : await peekBody(response.body as ReadableStream<Uint8Array>, settings.threshold)
+
+  if (body.ended && body.size < settings.threshold) {
+    const headers = new Headers(response.headers)
+    appendVary(headers, 'Accept-Encoding')
+
+    return new Response(body.stream, { status: response.status, statusText: response.statusText, headers })
+  }
+
   const headers = new Headers(response.headers)
   headers.set('Content-Encoding', encoding as string)
   appendVary(headers, 'Accept-Encoding')
@@ -205,10 +238,74 @@ export async function compressResponse(
    * two declarations disagree about the array-buffer parameter. Everything
    * around this line stays typed.
    */
-  const compressed = (response.body as unknown as ReadableStream)
+  const compressed = (body.stream as unknown as ReadableStream)
     .pipeThrough(new CompressionStream(encoding === 'gzip' ? 'gzip' : 'deflate') as unknown as ReadableWritablePair) as unknown as ReadableStream<Uint8Array>
 
   return new Response(compressed, { status: response.status, statusText: response.statusText, headers })
+}
+
+/**
+ * Read up to `limit` bytes, and hand back a stream that still has them.
+ *
+ * The prefix is re-emitted before the rest of the source, so nothing is lost
+ * and nothing is held beyond the limit. `ended` says the body finished inside
+ * the prefix, which is what makes a small answer distinguishable from the
+ * beginning of a large one.
+ */
+export async function peekBody(
+  source: ReadableStream<Uint8Array>,
+  limit: number,
+): Promise<{ stream: ReadableStream<Uint8Array>, size: number, ended: boolean }> {
+  const reader = source.getReader()
+  const prefix: Uint8Array[] = []
+  let size = 0
+  let ended = false
+
+  while (size < limit) {
+    const { value, done } = await reader.read()
+
+    if (done) {
+      ended = true
+      break
+    }
+
+    if (value) {
+      prefix.push(value)
+      size += value.byteLength
+    }
+  }
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const chunk of prefix)
+        controller.enqueue(chunk)
+
+      if (ended)
+        controller.close()
+    },
+    async pull(controller) {
+      if (ended)
+        return
+
+      const { value, done } = await reader.read()
+
+      if (done) {
+        ended = true
+        controller.close()
+        return
+      }
+
+      if (value)
+        controller.enqueue(value)
+    },
+    cancel(reason) {
+      // A reader who navigated away, which for this product means `git diff`
+      // still running with nobody to read it.
+      return reader.cancel(reason)
+    },
+  })
+
+  return { stream, size, ended }
 }
 
 /** Add to `Vary` without dropping what is already there. */
