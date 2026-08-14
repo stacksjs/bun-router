@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.23...v0.0.24)
+
+## 🚀 Features
+
+- **response**: compress what routes return, not only static files ([d37a7b9](https://github.com/stacksjs/bun-router/commit/d37a7b9)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.24 ([9d71101](https://github.com/stacksjs/bun-router/commit/9d71101)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.22...v0.0.23)
 
 ## 🚀 Features
