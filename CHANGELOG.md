@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.26...v0.0.27)
+
+## 🐛 Bug Fixes
+
+- **types**: widen ResponseStatus to the codes handlers return ([aecab3d](https://github.com/stacksjs/bun-router/commit/aecab3d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.27 ([0cf8d3b](https://github.com/stacksjs/bun-router/commit/0cf8d3b)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.25...v0.0.26)
 
 ## 🐛 Bug Fixes

@@ -1,7 +1,7 @@
 {
   "name": "bun-router-workspace",
   "type": "module",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "private": true,
   "description": "A router for Bun.",
   "author": "Chris Breuer <chris@stacksjs.org>",
