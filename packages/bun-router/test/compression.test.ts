@@ -66,16 +66,18 @@ describe('the rules', () => {
   })
 
   /*
-   * The important one. A response with no `Content-Length` is a stream, and
-   * buffering it to compress would turn a progressive render into a wait - the
-   * diff manifest that streams a hundred files as they parse would arrive all
-   * at once, at the end.
+   * A length is a hint, not a requirement. Bun puts no `Content-Length` on a
+   * `Response` built from a string, so reading its absence as "this is a
+   * stream, leave it alone" left every server-rendered page uncompressed -
+   * which is the exact case this exists for.
    */
-  test('a stream is never compressed, because that would make it not a stream', () => {
-    const stream = new Response(new ReadableStream(), { headers: { 'content-type': 'application/x-ndjson' } })
+  test('a body with no declared length is still compressed, by piping', () => {
+    const streamed = new Response(new ReadableStream(), { headers: { 'content-type': 'application/x-ndjson' } })
+    const fromString = new Response('a'.repeat(4000), { headers: { 'content-type': 'text/html' } })
 
-    expect(stream.headers.get('content-length')).toBeNull()
-    expect(shouldCompress(stream, 'gzip', 1024)).toBe(false)
+    expect(fromString.headers.get('content-length')).toBeNull()
+    expect(shouldCompress(streamed, 'gzip', 1024)).toBe(true)
+    expect(shouldCompress(fromString, 'gzip', 1024)).toBe(true)
   })
 
   test('an already-encoded response is not encoded twice', () => {
@@ -94,7 +96,6 @@ describe('compressing', () => {
     const answer = await compressResponse(html(LONG), asked())
 
     expect(answer.headers.get('content-encoding')).toBe('gzip')
-    expect(Number(answer.headers.get('content-length'))).toBeLessThan(LONG.length / 4)
 
     // And the bytes are the bytes: gunzip returns what went in.
     const gunzipped = Bun.gunzipSync(new Uint8Array(await answer.arrayBuffer()))
@@ -106,15 +107,53 @@ describe('compressing', () => {
     const answer = await compressResponse(html(LONG), asked('deflate'))
 
     expect(answer.headers.get('content-encoding')).toBe('deflate')
-    expect(new TextDecoder().decode(Bun.inflateSync(new Uint8Array(await answer.arrayBuffer())))).toBe(LONG)
+
+    // Decompressed the same way a browser would. HTTP's `deflate` is the
+    // zlib-wrapped form, which is what `CompressionStream` produces and what
+    // `Bun.inflateSync` - raw deflate - refuses.
+    const inflated = new Response(answer.body!.pipeThrough(new DecompressionStream('deflate')))
+
+    expect(await inflated.text()).toBe(LONG)
   })
 
-  test('a body that grows is sent as it was', async () => {
-    // gzip's own header and trailer are about twenty bytes, so anything
-    // shorter than that comes back bigger. Reachable here only by dropping the
-    // threshold, which is the point: the guard is what makes the threshold a
-    // performance choice rather than a correctness one.
-    const answer = await compressResponse(html('tiny'), asked(), { threshold: 0 })
+  /*
+   * The property that matters most here: a response that streams keeps
+   * streaming. The diff manifest sends a hundred files as they parse, and a
+   * compression step that read the whole body first would turn that into a
+   * wait - a worse trade than the bytes are worth.
+   */
+  test('a stream stays a stream, and comes out compressed', async () => {
+    const chunks = ['{"file":"one"}\n', '{"file":"two"}\n', '{"file":"three"}\n']
+
+    let closed = false
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const chunk of chunks)
+          controller.enqueue(new TextEncoder().encode(chunk))
+
+        controller.close()
+        closed = true
+      },
+    })
+
+    const answer = await compressResponse(
+      new Response(source, { headers: { 'content-type': 'application/x-ndjson' } }),
+      asked(),
+    )
+
+    expect(answer.headers.get('content-encoding')).toBe('gzip')
+    // No length: it is not known until the body ends, and a wrong one is a
+    // truncated response rather than a slow one.
+    expect(answer.headers.get('content-length')).toBeNull()
+    expect(closed).toBe(true)
+
+    const gunzipped = Bun.gunzipSync(new Uint8Array(await answer.arrayBuffer()))
+
+    expect(new TextDecoder().decode(gunzipped)).toBe(chunks.join(''))
+  })
+
+  test('a body below the threshold is sent as it was', async () => {
+    const answer = await compressResponse(html('tiny'), asked())
 
     expect(answer.headers.get('content-encoding')).toBeNull()
     expect(await answer.text()).toBe('tiny')

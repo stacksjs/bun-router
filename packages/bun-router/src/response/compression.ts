@@ -7,18 +7,25 @@
  * HTML and compresses to about a tenth of that, on every request, for every
  * visitor - and the same is true of any JSON list long enough to matter.
  *
- * Three rules, and the middle one is the important one:
+ * Three rules:
  *
  * - **Only when the client asked.** `Accept-Encoding` decides, and `Vary` says
  *   so, because a cache that hands a gzipped body to a client that did not ask
  *   is a cache that breaks that client.
- * - **Only when the length is known.** A response with no `Content-Length` is a
- *   stream, and buffering one to compress it would turn a progressive render
- *   into a wait - the diff manifest that streams a hundred files as they parse
- *   would arrive all at once, at the end. Streams are left alone.
  * - **Only when it is worth it.** Below a kilobyte the header costs more than
  *   the saving, and already-compressed bytes (an image, a woff2, a zip) get
  *   bigger rather than smaller.
+ * - **Never by buffering.** The body is piped through a `CompressionStream`
+ *   rather than read into memory, so a response that streams keeps streaming:
+ *   the diff manifest that sends a hundred files as they parse still arrives a
+ *   file at a time, compressed. Buffering to compress would have turned this
+ *   product's progressive render into a wait, which is a worse trade than the
+ *   bytes are worth.
+ *
+ * A piped body has no length until it ends, so `Content-Length` comes off and
+ * the response goes out chunked. That is the ordinary shape for a compressed
+ * response and every client handles it; a browser showing a page as it arrives
+ * is not waiting for a number.
  */
 
 /** zlib's own range, so a level Bun would reject is a type error rather than a throw. */
@@ -27,7 +34,14 @@ export type CompressionLevel = -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 export interface CompressionOptions {
   /** Off turns the whole thing off, for a proxy that already compresses. */
   enabled?: boolean
-  /** zlib level. 6 is the usual balance; 9 costs noticeably more CPU for a few percent. */
+  /**
+   * Kept for callers that set it, and unused by the stream path.
+   *
+   * `CompressionStream` has no level knob - it is the platform's, at its own
+   * default - and piping is what keeps a streamed response streaming. A level
+   * would mean going back to buffering, which is the trade this deliberately
+   * does not make.
+   */
   level?: CompressionLevel
   /** Bodies below this many bytes are sent as they are. */
   threshold?: number
@@ -110,7 +124,16 @@ export function negotiateEncoding(header: string | null): 'gzip' | 'deflate' | n
   return null
 }
 
-/** Whether this response should be compressed at all, and why not when it should not. */
+/**
+ * Whether this response should be compressed at all.
+ *
+ * `Content-Length` is a *hint here rather than a requirement*: Bun does not put
+ * one on a `Response` built from a string, so treating its absence as "this is
+ * a stream, leave it alone" left every server-rendered page uncompressed - the
+ * exact case this exists for. When there is a length, it decides against
+ * bodies too small to be worth it; when there is not, the body is piped and
+ * the threshold cannot apply.
+ */
 export function shouldCompress(response: Response, encoding: string | null, threshold: number): boolean {
   if (!encoding)
     return false
@@ -125,14 +148,12 @@ export function shouldCompress(response: Response, encoding: string | null, thre
   if (!isCompressible(response.headers.get('content-type')))
     return false
 
-  const length = Number(response.headers.get('content-length') ?? Number.NaN)
-
-  // No length means a stream. Buffering it to compress would turn a
-  // progressive render into a wait, which is a worse trade than the bytes.
-  if (!Number.isFinite(length))
+  if (!response.body)
     return false
 
-  return length >= threshold
+  const length = Number(response.headers.get('content-length') ?? Number.NaN)
+
+  return Number.isFinite(length) ? length >= threshold : true
 }
 
 /**
@@ -168,25 +189,24 @@ export async function compressResponse(
     return response
   }
 
-  const body = new Uint8Array(await response.arrayBuffer())
-
-  const compressed = encoding === 'gzip'
-    ? Bun.gzipSync(body, { level: settings.level })
-    : Bun.deflateSync(body, { level: settings.level })
-
-  // Compressing can grow a body that was already dense. Sending the original
-  // then, rather than a larger one with an extra header.
-  if (compressed.byteLength >= body.byteLength) {
-    const headers = new Headers(response.headers)
-    appendVary(headers, 'Accept-Encoding')
-
-    return new Response(body, { status: response.status, statusText: response.statusText, headers })
-  }
-
   const headers = new Headers(response.headers)
   headers.set('Content-Encoding', encoding as string)
-  headers.set('Content-Length', String(compressed.byteLength))
   appendVary(headers, 'Accept-Encoding')
+
+  // The compressed length is not known until the body ends, and a wrong
+  // `Content-Length` is a truncated page rather than a slow one.
+  headers.delete('Content-Length')
+
+  /*
+   * Cast at the seam, and only here.
+   *
+   * `CompressionStream` is typed against the DOM's byte-stream pair and a
+   * `Response` body against Bun's; they are the same object at runtime and the
+   * two declarations disagree about the array-buffer parameter. Everything
+   * around this line stays typed.
+   */
+  const compressed = (response.body as unknown as ReadableStream)
+    .pipeThrough(new CompressionStream(encoding === 'gzip' ? 'gzip' : 'deflate') as unknown as ReadableWritablePair) as unknown as ReadableStream<Uint8Array>
 
   return new Response(compressed, { status: response.status, statusText: response.statusText, headers })
 }
