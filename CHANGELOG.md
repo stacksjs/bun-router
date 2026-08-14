@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.25...v0.0.26)
+
+## 🐛 Bug Fixes
+
+- **response**: honour the threshold without a length, and never an event stream ([06656c0](https://github.com/stacksjs/bun-router/commit/06656c0)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.26 ([5d8ecba](https://github.com/stacksjs/bun-router/commit/5d8ecba)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.24...v0.0.25)
 
 ## 🐛 Bug Fixes
