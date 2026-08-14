@@ -3,6 +3,8 @@ import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types
 import type { Router } from './router'
 import { getParsedCookies, getParsedURL, RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
+import type { CompressionOptions } from '../response/compression'
+import { compressResponse } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
 
 // Helpers that frameworks layered on bun-router treat as guaranteed but
@@ -216,8 +218,22 @@ export function registerServerHandling(RouterClass: typeof Router): void {
       async value(req: Request): Promise<Response> {
         // The prototype is mutated via defineProperties; the static type doesn't see
         // handleRequestImpl as a public method, so we cast through unknown.
-        const self = this as unknown as { handleRequestImpl: (r: Request) => Promise<Response> }
-        return runWithRequest(req as EnhancedRequest, () => self.handleRequestImpl(req))
+        const self = this as unknown as {
+          handleRequestImpl: (r: Request) => Promise<Response>
+          config?: { compression?: CompressionOptions }
+        }
+
+        const response = await runWithRequest(req as EnhancedRequest, () => self.handleRequestImpl(req))
+
+        /*
+         * The one place every response passes through.
+         *
+         * Compression belongs here rather than in a middleware somebody has to
+         * remember: a server-rendered page is the shape that costs, and a
+         * framework whose pages go out uncompressed is one where every app
+         * pays for it silently. Streams are left alone - see the module.
+         */
+        return await compressResponse(response, req, self.config?.compression ?? {})
       },
       writable: true,
       configurable: true,

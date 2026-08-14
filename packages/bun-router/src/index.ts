@@ -44,6 +44,7 @@ export { enableRequestContext, getCurrentRequest, request, runWithRequest, setCu
 export * from './session'
 
 // Response factory helpers
+export * from './response/compression'
 export * from './response/response-factory'
 
 // The Router class and routing features (fluent API, throttling, caching, …)
