@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.24...v0.0.25)
+
+## 🐛 Bug Fixes
+
+- **response**: compress by piping, so a string body is compressed at all ([573dbf5](https://github.com/stacksjs/bun-router/commit/573dbf5)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.0.25 ([c2d4ef9](https://github.com/stacksjs/bun-router/commit/c2d4ef9)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.23...v0.0.24)
 
 ## 🚀 Features
