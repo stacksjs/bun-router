@@ -1359,13 +1359,27 @@ export type AllowedMimeType =
   | 'application/octet-stream'
 
 /**
- * Response status codes - narrow and specific
+ * Response status codes - narrow and specific.
+ *
+ * Narrow to catch typos, not to pick which parts of HTTP an application is
+ * allowed to speak. Everything below is a status a real handler returns, and a
+ * missing one is not a nudge toward a better design: it is a type error on
+ * correct code, with `as any` as the only way out. The set grew because an
+ * upload endpoint could not say 413 for a body over its limit.
+ *
+ * Deliberately still absent: 1xx, which Bun handles; 306, which is unused; and
+ * 3xx redirect codes other than the ones `redirect()` already accepts, so a
+ * redirect keeps going through the helper that sets a Location header.
  */
 export type ResponseStatus =
-  | 200 | 201 | 202 | 204 // Success
-  | 301 | 302 | 304 // Redirects
-  | 400 | 401 | 403 | 404 | 405 | 409 | 422 | 429 // Client errors
-  | 500 | 502 | 503 | 504 // Server errors
+  | 200 | 201 | 202 | 203 | 204 | 205 | 206 // Success
+  | 301 | 302 | 303 | 304 | 307 | 308 // Redirects
+  // Client errors. 402 is here for metered and paid APIs, 413/415 for uploads,
+  // 410 for content that is gone rather than missing, 428 for optimistic
+  // concurrency, and 451 because it is legally meaningful where it applies.
+  | 400 | 401 | 402 | 403 | 404 | 405 | 406 | 408 | 409 | 410 | 411 | 412 | 413 | 414 | 415 | 416 | 418
+  | 422 | 423 | 425 | 426 | 428 | 429 | 431 | 451
+  | 500 | 501 | 502 | 503 | 504 | 505 | 507 | 511 // Server errors
 
 /**
  * Content types - narrow
