@@ -1,13 +1,18 @@
-import type { BunPressConfig } from 'bunpress'
+import type { BunPressConfig } from '@stacksjs/bunpress'
 
 const config: BunPressConfig = {
-  name: 'bun-router',
+  title: 'bun-router',
   description: 'High-performance router for Bun',
   url: 'https://bun-router.stacksjs.com',
 
   theme: 'vitepress',
 
   themeConfig: {
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/stacksjs/bun-router' },
+      { icon: 'discord', link: 'https://discord.gg/stacksjs' },
+      { icon: 'twitter', link: 'https://twitter.com/stacksjs' },
+    ],
     colors: {
       primary: '#f472b6',
     },
@@ -103,7 +108,7 @@ const config: BunPressConfig = {
     },
   ],
 
-  navbar: [
+  nav: [
     { text: 'Home', link: '/' },
     { text: 'Guide', link: '/quick-start' },
     { text: 'Features', link: '/features/middleware' },
@@ -111,11 +116,6 @@ const config: BunPressConfig = {
     { text: 'GitHub', link: 'https://github.com/stacksjs/bun-router' },
   ],
 
-  socialLinks: [
-    { icon: 'github', link: 'https://github.com/stacksjs/bun-router' },
-    { icon: 'discord', link: 'https://discord.gg/stacksjs' },
-    { icon: 'twitter', link: 'https://twitter.com/stacksjs' },
-  ],
 }
 
 export default config

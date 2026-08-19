@@ -72,7 +72,7 @@
     "typecheck": "bunx --bun tsc --noEmit"
   },
   "devDependencies": {
-    "@stacksjs/bunpress": "^0.1.4",
+    "@stacksjs/bunpress": "^0.2.11",
     "@stacksjs/stx": "^0.2.176",
     "better-dx": "^0.2.7"
   },
