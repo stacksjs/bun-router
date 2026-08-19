@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.27...v0.1.0)
+
+## ⚡ Performance Improvements
+
+- **build**: minify the published bundle ([efa1da7](https://github.com/stacksjs/bun-router/commit/efa1da7)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.0 ([c0b21d6](https://github.com/stacksjs/bun-router/commit/c0b21d6)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.26...v0.0.27)
 
 ## 🐛 Bug Fixes
