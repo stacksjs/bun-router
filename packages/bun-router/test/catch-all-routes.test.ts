@@ -1,5 +1,5 @@
 import type { Server } from 'bun'
-import type { EnhancedRequest } from '../src/types'
+import type { EnhancedRequest, WebSocketData } from '../src/types'
 import { afterEach, describe, expect, it } from 'bun:test'
 import { Router } from '../src/router'
 
@@ -11,7 +11,7 @@ import { Router } from '../src/router'
  * directory a 404 while the top level looks like it works.
  */
 describe('catch-all routes', () => {
-  let server: Server | null = null
+  let server: Server<WebSocketData> | null = null
 
   afterEach(async () => {
     await server?.stop(true)
