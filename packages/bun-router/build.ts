@@ -9,6 +9,7 @@ await Promise.all([
     splitting: true,
     target: 'bun',
     format: 'esm',
+    minify: true,
   }),
   $`bunx --bun tsc -p tsconfig.build.json`,
 ])
