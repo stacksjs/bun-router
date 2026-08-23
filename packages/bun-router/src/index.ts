@@ -54,6 +54,18 @@ export { MiddlewareGroupRegistry, middlewareGroups } from './router/middleware-g
 // Testing utilities
 export * from './testing'
 
+/*
+ * Typed routes, and the client that reads them.
+ *
+ * `createTypedRouter()` registers through the ordinary router while
+ * accumulating a route map into its own type, and `createTypedClient()` reads
+ * that map back - so a TypeScript consumer gets input and output inference
+ * with no generation step between changing a route and seeing the type change.
+ * See `./typed/router.ts` for what this is and, just as importantly, what it
+ * is not.
+ */
+export * from './typed'
+
 // Public types
 export * from './types'
 

@@ -63,6 +63,7 @@ const config: BunPressConfig = {
         { text: 'Rate Limiting', link: '/features/rate-limiting' },
         { text: 'View Rendering', link: '/features/view-rendering' },
         { text: 'Action Handlers', link: '/features/action-handlers' },
+        { text: 'Typed Client', link: '/features/typed-client' },
         { text: 'Security', link: '/features/security' },
       ],
     },
