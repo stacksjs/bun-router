@@ -1,24 +1,8 @@
-import type { CookieAccessor, CookieOptions, EnhancedRequest } from '../types'
+import type { EnhancedRequest } from '../types'
 import type { JWTTestOptions, SessionTestOptions, TestUser } from './types'
 import { mock } from 'bun:test'
+import { createInMemoryCookieAccessor } from '../request/cookie-accessor'
 import { createMockRequest } from './test-request'
-
-/**
- * Creates a CookieAccessor from a plain Record<string, string>
- */
-function createCookieAccessor(cookies: Record<string, string>): CookieAccessor {
-  const cookieStore = { ...cookies }
-  return {
-    get: (name: string) => cookieStore[name],
-    set: (name: string, value: string, _options?: CookieOptions) => {
-      cookieStore[name] = value
-    },
-    delete: (name: string, _options?: CookieOptions) => {
-      delete cookieStore[name]
-    },
-    getAll: () => ({ ...cookieStore }),
-  }
-}
 
 /**
  * Authentication testing utilities
@@ -88,7 +72,7 @@ export class AuthTester {
    */
   withAuthCookies(cookies: Record<string, string>): AuthTester {
     const existingCookies = this.request.cookies?.getAll() || {}
-    this.request.cookies = createCookieAccessor({ ...existingCookies, ...cookies })
+    this.request.cookies = createInMemoryCookieAccessor({ ...existingCookies, ...cookies })
     return this
   }
 

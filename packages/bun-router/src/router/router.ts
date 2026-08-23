@@ -16,6 +16,7 @@ import type {
   WebSocketConfig,
   WebSocketData,
 } from '../types'
+import { createCookieAccessor } from '../request/cookie-accessor'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
@@ -1053,17 +1054,17 @@ export class Router {
       return input
     }
 
-    // Add cookie utilities
-    enhancedReq.cookies = {
-      get: (name: string) => getCookies()[name],
-      set: (name: string, value: string, options: CookieOptions = {}) => {
+    // Add cookie utilities — the same hybrid the server's macro accessor
+    // builds, so a handler cannot tell which path produced its request.
+    enhancedReq.cookies = createCookieAccessor({
+      read: getCookies,
+      write: (name, value, options) => {
         enhancedReq._cookiesToSet!.push({ name, value, options })
       },
-      delete: (name: string, options: CookieOptions = {}) => {
+      remove: (name, options) => {
         enhancedReq._cookiesToDelete!.push({ name, options })
       },
-      getAll: () => ({ ...getCookies() }),
-    }
+    })
 
     // Add Laravel-style request methods directly to the wrapper object
     // These are the methods that provide Laravel-like request handling

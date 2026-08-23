@@ -1,22 +1,6 @@
-import type { CookieAccessor, CookieOptions, EnhancedRequest, UploadedFile } from '../types'
+import type { EnhancedRequest, UploadedFile } from '../types'
 import type { TestFile, TestRequestOptions } from './types'
-
-/**
- * Creates a CookieAccessor from a plain Record<string, string>
- */
-function createCookieAccessor(cookies: Record<string, string>): CookieAccessor {
-  const cookieStore = { ...cookies }
-  return {
-    get: (name: string) => cookieStore[name],
-    set: (name: string, value: string, _options?: CookieOptions) => {
-      cookieStore[name] = value
-    },
-    delete: (name: string, _options?: CookieOptions) => {
-      delete cookieStore[name]
-    },
-    getAll: () => ({ ...cookieStore }),
-  }
-}
+import { createInMemoryCookieAccessor } from '../request/cookie-accessor'
 
 /**
  * Creates a mock EnhancedRequest for testing
@@ -53,9 +37,12 @@ export class TestRequestBuilder {
       user: options.user,
       context: options.context || {},
       requestId: `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ip: '127.0.0.1',
+      // A function, because that is what a real request carries: `ip` is a
+      // macro on the server. A string here made every test request a shape
+      // production never produces.
+      ip: () => '127.0.0.1',
       userAgent: () => 'BunRouter-TestClient/1.0',
-      cookies: createCookieAccessor(options.cookies || {}),
+      cookies: createInMemoryCookieAccessor(options.cookies || {}),
       startTime: Date.now(),
       traceId: `trace-${Date.now()}`,
       spanId: `span-${Date.now()}`,
@@ -165,7 +152,7 @@ export class TestRequestBuilder {
    */
   cookies(cookies: Record<string, string>): TestRequestBuilder {
     const existingCookies = this.request.cookies?.getAll() || {}
-    this.request.cookies = createCookieAccessor({ ...existingCookies, ...cookies })
+    this.request.cookies = createInMemoryCookieAccessor({ ...existingCookies, ...cookies })
     return this
   }
 
@@ -208,7 +195,7 @@ export class TestRequestBuilder {
    * Set IP address
    */
   ip(ip: string): TestRequestBuilder {
-    this.request.ip = ip
+    this.request.ip = () => ip
     return this
   }
 

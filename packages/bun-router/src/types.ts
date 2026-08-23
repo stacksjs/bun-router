@@ -782,14 +782,37 @@ export interface CookieOptions {
 /**
  * Cookie accessor interface with utility methods
  */
+/**
+ * `request.cookies`, in all three of the shapes it actually has.
+ *
+ * The server installs a hybrid: a function returning the parsed map, carrying
+ * the name→value entries as own properties, with `get`/`set`/`delete`/`getAll`
+ * on top. The declaration described only the last of those, so `req.cookies()`
+ * and `req.cookies.session` were both type errors against a runtime that
+ * supports them, and userland reached for `as any` to get at either.
+ */
 export interface CookieAccessor {
+  /** The whole parsed cookie map. */
+  (): Record<string, string>
+  /** Direct access by name: `req.cookies.session`. */
+  [name: string]: unknown
   get: (name: string) => string | undefined
   set: (name: string, value: string, options?: CookieOptions) => void
   delete: (name: string, options?: CookieOptions) => void
   getAll: () => Record<string, string>
 }
 
-export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip' | 'cookies' | 'route'> {
+/*
+ * `ip` is NOT omitted from the macro methods.
+ *
+ * It used to be, and was re-declared below as `ip?: string`, with a comment
+ * saying so. The runtime disagrees: `ip` is installed as a macro and is a
+ * function on every request the server builds. So `const addr: string = req.ip`
+ * type-checked and handed you a function, while `req.ip()` - the thing that
+ * works - was an error. `cookies` and `route` stay omitted because they are
+ * genuinely re-declared below with richer types.
+ */
+export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'cookies' | 'route'> {
   /**
    * Route parameters extracted from the URL
    */
@@ -866,13 +889,10 @@ export interface EnhancedRequest extends Request, Omit<RequestMacroMethods, 'ip'
    */
   requestId?: string
   /**
-   * IP address of the client (string property, not function from RequestMacroMethods)
+   * Cookies parsed from the request. Callable, indexable, and carrying
+   * get/set/delete/getAll - see {@link CookieAccessor}.
    */
-  ip?: string
-  /**
-   * Cookies parsed from the request with utility methods
-   */
-  cookies?: CookieAccessor
+  cookies: CookieAccessor
   /**
    * Flash messages (temporary messages for the next request)
    */

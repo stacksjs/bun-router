@@ -37,6 +37,11 @@ export * as Errors from './errors'
 // Built-in middleware (CORS, CSRF, sessions, rate limiting, …)
 export * from './middleware'
 
+// One builder for `request.cookies`, so the router, the server and the testing
+// utilities all produce the same shape.
+export { createCookieAccessor, createInMemoryCookieAccessor } from './request/cookie-accessor'
+export type { CookieAccessorSinks } from './request/cookie-accessor'
+
 // Request context (AsyncLocalStorage-backed current request; lazy — see enableRequestContext)
 export { enableRequestContext, getCurrentRequest, request, runWithRequest, setCurrentRequest } from './request/context'
 
