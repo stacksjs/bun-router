@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.1...v0.1.2)
+
+## 🐛 Bug Fixes
+
+- **typed**: read an optional `validations` the same as a required one ([5ba7147](https://github.com/stacksjs/bun-router/commit/5ba7147)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.2 ([04741bc](https://github.com/stacksjs/bun-router/commit/04741bc)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.0...v0.1.1)
 
 ## 🚀 Features
