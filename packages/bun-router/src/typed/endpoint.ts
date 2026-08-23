@@ -54,8 +54,18 @@ export type InputOf<H>
     ? ([I] extends [undefined] ? InputOfHandlerValidations<H> : NonNullable<I>)
     : InputOfHandlerValidations<H>
 
-type InputOfHandlerValidations<H> = H extends { validations: infer V }
-  ? InputOfValidations<V>
+/*
+ * Matched as OPTIONAL on purpose.
+ *
+ * `H extends { validations: infer V }` only matches a handler whose
+ * `validations` is a required property. An action class that declares
+ * `validations?: TValidations` - which is the normal way to write one, since
+ * plenty of actions have none - failed that check and fell through to
+ * "accepts anything", silently. The failure mode is the worst kind: the client
+ * still compiles, and every wrong body it sends compiles too.
+ */
+type InputOfHandlerValidations<H> = H extends { validations?: infer V }
+  ? ([V] extends [undefined] ? Record<string, unknown> : InputOfValidations<NonNullable<V>>)
   : Record<string, unknown>
 
 /**

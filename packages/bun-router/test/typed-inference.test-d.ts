@@ -33,6 +33,23 @@ const storeProject = {
   handle: () => ({ id: 1, name: 'apollo' }),
 }
 
+/**
+ * The same, but with `validations` declared OPTIONAL - which is how an action
+ * class writes it, since plenty of actions have none. Matched separately
+ * because a required-only check passes the test above and silently accepts
+ * anything here.
+ */
+declare const storeProjectOptional: {
+  validations?: {
+    name: { rule: { test: (value: string) => boolean, validate: (value: any) => any } }
+    budget: { rule: { test: (value: number) => boolean, validate: (value: any) => any } }
+  }
+  handle: () => { id: number }
+}
+
+/** And one with no validations at all, which must not narrow to `never`. */
+declare const bareAction: { handle: () => { ok: true } }
+
 const exportProjects = () => new Response('a,b,c')
 
 const createUser = defineEndpoint<{ email: string }, { id: number }>(() => ({ id: 1 }))
@@ -42,6 +59,8 @@ const api = createTypedRouter(router)
   .get('/v1/projects/{id}', (req: EnhancedRequest) => ({ id: Number(req.params.id), archived: false }))
   .post('/v1/projects', storeProject)
   .post('/v1/users', createUser)
+  .put('/v1/projects/{id}', storeProjectOptional)
+  .patch('/v1/projects/{id}', bareAction)
   .get('/v1/projects/{id}/export', exportProjects)
 
 /*
@@ -73,6 +92,14 @@ type StoreBodyIsInferred = Expect<Equal<StoreBody, { name: string, budget: numbe
 
 type UserBody = Parameters<typeof client.post<'/v1/users'>>[1]
 type UserBodyIsDeclared = Expect<Equal<UserBody, { email: string }>>
+
+// An optional `validations` is read exactly like a required one.
+type OptionalBody = Parameters<typeof client.put<'/v1/projects/{id}'>>[1]
+type OptionalBodyIsInferred = Expect<Equal<OptionalBody, { name: string, budget: number }>>
+
+// No validations at all: anything, rather than nothing.
+type BareBody = Parameters<typeof client.patch<'/v1/projects/{id}'>>[1]
+type BareBodyIsOpen = Expect<Equal<BareBody, Record<string, unknown>>>
 
 // ── the calls that must compile ───────────────────────────────────────────
 
