@@ -1,3 +1,23 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.0...v0.1.1)
+
+## 🚀 Features
+
+- typed routes and a typed client, with no generation step ([7e3f1b3](https://github.com/stacksjs/bun-router/commit/7e3f1b3)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🐛 Bug Fixes
+
+- **docs**: use the config keys bunpress actually has ([c3d197a](https://github.com/stacksjs/bun-router/commit/c3d197a)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **types**: give Server the argument it now requires ([1b6b693](https://github.com/stacksjs/bun-router/commit/1b6b693)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.1 ([1ea7704](https://github.com/stacksjs/bun-router/commit/1ea7704)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: bunpress 0.2.13 ([fdb336a](https://github.com/stacksjs/bun-router/commit/fdb336a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.0.27...v0.1.0)
 
 ## ⚡ Performance Improvements
