@@ -14,7 +14,9 @@
 
 import { Router, url } from '../src'
 
-declare module '../src/types/registry' {
+// The entry module, which is what `'@stacksjs/bun-router'` resolves to for an
+// application. Augmenting anywhere else creates a second, unrelated interface.
+declare module '../src' {
   interface RouterTypeRegistry {
     actions: 'Actions/CreateUserAction' | 'Actions/ListUsersAction'
     middleware: 'auth' | 'throttle'

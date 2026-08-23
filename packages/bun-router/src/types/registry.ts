@@ -1,59 +1,10 @@
+import type { RouterTypeRegistry } from '../index'
 import type { BuiltInMiddleware } from '../types'
 
 /**
- * What an application tells the router about itself.
- *
- * A router deals in strings that are really identifiers: `'Actions/CreateUser'`
- * names a file, `'auth'` names a middleware, `'users.show'` names a route. The
- * compiler has no idea which of them exist, so a typo in any of the three is a
- * runtime error at best — a silently unprotected endpoint at worst, when the
- * typo is in a middleware alias.
- *
- * The router cannot know them either. The application can, so it says so, by
- * augmenting this interface:
- *
- * ```ts
- * // types/router.d.ts
- * declare module '@stacksjs/bun-router' {
- *   interface RouterTypeRegistry {
- *     actions: 'Actions/CreateUser' | 'Actions/ListUsers'
- *     middleware: 'auth' | 'throttle' | 'signed'
- *     routes: {
- *       'users.index': '/users'
- *       'users.show': '/users/{id}'
- *     }
- *   }
- * }
- * ```
- *
- * From then on, `router.post('/users', 'Actions/CreateUsr')` is a compile
- * error, so is `.middleware('atuh')`, and `url('users.show')` demands an `id`
- * because the path says it has one.
- *
- * ## Nothing is required
- *
- * Every key is independent, and every one falls back to exactly the type it had
- * before this existed when it is absent. An application that declares none of
- * them sees no change at all. That is the point: this cannot be a breaking
- * change, and it cannot be a thing you must do before the router is usable.
- *
- * ## Generating it
- *
- * The three unions are facts a build step already knows. A framework on top of
- * this router that scans `app/Actions/` or a middleware alias map can emit the
- * augmentation into a `.d.ts` and the whole surface types itself with nothing
- * hand-written. Writing it by hand works just as well for a smaller app.
- */
-// eslint-disable-next-line ts/no-empty-object-type -- augmentation target; empty by design
-export interface RouterTypeRegistry {}
-
-/**
- * Read a key out of the registry, or fall back.
- *
- * `K extends keyof RouterTypeRegistry` is `never extends never` — false — while
- * the interface is empty, which is what makes every fallback the default. The
- * second check keeps a malformed augmentation (say, `actions: number`) from
- * poisoning the type: it falls back rather than producing something unusable.
+ * Reading what the application declared. The interface itself lives in
+ * `../index`, which is the module an application can name in a
+ * `declare module '@stacksjs/bun-router'` augmentation - see the note there.
  */
 export type FromRegistry<TKey extends string, TFallback>
   = TKey extends keyof RouterTypeRegistry

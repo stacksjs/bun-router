@@ -74,15 +74,44 @@ export * from './typed'
 // Public types
 export * from './types'
 
-/*
+/**
  * What an application tells the router about itself.
  *
- * A router deals in strings that are really identifiers - `'Actions/CreateUser'`
- * names a file, `'auth'` names a middleware, `'users.show'` names a route - and
- * only the application knows which of them exist. Augment `RouterTypeRegistry`
- * and every one of them stops being `string`. Declaring nothing changes
- * nothing. See `./types/registry.ts`.
+ * A router deals in strings that are really identifiers: `'Actions/CreateUser'`
+ * names a file, `'auth'` names a middleware, `'users.show'` names a route. The
+ * compiler has no idea which of them exist, so a typo in any of the three is a
+ * runtime error at best - a silently unprotected endpoint at worst, when the
+ * typo is in a middleware alias.
+ *
+ * The router cannot know them either. The application can, so it says so:
+ *
+ * ```ts
+ * declare module '@stacksjs/bun-router' {
+ *   interface RouterTypeRegistry {
+ *     actions: 'Actions/CreateUserAction' | 'Actions/ListUsersAction'
+ *     middleware: 'auth' | 'throttle'
+ *     routes: { 'users.index': '/users', 'users.show': '/users/{id}' }
+ *   }
+ * }
+ * ```
+ *
+ * Every key is independent, and every one falls back to exactly the type it had
+ * before this existed when absent. Declaring nothing changes nothing.
+ *
+ * ## Why it is declared HERE, in the entry
+ *
+ * A module augmentation merges into the module it names. `RouterTypeRegistry`
+ * used to be declared in `./types/registry` and merely re-exported from here,
+ * which meant `declare module '@stacksjs/bun-router'` created a second,
+ * unrelated interface: `keyof RouterTypeRegistry` looked right at the call
+ * site, while every type computed from it inside the package still saw an empty
+ * one and quietly fell back. Everything looked wired up and nothing was
+ * checked. Declaring it in the entry is what makes the obvious augmentation the
+ * one that works.
  */
+// eslint-disable-next-line ts/no-empty-object-type -- augmentation target; empty by design
+export interface RouterTypeRegistry {}
+
 export type {
   FromRegistry,
   KnownActionPath,
@@ -91,7 +120,6 @@ export type {
   KnownRoutes,
   MiddlewareReference,
   PathForRouteName,
-  RouterTypeRegistry,
 } from './types/registry'
 
 // Validation (Laravel-style rules, custom rules, middleware)

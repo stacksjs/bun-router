@@ -61,6 +61,15 @@ Middleware **group** names go in `middleware` too. A group name is a middleware
 reference as far as a call site is concerned — `.middleware('web')` expands to the
 group — so both live in the same union.
 
+## Where to declare it
+
+`declare module '@stacksjs/bun-router'` — the package entry, which is where the
+interface is declared. That matters: a module augmentation merges into the module it
+names, so augmenting any other specifier (a deep import, a re-exporting barrel)
+creates a second, unrelated interface. `keyof RouterTypeRegistry` would look right at
+your call site while every type computed from it inside the package still saw an
+empty one — everything wired up, nothing checked.
+
 ## Generating it
 
 All three unions are facts a build step already knows. Anything that scans an

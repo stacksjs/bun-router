@@ -2222,5 +2222,4 @@ export type {
   KnownRoutes,
   MiddlewareReference,
   PathForRouteName,
-  RouterTypeRegistry,
 } from './types/registry'
