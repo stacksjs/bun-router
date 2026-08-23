@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.6...v0.1.7)
+
+## 🐛 Bug Fixes
+
+- **request**: give `query` an existence to match its declaration ([03c496d](https://github.com/stacksjs/bun-router/commit/03c496d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.7 ([acaa03e](https://github.com/stacksjs/bun-router/commit/acaa03e)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.5...v0.1.6)
 
 ## 🐛 Bug Fixes
