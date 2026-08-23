@@ -428,7 +428,9 @@ describe('Route Optimization', () => {
       const match = trie.match('/api/search/hello%20world', 'GET')
 
       expect(match).toBeTruthy()
-      expect(match?.params.query).toBe('hello%20world')
+      // Decoded. The trie used to store the raw segment, which meant every
+      // consumer had to decode and every consumer that forgot had a bug.
+      expect(match?.params.query).toBe('hello world')
     })
 
     it('should handle very long paths', () => {

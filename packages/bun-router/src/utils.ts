@@ -1,5 +1,6 @@
 import type { ActionHandler, ActionHandlerClass, RouteHandler } from './types'
 import { join } from 'node:path'
+import { decodeParam } from './utils/decode-param'
 
 // Re-export query preservation utilities
 export * from './utils/query-preservation'
@@ -209,14 +210,16 @@ export function matchPath(
     }
 
     if (seg.isParam) {
-      // Store the parameter value
-      params[seg.paramName] = pathSegment
+      // Decoded before the constraint runs, so a constraint and the stored
+      // value never disagree about what the segment says. See `decodeParam`.
+      const decodedSegment = decodeParam(pathSegment)
+      params[seg.paramName] = decodedSegment
 
       // Check constraints if they exist
       if (constraints && constraints[seg.paramName]) {
         const regex = getConstraintRegex(constraints[seg.paramName])
         if (regex) {
-          if (!regex.test(pathSegment)) {
+          if (!regex.test(decodedSegment)) {
             return false
           }
         }

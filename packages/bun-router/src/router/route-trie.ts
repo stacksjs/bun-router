@@ -1,4 +1,5 @@
 import type { HTTPMethod, Route } from '../types'
+import { decodeParam } from '../utils/decode-param'
 
 /**
  * Route segment types for the trie
@@ -343,10 +344,14 @@ export class RouteTrie {
 
     // Try parameter match
     const paramNode = node.paramChild
+    // Decoded BEFORE the constraint runs, so `{id}` constrained to `\d+` sees
+    // the `7` the client meant rather than the `%37` it sent. Testing the raw
+    // segment and storing the decoded one would be two different values.
+    const decodedSegment = paramNode?.paramName ? decodeParam(segment) : segment
     if (paramNode && paramNode.paramName
-      && (!paramNode.pattern || paramNode.pattern.test(segment))) {
+      && (!paramNode.pattern || paramNode.pattern.test(decodedSegment))) {
       const previous = params[paramNode.paramName]
-      params[paramNode.paramName] = segment
+      params[paramNode.paramName] = decodedSegment
       const match = this.matchSegments(paramNode, segments, segmentIndex + 1, params, method)
       if (match)
         return match
@@ -361,7 +366,12 @@ export class RouteTrie {
     if (node.wildcardChild) {
       const compiled = node.wildcardChild.getRoute(method)
       if (compiled) {
-        params[node.wildcardChild.paramName ?? 'wildcard'] = segments.slice(segmentIndex).join('/')
+        // Per segment, then joined: decoding the joined string would let an
+        // encoded `/` inside one segment become a separator between two.
+        params[node.wildcardChild.paramName ?? 'wildcard'] = segments
+          .slice(segmentIndex)
+          .map(decodeParam)
+          .join('/')
         return {
           route: compiled.route,
           params,

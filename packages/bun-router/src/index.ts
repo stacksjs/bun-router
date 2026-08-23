@@ -37,6 +37,9 @@ export * as Errors from './errors'
 // Built-in middleware (CORS, CSRF, sessions, rate limiting, …)
 export * from './middleware'
 
+// Path params, decoded once — see the note in the module.
+export { decodeParam } from './utils/decode-param'
+
 // One builder for `request.cookies`, so the router, the server and the testing
 // utilities all produce the same shape.
 export { createCookieAccessor, createInMemoryCookieAccessor } from './request/cookie-accessor'

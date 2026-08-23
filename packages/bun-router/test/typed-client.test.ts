@@ -57,11 +57,15 @@ describe('createTypedClient', () => {
   })
 
   it('percent-encodes a param rather than letting it address another route', async () => {
-    // Left raw, the slashes here would make this a different path entirely.
-    // The router hands params on without decoding them, so what arrives is the
-    // encoded form - the point being that it arrived HERE, as one segment.
+    // Left raw, the slashes here would make this a different path entirely, so
+    // the client encodes them and the value arrives HERE, as one segment.
+    //
+    // It arrives with its original value, too: the client encodes, the router
+    // decodes, and the param round-trips. This used to assert the encoded form
+    // came out the other side, because the router did not decode at all and the
+    // caller was handed `7%2F..%2F1` to deal with.
     expect(await client().get('/echo/{id}', { params: { id: '7/../1' } }))
-      .toEqual({ id: '7%2F..%2F1' })
+      .toEqual({ id: '7/../1' })
   })
 
   it('appends query parameters', async () => {
