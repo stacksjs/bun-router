@@ -36,6 +36,13 @@
   "exclude": [
     "**/node_modules/**/*",
     "**/dist/**/*",
-    "**/pantry/**/*"
+    "**/pantry/**/*",
+    // Checked by `tsconfig.registry-types.json` instead. Its `declare module`
+    // augmentation is global, so including it here would narrow every action
+    // path and middleware alias in the whole compilation - and the behaviour
+    // most applications actually see, the un-augmented one, would go unchecked.
+    // Named exactly, not globbed: `registry-fallback-typing.test-d.ts` is the
+    // file that proves the un-augmented case and belongs in THIS project.
+    "**/registry-typing.test-d.ts"
   ]
 }

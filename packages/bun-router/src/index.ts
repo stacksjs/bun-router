@@ -74,6 +74,26 @@ export * from './typed'
 // Public types
 export * from './types'
 
+/*
+ * What an application tells the router about itself.
+ *
+ * A router deals in strings that are really identifiers - `'Actions/CreateUser'`
+ * names a file, `'auth'` names a middleware, `'users.show'` names a route - and
+ * only the application knows which of them exist. Augment `RouterTypeRegistry`
+ * and every one of them stops being `string`. Declaring nothing changes
+ * nothing. See `./types/registry.ts`.
+ */
+export type {
+  FromRegistry,
+  KnownActionPath,
+  KnownMiddlewareName,
+  KnownRouteName,
+  KnownRoutes,
+  MiddlewareReference,
+  PathForRouteName,
+  RouterTypeRegistry,
+} from './types/registry'
+
 // Validation (Laravel-style rules, custom rules, middleware)
 export * from './validation/validator'
 

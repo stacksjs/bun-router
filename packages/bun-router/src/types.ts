@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import type { Router } from './router/router'
+import type { KnownActionPath, MiddlewareReference } from './types/registry'
 import type { SessionManager } from './session/index'
 import type { QueryPreservationConfig } from './utils/query-preservation'
 import type {
@@ -728,8 +729,8 @@ export interface RouterConfig {
    */
   controllersPath?: string
   defaultMiddleware?: {
-    api?: (string | MiddlewareHandler)[]
-    web?: (string | MiddlewareHandler)[]
+    api?: (MiddlewareReference | MiddlewareHandler)[]
+    web?: (MiddlewareReference | MiddlewareHandler)[]
   }
   /**
    * View engine configuration
@@ -962,9 +963,13 @@ export interface ActionHandlerClass {
 }
 
 /**
- * Action handler path with strict pattern validation
+ * Action handler path.
+ *
+ * The real set of actions when the application declares one through
+ * {@link RouterTypeRegistry}, and the shape of an action path otherwise — which
+ * catches `'Acton/CreateUser'` and nothing else. See `./types/registry.ts`.
  */
-export type ActionPath = `Actions/${string}Action` | `actions/${string}Action` | `${string}Controller@${string}`
+export type ActionPath = KnownActionPath
 
 /**
  * Strongly typed action handler: every form a route will accept.
@@ -1083,7 +1088,7 @@ export interface AuthMiddlewareConfig {
 
 export interface RouteGroup {
   prefix?: string
-  middleware?: (string | MiddlewareHandler)[]
+  middleware?: (MiddlewareReference | MiddlewareHandler)[]
 }
 
 export interface Route {
@@ -1311,18 +1316,42 @@ export type SecurityHeader =
 /**
  * Built-in middleware names - extremely narrow
  */
+/**
+ * The middleware this package ships, by the name it is actually registered
+ * under.
+ *
+ * This list used to be a guess and disagreed with the package in several
+ * places: it offered `json`, `rateLimiter`, `requestId`, `compress`, `static`
+ * and `logger`, none of which exist, while the real `json_body`, `rate_limit`,
+ * `request_id`, `security` and `ddos_protection` - the ones the default
+ * middleware groups in `config.ts` are built from - were missing. Anything
+ * typed against it was being checked against fiction.
+ *
+ * Every name here is a module under `src/middleware/`, plus the three aliases
+ * `Router` registers itself.
+ */
 export type BuiltInMiddleware =
   | 'auth'
+  | 'content_security_policy'
   | 'cors'
   | 'csrf'
+  | 'ddos_protection'
+  | 'file_security'
+  | 'file_upload'
   | 'helmet'
-  | 'json'
-  | 'compress'
-  | 'static'
+  | 'input_validation'
+  | 'json_body'
+  | 'performance_alerting'
+  | 'performance_dashboard'
+  | 'performance_monitor'
+  | 'rate_limit'
+  | 'request_id'
+  | 'request_signing'
+  | 'request_tracer'
+  | 'response_cache'
+  | 'security'
+  | 'security_suite'
   | 'session'
-  | 'rateLimiter'
-  | 'requestId'
-  | 'logger'
   | 'throttle'
 
 /**
@@ -2179,3 +2208,19 @@ export interface EnhancedLaravelModelBindingMethods {
     bindings: Record<Child, Parent>
   ) => MiddlewareHandler
 }
+
+/*
+ * What an application tells the router about itself: its action paths, its
+ * middleware aliases, its named routes. Augment `RouterTypeRegistry` and every
+ * string identifier in the API stops being `string`. See `./types/registry.ts`.
+ */
+export type {
+  FromRegistry,
+  KnownActionPath,
+  KnownMiddlewareName,
+  KnownRouteName,
+  KnownRoutes,
+  MiddlewareReference,
+  PathForRouteName,
+  RouterTypeRegistry,
+} from './types/registry'

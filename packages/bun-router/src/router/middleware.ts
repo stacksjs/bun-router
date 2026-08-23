@@ -1,4 +1,4 @@
-import type { EnhancedRequest, MiddlewareHandler, NextFunction, Route } from '../types'
+import type { EnhancedRequest, MiddlewareHandler, MiddlewareReference, NextFunction, Route } from '../types'
 import type { Router } from './router'
 import { resolveHandler as resolveHandlerUtil, wrapResponse } from './handler-resolver'
 
@@ -11,7 +11,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Add middleware to the router
      */
     use: {
-      value(...middleware: (string | MiddlewareHandler)[]): Router {
+      value(...middleware: (MiddlewareReference | MiddlewareHandler)[]): Router {
         for (const mw of middleware) {
           const resolvedMiddleware = this.resolveMiddleware(mw)
           if (resolvedMiddleware) {
@@ -144,7 +144,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Add middleware to a route group
      */
     middleware: {
-      value(...middleware: (string | MiddlewareHandler)[]): Router {
+      value(...middleware: (MiddlewareReference | MiddlewareHandler)[]): Router {
         // Validate string middleware names against the named middleware registry
         for (const mw of middleware) {
           if (typeof mw === 'string') {
@@ -179,7 +179,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Apply middleware to a specific route
      */
     applyMiddlewareToRoute: {
-      value(route: Route, middleware: (string | MiddlewareHandler)[]): void {
+      value(route: Route, middleware: (MiddlewareReference | MiddlewareHandler)[]): void {
         for (const mw of middleware) {
           const resolvedMiddleware = this.resolveMiddleware(mw)
           if (resolvedMiddleware) {

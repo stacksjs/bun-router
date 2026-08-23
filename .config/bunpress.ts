@@ -64,6 +64,7 @@ const config: BunPressConfig = {
         { text: 'View Rendering', link: '/features/view-rendering' },
         { text: 'Action Handlers', link: '/features/action-handlers' },
         { text: 'Typed Client', link: '/features/typed-client' },
+        { text: 'Type Registry', link: '/features/type-registry' },
         { text: 'Security', link: '/features/security' },
       ],
     },

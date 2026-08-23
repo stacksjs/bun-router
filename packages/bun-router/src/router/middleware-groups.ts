@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from '../types'
+import type { MiddlewareHandler, MiddlewareReference } from '../types'
 
 /**
  * Middleware Group Registry
@@ -15,14 +15,14 @@ import type { MiddlewareHandler } from '../types'
  * router.group({ middleware: 'web' }, () => { ... })
  */
 export class MiddlewareGroupRegistry {
-  private groups = new Map<string, (string | MiddlewareHandler)[]>()
-  private globalMiddleware: (string | MiddlewareHandler)[] = []
+  private groups = new Map<string, (MiddlewareReference | MiddlewareHandler)[]>()
+  private globalMiddleware: (MiddlewareReference | MiddlewareHandler)[] = []
   private middlewarePriority: Map<string, number> = new Map()
 
   /**
    * Define a middleware group
    */
-  define(name: string, middleware: (string | MiddlewareHandler)[]): this {
+  define(name: string, middleware: (MiddlewareReference | MiddlewareHandler)[]): this {
     this.groups.set(name, [...middleware])
     return this
   }
@@ -30,7 +30,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Extend an existing group with additional middleware
    */
-  extend(name: string, middleware: (string | MiddlewareHandler)[]): this {
+  extend(name: string, middleware: (MiddlewareReference | MiddlewareHandler)[]): this {
     const existing = this.groups.get(name) || []
     this.groups.set(name, [...existing, ...middleware])
     return this
@@ -39,7 +39,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Prepend middleware to an existing group
    */
-  prepend(name: string, middleware: (string | MiddlewareHandler)[]): this {
+  prepend(name: string, middleware: (MiddlewareReference | MiddlewareHandler)[]): this {
     const existing = this.groups.get(name) || []
     this.groups.set(name, [...middleware, ...existing])
     return this
@@ -48,7 +48,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Get middleware for a group
    */
-  get(name: string): (string | MiddlewareHandler)[] {
+  get(name: string): (MiddlewareReference | MiddlewareHandler)[] {
     return this.groups.get(name) || []
   }
 
@@ -68,9 +68,14 @@ export class MiddlewareGroupRegistry {
   }
 
   /**
-   * Resolve a middleware reference, expanding group names into their middleware
+   * Resolve a middleware reference, expanding group names into their middleware.
+   *
+   * A group name is a middleware reference as far as a caller is concerned -
+   * you write `.middleware('web')` and get the group - so an application that
+   * declares its aliases in `RouterTypeRegistry` lists its group names there
+   * too.
    */
-  resolve(middleware: string | MiddlewareHandler): (string | MiddlewareHandler)[] {
+  resolve(middleware: MiddlewareReference | MiddlewareHandler): (MiddlewareReference | MiddlewareHandler)[] {
     if (typeof middleware === 'function') {
       return [middleware]
     }
@@ -87,8 +92,8 @@ export class MiddlewareGroupRegistry {
   /**
    * Resolve multiple middleware references, expanding groups
    */
-  resolveAll(middleware: (string | MiddlewareHandler)[]): (string | MiddlewareHandler)[] {
-    const resolved: (string | MiddlewareHandler)[] = []
+  resolveAll(middleware: (MiddlewareReference | MiddlewareHandler)[]): (MiddlewareReference | MiddlewareHandler)[] {
+    const resolved: (MiddlewareReference | MiddlewareHandler)[] = []
 
     for (const mw of middleware) {
       resolved.push(...this.resolve(mw))
@@ -102,7 +107,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Add middleware to the global stack (runs on every request)
    */
-  pushGlobal(...middleware: (string | MiddlewareHandler)[]): this {
+  pushGlobal(...middleware: (MiddlewareReference | MiddlewareHandler)[]): this {
     this.globalMiddleware.push(...middleware)
     return this
   }
@@ -110,7 +115,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Prepend middleware to the global stack
    */
-  prependGlobal(...middleware: (string | MiddlewareHandler)[]): this {
+  prependGlobal(...middleware: (MiddlewareReference | MiddlewareHandler)[]): this {
     this.globalMiddleware.unshift(...middleware)
     return this
   }
@@ -128,7 +133,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Get the global middleware stack
    */
-  getGlobal(): (string | MiddlewareHandler)[] {
+  getGlobal(): (MiddlewareReference | MiddlewareHandler)[] {
     return [...this.globalMiddleware]
   }
 
@@ -145,7 +150,7 @@ export class MiddlewareGroupRegistry {
   /**
    * Sort middleware by priority
    */
-  sortByPriority(middleware: (string | MiddlewareHandler)[]): (string | MiddlewareHandler)[] {
+  sortByPriority(middleware: (MiddlewareReference | MiddlewareHandler)[]): (MiddlewareReference | MiddlewareHandler)[] {
     return [...middleware].sort((a, b) => {
       const nameA = typeof a === 'string' ? a.split(':')[0] : ''
       const nameB = typeof b === 'string' ? b.split(':')[0] : ''
@@ -164,9 +169,9 @@ export class MiddlewareGroupRegistry {
    * @param options - except or only filter
    */
   filter(
-    middleware: (string | MiddlewareHandler)[],
+    middleware: (MiddlewareReference | MiddlewareHandler)[],
     options: { except?: string[], only?: string[] },
-  ): (string | MiddlewareHandler)[] {
+  ): (MiddlewareReference | MiddlewareHandler)[] {
     if (options.only && options.only.length > 0) {
       return middleware.filter((mw) => {
         if (typeof mw === 'string') {

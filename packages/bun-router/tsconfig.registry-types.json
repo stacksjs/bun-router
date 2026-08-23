@@ -1,0 +1,19 @@
+{
+  // The registry type tests live in their own project because a `declare
+  // module` augmentation is global: declaring `RouterTypeRegistry` in one file
+  // narrows every action path, middleware alias and route name in the WHOLE
+  // compilation. Under the main config that would mean the fallback behaviour -
+  // what an application that declares nothing sees, which is most of them - is
+  // never type-checked at all.
+  //
+  // So: the main config excludes these, and this one includes only them.
+  "extends": "../../tsconfig.json",
+  "include": [
+    "src/**/*",
+    "test/registry-typing.test-d.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**/*",
+    "**/dist/**/*"
+  ]
+}

@@ -7,6 +7,8 @@
  * and unmatched params appended as a query string.
  */
 
+import type { ExtractRouteParams } from './types'
+import type { KnownRouteName, PathForRouteName } from './types/registry'
 import process from 'node:process'
 
 const namedRouteRegistry: Map<string, string> = new Map()
@@ -42,6 +44,38 @@ export function clearNamedRoutes(): void {
   namedRouteRegistry.clear()
 }
 
+/**
+ * The params a named route needs, plus anything else you want in the query.
+ *
+ * The required half comes from the path the name resolves to, so
+ * `url('users.show')` with no `id` is a compile error once the application has
+ * declared its routes. Extra keys stay allowed on purpose: the implementation
+ * appends whatever it did not consume as a query string, which is a real
+ * feature and not a mistake to be typed away.
+ */
+export type UrlParams<TName extends string>
+  = ParamValues<ExtractRouteParams<PathForRouteName<TName>>> & Record<string, string | number | boolean>
+
+/**
+ * Path params are strings on the wire, but `url()` stringifies whatever it is
+ * given - so `url('users.show', { id: 42 })` is correct and should type as
+ * correct. Homomorphic, so an optional `{slug?}` stays optional.
+ */
+type ParamValues<TParams> = { [K in keyof TParams]: string | number | boolean }
+
+/** The keys of `T` that are not optional. */
+type RequiredKeys<T> = { [K in keyof T]-?: object extends Pick<T, K> ? never : K }[keyof T]
+
+/**
+ * `url()` takes no second argument when the route needs no parameters.
+ *
+ * Keyed on REQUIRED params, not all of them: a path whose only parameter is
+ * optional (`/posts/{slug?}`) is reachable with nothing at all, and demanding
+ * an empty object for it would be the type getting in the way of the truth.
+ */
+type RequiresParams<TName extends string>
+  = [RequiredKeys<ExtractRouteParams<PathForRouteName<TName>>>] extends [never] ? false : true
+
 export interface UrlOptions {
   /**
    * Return a fully-qualified URL using `process.env.APP_URL` (falling back to
@@ -71,6 +105,15 @@ export interface UrlOptions {
  * // → 'https://app.example/users/42'  (when APP_URL=https://app.example)
  * ```
  */
+// False positive: this is an overload signature, which has no body for its
+// parameters to be used in. The implementation below uses them.
+// eslint-disable-next-line pickier/no-unused-vars
+export function url<TName extends KnownRouteName>(
+  name: TName,
+  ...rest: RequiresParams<TName> extends true
+    ? [params: UrlParams<TName>, options?: UrlOptions]
+    : [params?: UrlParams<TName>, options?: UrlOptions]
+): string
 export function url(
   name: string,
   params: Record<string, string | number | boolean> = {},

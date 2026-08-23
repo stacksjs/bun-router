@@ -6,6 +6,7 @@ import type {
   CookieToSet,
   EnhancedRequest,
   MiddlewareHandler,
+  MiddlewareReference,
   NextFunction,
   Route,
   RouteGroup,
@@ -256,7 +257,7 @@ export class Router {
     handler: ActionHandler,
     type?: 'api' | 'web',
     name?: string,
-    middleware?: (string | MiddlewareHandler)[],
+    middleware?: (MiddlewareReference | MiddlewareHandler)[],
   ): Router {
     // Apply current group settings if in a group
     let routePath = path
@@ -417,9 +418,9 @@ export class Router {
    * keep working — `ActionHandler<TPath>` is a union that accepts them.
    * See stacksjs/stacks#1851 for the broader typed-request work.
    */
-  get<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  get<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  get<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  get<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  get<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  get<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('GET', path, handler, type, name, middleware)
   }
 
@@ -427,9 +428,9 @@ export class Router {
    * HTTP POST method. See {@link get} for `TPath`-driven param
    * narrowing on inline handlers.
    */
-  post<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  post<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  post<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  post<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  post<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  post<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('POST', path, handler, type, name, middleware)
   }
 
@@ -437,9 +438,9 @@ export class Router {
    * HTTP PUT method. See {@link get} for `TPath`-driven param
    * narrowing on inline handlers.
    */
-  put<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  put<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  put<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  put<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  put<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  put<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('PUT', path, handler, type, name, middleware)
   }
 
@@ -447,9 +448,9 @@ export class Router {
    * HTTP PATCH method. See {@link get} for `TPath`-driven param
    * narrowing on inline handlers.
    */
-  patch<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  patch<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  patch<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  patch<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  patch<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  patch<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('PATCH', path, handler, type, name, middleware)
   }
 
@@ -457,9 +458,9 @@ export class Router {
    * HTTP DELETE method. See {@link get} for `TPath`-driven param
    * narrowing on inline handlers.
    */
-  delete<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  delete<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  delete<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  delete<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  delete<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  delete<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('DELETE', path, handler, type, name, middleware)
   }
 
@@ -467,9 +468,9 @@ export class Router {
    * HTTP OPTIONS method. See {@link get} for `TPath`-driven param
    * narrowing on inline handlers.
    */
-  options<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  options<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  options<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  options<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  options<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  options<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     return this.registerRoute('OPTIONS', path, handler, type, name, middleware)
   }
 
@@ -478,9 +479,9 @@ export class Router {
    * handler is type-narrowed via {@link ActionHandler}'s `TPath`
    * generic, same as the single-method overloads.
    */
-  match<TPath extends string>(methods: string[], path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  match<TPath extends string>(methods: string[], path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  match<TPath extends string>(methods: string[], path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  match<TPath extends string>(methods: string[], path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  match<TPath extends string>(methods: string[], path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  match<TPath extends string>(methods: string[], path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     for (const method of methods) {
       this.registerRoute(method, path, handler, type, name, middleware)
     }
@@ -491,9 +492,9 @@ export class Router {
    * Register the handler against every HTTP method. See {@link get}
    * for `TPath`-driven param narrowing on inline handlers.
    */
-  any<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  any<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router
-  any<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (string | MiddlewareHandler)[]): Router {
+  any<TPath extends string>(path: TPath, handler: TypedRouteHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  any<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router
+  any<TPath extends string>(path: TPath, handler: ActionHandler<TPath>, type?: 'api' | 'web', name?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[]): Router {
     // Straight to `registerRoute` rather than through `match`: from inside the
     // class the implementation signature is invisible, so a handler typed as
     // the full union matches neither of `match`'s two public overloads.
@@ -1369,7 +1370,7 @@ export class Router {
   /**
    * Add middleware to the router
    */
-  use(...middleware: (string | MiddlewareHandler)[]): Router {
+  use(...middleware: (MiddlewareReference | MiddlewareHandler)[]): Router {
     for (const mw of middleware) {
       const resolvedMiddleware = this.resolveMiddleware(mw)
       if (resolvedMiddleware) {
@@ -1387,9 +1388,9 @@ export class Router {
    * routes it registers) has finished — await it, or routes registered
    * after an `await` inside the callback would lose the group prefix.
    */
-  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => Promise<void>): Promise<Router>
-  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => void): Router
-  group(options: { prefix?: string, middleware?: (string | MiddlewareHandler)[] }, callback: () => void | Promise<void>): Router | Promise<Router> {
+  group(options: { prefix?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[] }, callback: () => Promise<void>): Promise<Router>
+  group(options: { prefix?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[] }, callback: () => void): Router
+  group(options: { prefix?: string, middleware?: (MiddlewareReference | MiddlewareHandler)[] }, callback: () => void | Promise<void>): Router | Promise<Router> {
     // Save current group state
     const previousGroup = this.currentGroup
 

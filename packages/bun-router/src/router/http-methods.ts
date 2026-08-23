@@ -1,4 +1,4 @@
-import type { ActionHandler, EnhancedRequest, MiddlewareHandler, Route } from '../types'
+import type { ActionHandler, EnhancedRequest, MiddlewareHandler, MiddlewareReference, Route } from '../types'
 import type { Router } from './router'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
@@ -18,7 +18,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         // Apply current group settings if in a group
         let routePath = path
@@ -172,7 +172,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('GET', path, handler, type, name, middleware)
       },
@@ -187,7 +187,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('POST', path, handler, type, name, middleware)
       },
@@ -202,7 +202,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('PUT', path, handler, type, name, middleware)
       },
@@ -217,7 +217,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('PATCH', path, handler, type, name, middleware)
       },
@@ -232,7 +232,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('DELETE', path, handler, type, name, middleware)
       },
@@ -247,7 +247,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('OPTIONS', path, handler, type, name, middleware)
       },
@@ -264,7 +264,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         return this.addRoute('HEAD', path, handler, type, name, middleware)
       },
@@ -280,7 +280,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         for (const method of methods) {
           this.addRoute(method, path, handler, type, name, middleware)
@@ -298,7 +298,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
         handler: ActionHandler,
         type?: 'api' | 'web',
         name?: string,
-        middleware?: (string | MiddlewareHandler)[],
+        middleware?: (MiddlewareReference | MiddlewareHandler)[],
       ): Router {
         const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
         return this.match(methods, path, handler, type, name, middleware)
