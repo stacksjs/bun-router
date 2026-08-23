@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.5...v0.1.6)
+
+## 🐛 Bug Fixes
+
+- **router**: decode path params, once ([029e5a9](https://github.com/stacksjs/bun-router/commit/029e5a9)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.6 ([12b624c](https://github.com/stacksjs/bun-router/commit/12b624c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.4...v0.1.5)
 
 ## 🐛 Bug Fixes
