@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.4...v0.1.5)
+
+## 🐛 Bug Fixes
+
+- **types**: stop the registry guard rejecting real action lists ([04d9064](https://github.com/stacksjs/bun-router/commit/04d9064)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.5 ([3d76235](https://github.com/stacksjs/bun-router/commit/3d76235)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.3...v0.1.4)
 
 ## 🐛 Bug Fixes
