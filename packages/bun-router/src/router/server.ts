@@ -1,7 +1,7 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
-import { getParsedCookies, getParsedURL, RequestWithMacros } from '../request/macros'
+import { getParsedCookies, getParsedQuery, getParsedURL, RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
 import { compressResponse } from '../response/compression'
@@ -43,6 +43,20 @@ if (!RequestWithMacros.hasMacro('get')) {
 // Installed as a shared-prototype accessor: the hybrid materializes on
 // first access and is cached as an own property, so requests that never
 // touch cookies do zero cookie work.
+/*
+ * `query` — a shared-prototype accessor, for the same reason `cookies` is one:
+ * it materialises on first access and is cached as an own property, so a
+ * request that never looks at the query string does no query-string work.
+ *
+ * It had no assignment at all on this path, while `EnhancedRequest` declares it
+ * non-optional - so `req.query.a` compiled and threw `undefined is not an
+ * object`. The `get()` macro reads `searchParams` directly, which is why the
+ * gap survived: the documented alternative worked.
+ */
+RequestWithMacros.macroAccessor('query', function (this: EnhancedRequest) {
+  return getParsedQuery(this)
+})
+
 RequestWithMacros.macroAccessor('cookies', function (this: EnhancedRequest) {
   const req = this
   const cookies = (): Record<string, string> => ({ ...getParsedCookies(req) })

@@ -25,10 +25,6 @@ export interface CookieAccessorSinks {
   remove?: (name: string, options: CookieOptions) => void
 }
 
-// False positive: `sinks` is destructured on the first line of the body, which
-// the rule's scope analysis does not count as a use. Named honestly rather than
-// `_sinks`, because it IS used.
-// eslint-disable-next-line pickier/no-unused-vars
 export function createCookieAccessor(sinks: CookieAccessorSinks): CookieAccessor {
   const { read, write, remove } = sinks
   const accessor = ((): Record<string, string> => ({ ...read() })) as CookieAccessor

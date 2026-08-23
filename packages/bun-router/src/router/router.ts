@@ -18,6 +18,7 @@ import type {
   WebSocketData,
 } from '../types'
 import { createCookieAccessor } from '../request/cookie-accessor'
+import { getParsedQuery } from '../request/macros'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
@@ -981,12 +982,10 @@ export class Router {
       return parsedCookies
     }
 
-    // Parse query string
-    const url = new URL(req.url)
-    const query: Record<string, string> = {}
-    url.searchParams.forEach((value, key) => {
-      query[key] = value
-    })
+    // Parse query string — the same builder the server path uses, so a
+    // repeated key does not become an array on one path and the last value on
+    // the other.
+    const query = getParsedQuery(req as EnhancedRequest)
 
     // Create a wrapper object that proxies to the original request
     // This is necessary because native Request objects don't allow property assignment in Bun

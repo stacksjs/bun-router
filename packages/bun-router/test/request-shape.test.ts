@@ -105,3 +105,44 @@ describe('request.ip is one shape everywhere', () => {
     expect(req.ip()).toBe('9.9.9.9')
   })
 })
+
+describe('request.query exists, because the type says it does', () => {
+  it('is an object on a request with a query string', async () => {
+    const router = new Router()
+    let captured: any
+    router.get('/q', (req) => { captured = req; return new Response('ok') })
+    await router.handleRequest(new Request('http://localhost/q?a=1'))
+
+    // This used to be `undefined`, so `req.query.a` threw
+    // `undefined is not an object` - a declared, non-optional property that did
+    // not exist. Not a wrong value: a 500.
+    expect(captured.query).toEqual({ a: '1' })
+  })
+
+  it('is an empty object when there is no query string', async () => {
+    const router = new Router()
+    let captured: any
+    router.get('/q', (req) => { captured = req; return new Response('ok') })
+    await router.handleRequest(new Request('http://localhost/q'))
+
+    expect(captured.query).toEqual({})
+  })
+
+  it('collects a repeated key into an array, as the declared type promises', async () => {
+    const router = new Router()
+    let captured: any
+    router.get('/q', (req) => { captured = req; return new Response('ok') })
+    await router.handleRequest(new Request('http://localhost/q?a=1&a=2'))
+
+    expect(captured.query).toEqual({ a: ['1', '2'] })
+  })
+
+  it('decodes values', async () => {
+    const router = new Router()
+    let captured: any
+    router.get('/q', (req) => { captured = req; return new Response('ok') })
+    await router.handleRequest(new Request('http://localhost/q?b=x%20y'))
+
+    expect(captured.query).toEqual({ b: 'x y' })
+  })
+})

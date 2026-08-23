@@ -26,6 +26,7 @@ const GLOB_PATTERN_CACHE = new Map<string, RegExp>()
 interface RequestParseCache {
   _parsedURL?: URL
   _parsedCookies?: Record<string, string>
+  _parsedQuery?: Record<string, string | string[]>
 }
 
 export function getParsedURL(req: EnhancedRequest): URL {
@@ -820,3 +821,33 @@ export const RequestHelpers = {
 
 // Auto-register built-in macros
 registerBuiltInRequestMacros()
+
+/**
+ * `request.query`, built once per request.
+ *
+ * `EnhancedRequest` declares `query` as a non-optional
+ * `Record<string, string | string[]>`, and on the server path nothing ever
+ * assigned it - so `req.query.a` type-checked and then threw
+ * `undefined is not an object`. A declared property that does not exist is the
+ * worst version of a type-versus-runtime gap: not a wrong value, a 500.
+ *
+ * A repeated key (`?a=1&a=2`) becomes an array, which is what the declared type
+ * has always promised.
+ */
+export function getParsedQuery(req: EnhancedRequest): Record<string, string | string[]> {
+  const cache = req as EnhancedRequest & RequestParseCache
+  if (!cache._parsedQuery) {
+    const query: Record<string, string | string[]> = {}
+    for (const [key, value] of getParsedURL(req).searchParams) {
+      const existing = query[key]
+      if (existing === undefined)
+        query[key] = value
+      else if (Array.isArray(existing))
+        existing.push(value)
+      else
+        query[key] = [existing, value]
+    }
+    cache._parsedQuery = query
+  }
+  return cache._parsedQuery
+}
