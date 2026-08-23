@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.3...v0.1.4)
+
+## 🐛 Bug Fixes
+
+- **types**: declare RouterTypeRegistry in the entry, where augmenting it works ([68f1b74](https://github.com/stacksjs/bun-router/commit/68f1b74)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.4 ([e89534d](https://github.com/stacksjs/bun-router/commit/e89534d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.2...v0.1.3)
 
 ## 🚀 Features
