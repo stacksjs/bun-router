@@ -947,7 +947,15 @@ export interface ActionHandlerClass {
 export type ActionPath = `Actions/${string}Action` | `actions/${string}Action` | `${string}Controller@${string}`
 
 /**
- * Strongly typed action handler with better type safety
+ * Strongly typed action handler: every form a route will accept.
+ *
+ * Note that the route-registering methods do NOT take this as a single
+ * parameter. A parameter typed as a union containing two call signatures gives
+ * TypeScript nothing to contextually type an inline arrow with, so
+ * `router.get('/users/{id}', req => …)` left `req` implicitly `any` - the exact
+ * opposite of what the path generic exists for. They declare
+ * {@link TypedRouteHandler} as a first overload and this as the fallback, which
+ * types the inline case and keeps every other form working.
  */
 export type ActionHandler<TPath extends string = string> =
   | ActionPath
@@ -1398,8 +1406,19 @@ export type ContentType =
 /**
  * Strongly typed route method signatures
  */
+/**
+ * A request whose `params` are exactly the ones its path declares.
+ *
+ * `Omit` first, because `EnhancedRequest.params` is `Record<string, string>`
+ * and an intersection with it widens the narrowed keyset straight back:
+ * `req.params.slugTypo` type-checked happily and returned `undefined` at
+ * runtime, which is the failure a typed router exists to prevent.
+ */
+export type RequestFor<TPath extends string>
+  = Omit<EnhancedRequest, 'params'> & { params: ExtractRouteParams<TPath> }
+
 export interface TypedRouteHandler<TPath extends string> {
-  (req: EnhancedRequest & { params: ExtractRouteParams<TPath> }): Response | Promise<Response>
+  (req: RequestFor<TPath>): Response | Promise<Response>
 }
 
 /**
