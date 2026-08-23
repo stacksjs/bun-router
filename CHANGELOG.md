@@ -1,3 +1,22 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.2...v0.1.3)
+
+## 🚀 Features
+
+- **types**: let an application declare its actions, middleware and routes ([d99a1e9](https://github.com/stacksjs/bun-router/commit/d99a1e9)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🐛 Bug Fixes
+
+- **types**: make request.ip and request.cookies say what they actually are ([0014f79](https://github.com/stacksjs/bun-router/commit/0014f79)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **types**: contextually type inline route handlers ([fa2c863](https://github.com/stacksjs/bun-router/commit/fa2c863)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.3 ([a86362d](https://github.com/stacksjs/bun-router/commit/a86362d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.1...v0.1.2)
 
 ## 🐛 Bug Fixes
