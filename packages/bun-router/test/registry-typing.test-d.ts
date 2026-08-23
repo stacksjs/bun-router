@@ -18,7 +18,10 @@ import { Router, url } from '../src'
 // application. Augmenting anywhere else creates a second, unrelated interface.
 declare module '../src' {
   interface RouterTypeRegistry {
-    actions: 'Actions/CreateUserAction' | 'Actions/ListUsersAction'
+    // Deliberately includes a name that does NOT match the loose fallback
+    // pattern: a real application's action list is full of them, and the guard
+    // used to reject exactly this and silently fall back.
+    actions: 'Actions/CreateUserAction' | 'Actions/ListUsersAction' | 'Actions/Dashboard/GetFunctions'
     middleware: 'auth' | 'throttle'
     routes: {
       'users.index': '/users'
@@ -34,6 +37,7 @@ const router = new Router()
 
 router.post('/users', 'Actions/CreateUserAction')
 router.get('/users', 'Actions/ListUsersAction')
+router.get('/fns', 'Actions/Dashboard/GetFunctions')
 
 export function badActions(): void {
   // @ts-expect-error typo: there is no such action

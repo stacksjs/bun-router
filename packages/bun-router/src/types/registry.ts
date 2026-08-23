@@ -6,9 +6,26 @@ import type { BuiltInMiddleware } from '../types'
  * `../index`, which is the module an application can name in a
  * `declare module '@stacksjs/bun-router'` augmentation - see the note there.
  */
-export type FromRegistry<TKey extends string, TFallback>
+
+/**
+ * Read a key out of the registry, or fall back.
+ *
+ * `TKey extends keyof RouterTypeRegistry` is false while the interface is
+ * empty, which is what makes every fallback the default.
+ *
+ * `TShape` is checked separately from `TFallback`, and the distinction is
+ * load-bearing. It used to test the declared value against the fallback itself,
+ * which sounds like the same thing and is not: the fallback for an action path
+ * is the loose pattern `Actions/${string}Action`, and a real application's
+ * action list contains names like `'Actions/Dashboard/Library/GetFunctions'`
+ * that do not match it. So a correct, complete declaration failed the guard and
+ * fell back to the pattern - the feature looked wired up and checked nothing.
+ * The guard is meant to catch `actions: number`, so it asks whether the
+ * declared value is a string, and nothing more.
+ */
+export type FromRegistry<TKey extends string, TShape, TFallback>
   = TKey extends keyof RouterTypeRegistry
-    ? (RouterTypeRegistry[TKey] extends TFallback ? RouterTypeRegistry[TKey] : TFallback)
+    ? (RouterTypeRegistry[TKey] extends TShape ? RouterTypeRegistry[TKey] : TFallback)
     : TFallback
 
 /**
@@ -21,6 +38,7 @@ export type FromRegistry<TKey extends string, TFallback>
  */
 export type KnownActionPath = FromRegistry<
   'actions',
+  string,
   `Actions/${string}Action` | `actions/${string}Action` | `${string}Controller@${string}`
 >
 
@@ -32,7 +50,7 @@ export type KnownActionPath = FromRegistry<
  * to the group - so the union has to contain both or the group form stops
  * type-checking the moment anything is declared.
  */
-export type KnownMiddlewareName = FromRegistry<'middleware', string>
+export type KnownMiddlewareName = FromRegistry<'middleware', string, string>
 
 /**
  * A middleware reference: an alias, or an alias with parameters.
@@ -53,7 +71,7 @@ export type MiddlewareReference =
   | `${KnownMiddlewareName}:${string}`
 
 /** The named routes this application registers, as `name → path`. */
-export type KnownRoutes = FromRegistry<'routes', Record<string, string>>
+export type KnownRoutes = FromRegistry<'routes', Record<string, string>, Record<string, string>>
 
 /** The names of those routes, or any string when none are declared. */
 export type KnownRouteName = keyof KnownRoutes extends never ? string : Extract<keyof KnownRoutes, string>
