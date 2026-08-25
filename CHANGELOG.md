@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.7...v0.1.8)
+
+## 🐛 Bug Fixes
+
+- **build**: stop inlining the STX renderer ([8ceb15c](https://github.com/stacksjs/bun-router/commit/8ceb15c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.8 ([5f42ac0](https://github.com/stacksjs/bun-router/commit/5f42ac0)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.6...v0.1.7)
 
 ## 🐛 Bug Fixes
