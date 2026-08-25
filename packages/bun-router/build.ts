@@ -10,6 +10,19 @@ await Promise.all([
     target: 'bun',
     format: 'esm',
     minify: true,
+    // Resolve these from the consumer at runtime instead of inlining them.
+    //
+    // renderStxFile() already routes its import through a variable "to avoid
+    // build-time resolution" and tells the user to `bun add @stacksjs/stx` if
+    // it is missing — but Bun constant-folds the variable and bundled the
+    // whole renderer anyway. The result was that an app's own @stacksjs/stx
+    // was never what ran: patching it changed nothing, because this frozen
+    // copy did the rendering. A slot-include fix released in stx 0.2.227 was
+    // invisible to every consumer for exactly this reason.
+    //
+    // The two declared dependencies are external for the ordinary reason —
+    // consumers install them, so bundling only pins a stale version.
+    external: ['@stacksjs/stx', '@stacksjs/clapp', 'ts-rate-limiter'],
   }),
   $`bunx --bun tsc -p tsconfig.build.json`,
 ])
