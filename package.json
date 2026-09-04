@@ -4,7 +4,7 @@
   "version": "0.1.8",
   "private": true,
   "description": "A router for Bun.",
-  "author": "Chris Breuer <chris@stacksjs.org>",
+  "author": "Chris Breuer <chris@stacksjs.com>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/bun-router#readme",
   "repository": {
