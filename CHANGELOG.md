@@ -1,3 +1,19 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.8...v0.1.9)
+
+## ⚡ Performance Improvements
+
+- **response**: keep compression fast paths synchronous ([c1c447d](https://github.com/stacksjs/bun-router/commit/c1c447d)) _(by Chris <chris@stacksjs.com>)_
+- **config**: defer bunfig loader ([45d3d2e](https://github.com/stacksjs/bun-router/commit/45d3d2e)) _(by Chris <chris@stacksjs.com>)_
+- **middleware**: defer rate limiter runtime ([a6cb22d](https://github.com/stacksjs/bun-router/commit/a6cb22d)) _(by Chris <chris@stacksjs.com>)_
+
+## 🧹 Chores
+
+- **package**: use current maintainer email ([8bbe5a3](https://github.com/stacksjs/bun-router/commit/8bbe5a3)) _(by Chris <chris@stacksjs.com>)_
+
+## Contributors
+
+- _Chris <chris@stacksjs.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.7...v0.1.8)
 
 ## 🐛 Bug Fixes
