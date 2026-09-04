@@ -173,19 +173,20 @@ export function shouldCompress(response: Response, encoding: string | null, thre
  * Returns the response it was given when it is not, so a caller can apply this
  * unconditionally at the end of the pipeline.
  */
-export async function compressResponse(
+export function applyResponseCompression(
   response: Response,
   request: Request,
   options: CompressionOptions = {},
-): Promise<Response> {
-  const settings = { ...DEFAULT_COMPRESSION, ...options }
+): Response | Promise<Response> {
+  const enabled = options.enabled ?? DEFAULT_COMPRESSION.enabled
 
-  if (!settings.enabled)
+  if (!enabled)
     return response
 
+  const threshold = options.threshold ?? DEFAULT_COMPRESSION.threshold
   const encoding = negotiateEncoding(request.headers.get('accept-encoding'))
 
-  if (!shouldCompress(response, encoding, settings.threshold)) {
+  if (!shouldCompress(response, encoding, threshold)) {
     /*
      * `Vary` even when nothing was compressed.
      *
@@ -211,19 +212,54 @@ export async function compressResponse(
    * have made bigger. `/api/health` is 356 bytes, and it was being compressed.
    */
   const known = Number(response.headers.get('content-length') ?? Number.NaN)
-  const body = Number.isFinite(known)
-    ? { stream: response.body as ReadableStream<Uint8Array>, size: known, ended: false }
-    : await peekBody(response.body as ReadableStream<Uint8Array>, settings.threshold)
+  if (!Number.isFinite(known))
+    return compressUnknownLengthResponse(response, encoding as 'gzip' | 'deflate', threshold)
 
-  if (body.ended && body.size < settings.threshold) {
+  return createCompressedResponse(
+    response,
+    response.body as ReadableStream<Uint8Array>,
+    encoding as 'gzip' | 'deflate',
+  )
+}
+
+/**
+ * Preserve the original Promise-only public contract for direct callers.
+ * The server uses `applyResponseCompression` so the usual uncompressed and
+ * known-length paths do not create a second promise per request.
+ */
+export async function compressResponse(
+  response: Response,
+  request: Request,
+  options: CompressionOptions = {},
+): Promise<Response> {
+  return applyResponseCompression(response, request, options)
+}
+
+async function compressUnknownLengthResponse(
+  response: Response,
+  encoding: 'gzip' | 'deflate',
+  threshold: number,
+): Promise<Response> {
+  const body = await peekBody(response.body as ReadableStream<Uint8Array>, threshold)
+
+  if (body.ended && body.size < threshold) {
     const headers = new Headers(response.headers)
     appendVary(headers, 'Accept-Encoding')
 
     return new Response(body.stream, { status: response.status, statusText: response.statusText, headers })
   }
 
+  return createCompressedResponse(response, body.stream, encoding)
+}
+
+function createCompressedResponse(
+  response: Response,
+  body: ReadableStream<Uint8Array>,
+  encoding: 'gzip' | 'deflate',
+): Response {
+
   const headers = new Headers(response.headers)
-  headers.set('Content-Encoding', encoding as string)
+  headers.set('Content-Encoding', encoding)
   appendVary(headers, 'Accept-Encoding')
 
   // The compressed length is not known until the body ends, and a wrong
@@ -238,7 +274,7 @@ export async function compressResponse(
    * two declarations disagree about the array-buffer parameter. Everything
    * around this line stays typed.
    */
-  const compressed = (body.stream as unknown as ReadableStream)
+  const compressed = (body as unknown as ReadableStream)
     .pipeThrough(new CompressionStream(encoding === 'gzip' ? 'gzip' : 'deflate') as unknown as ReadableWritablePair) as unknown as ReadableStream<Uint8Array>
 
   return new Response(compressed, { status: response.status, statusText: response.statusText, headers })

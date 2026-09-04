@@ -10,7 +10,7 @@
 // serve the wrong copy to the next client.
 
 import { describe, expect, test } from 'bun:test'
-import { appendVary, compressResponse, isCompressible, negotiateEncoding, peekBody, shouldCompress } from '../src/response/compression'
+import { appendVary, applyResponseCompression, compressResponse, isCompressible, negotiateEncoding, peekBody, shouldCompress } from '../src/response/compression'
 
 const LONG = 'ReviewOS renders its pages on the server. '.repeat(200)
 
@@ -92,6 +92,21 @@ describe('the rules', () => {
 })
 
 describe('compressing', () => {
+  test('keeps the common uncompressed path synchronous', () => {
+    const noEncoding = applyResponseCompression(html(LONG), new Request('http://localhost/'))
+    const tooSmall = applyResponseCompression(html('tiny'), asked())
+
+    expect(noEncoding).toBeInstanceOf(Response)
+    expect(tooSmall).toBeInstanceOf(Response)
+  })
+
+  test('keeps known-length compression synchronous', () => {
+    const answer = applyResponseCompression(html(LONG), asked())
+
+    expect(answer).toBeInstanceOf(Response)
+    expect((answer as Response).headers.get('content-encoding')).toBe('gzip')
+  })
+
   test('shrinks the body and says how', async () => {
     const answer = await compressResponse(html(LONG), asked())
 

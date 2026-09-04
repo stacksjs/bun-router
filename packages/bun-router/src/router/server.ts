@@ -4,7 +4,7 @@ import type { Router } from './router'
 import { getParsedCookies, getParsedQuery, getParsedURL, RequestWithMacros } from '../request/macros'
 import { runWithRequest, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
-import { compressResponse } from '../response/compression'
+import { applyResponseCompression } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
 
 // Helpers that frameworks layered on bun-router treat as guaranteed but
@@ -247,7 +247,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
          * framework whose pages go out uncompressed is one where every app
          * pays for it silently. Streams are left alone - see the module.
          */
-        return await compressResponse(response, req, self.config?.compression ?? {})
+        return applyResponseCompression(response, req, self.config?.compression)
       },
       writable: true,
       configurable: true,
