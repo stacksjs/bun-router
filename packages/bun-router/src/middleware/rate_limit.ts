@@ -1,6 +1,5 @@
-import type { StorageProvider } from 'ts-rate-limiter'
+import type { RateLimiter as TsRateLimiter, StorageProvider } from 'ts-rate-limiter'
 import type { EnhancedRequest, Middleware, MiddlewareHandler, NextFunction } from '../types'
-import { createRateLimiter } from 'ts-rate-limiter'
 import { config } from '../config'
 
 export interface RateLimitOptions {
@@ -41,7 +40,7 @@ function createRateLimitMiddleware(options: RateLimitOptions = {}): MiddlewareHa
 }
 
 export default class RateLimit implements Middleware {
-  private limiter: any // Will be initialized in constructor
+  private limiterPromise?: Promise<TsRateLimiter>
   private options: RateLimitOptions
 
   constructor(options: RateLimitOptions = {}) {
@@ -108,11 +107,14 @@ export default class RateLimit implements Middleware {
       }
     }
 
-    // Initialize the limiter (async)
-    this.initLimiter()
   }
 
-  private async initLimiter() {
+  private getLimiter(): Promise<TsRateLimiter> {
+    this.limiterPromise ??= this.initLimiter()
+    return this.limiterPromise
+  }
+
+  private async initLimiter(): Promise<TsRateLimiter> {
     // Create a copy of the options to avoid modifying the original
     const limiterOptions: any = { ...this.options }
 
@@ -144,7 +146,8 @@ export default class RateLimit implements Middleware {
     console.log = () => {}
     console.warn = () => {}
     try {
-      this.limiter = await createRateLimiter(limiterOptions)
+      const { createRateLimiter } = await import('ts-rate-limiter')
+      return await createRateLimiter(limiterOptions)
     }
     finally {
       console.log = originalConsoleLog
@@ -184,19 +187,10 @@ export default class RateLimit implements Middleware {
       return response || new Response('Not Found', { status: 404 })
     }
 
-    // If limiter isn't initialized yet, wait a bit and try again
-    if (!this.limiter) {
-      await new Promise(resolve => setTimeout(resolve, 50))
-      if (!this.limiter) {
-        // If still not initialized, just proceed
-        const response = await next()
-        return response || new Response('Not Found', { status: 404 })
-      }
-    }
-
     try {
+      const limiter = await this.getLimiter()
       // Check if request exceeds rate limit
-      const result = await this.limiter.check(req)
+      const result = await limiter.check(req)
 
       if (!result.allowed) {
         return this.options.handler
