@@ -1,6 +1,5 @@
 import type { RouterConfig } from './types'
 import process from 'node:process'
-import { loadConfig } from 'bunfig'
 
 /**
  * Default configuration for the router
@@ -310,6 +309,7 @@ let _config: RouterConfig | null = null
 
 export async function getConfig(): Promise<RouterConfig> {
   if (!_config) {
+    const { loadConfig } = await import('bunfig')
     _config = await loadConfig({
       name: 'router',
       defaultConfig,

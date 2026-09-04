@@ -19,4 +19,22 @@ describe('runtime import graph', () => {
 
     expect(eagerLimiterImports).toEqual([])
   })
+
+  test('does not load bunfig before getConfig is called', async () => {
+    const result = await Bun.build({
+      entrypoints: [join(import.meta.dir, '../src/index.ts')],
+      target: 'bun',
+      metafile: true,
+      external: ['@stacksjs/stx', '@stacksjs/clapp', 'ts-rate-limiter'],
+    })
+
+    expect(result.success).toBe(true)
+    const configEntry = Object.entries(result.metafile?.inputs ?? {})
+      .find(([source]) => source.endsWith('/config.ts'))
+    const eagerConfigLoaderImports = configEntry?.[1].imports
+      .filter(dependency => dependency.kind !== 'dynamic-import'
+        && dependency.path.includes('bunfig')) ?? []
+
+    expect(eagerConfigLoaderImports).toEqual([])
+  })
 })
