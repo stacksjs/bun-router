@@ -185,7 +185,10 @@ export function applyResponseCompression(
     return response
 
   const threshold = options.threshold ?? DEFAULT_COMPRESSION.threshold
-  const encoding = negotiateEncoding(request.headers.get('accept-encoding'))
+  const acceptEncoding = request.headers.get('accept-encoding')
+  const length = acceptEncoding ? Number(response.headers.get('content-length') ?? Number.NaN) : Number.NaN
+  // A known short response cannot use any encoding, so avoid parsing the offers.
+  const encoding = Number.isFinite(length) && !(length >= threshold) ? null : negotiateEncoding(acceptEncoding)
 
   if (!shouldCompress(response, encoding, threshold)) {
     /*

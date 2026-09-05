@@ -117,6 +117,70 @@ describe('the rules', () => {
   })
 })
 
+describe('compression eligibility before negotiation', () => {
+  test('preserves short responses and Vary for every encoding offer', async () => {
+    for (const encoding of ['', 'identity', 'gzip, deflate, br', 'gzip;q=0, deflate;q=0', '*', 'gzip;q=0, *;q=1']) {
+      const response = html('tiny', { vary: 'Origin' })
+      const answer = applyResponseCompression(response, asked(encoding))
+
+      expect(answer).toBe(response)
+      expect(response.headers.get('content-encoding')).toBeNull()
+      expect(response.headers.get('vary')).toBe('Origin, Accept-Encoding')
+      expect(await response.text()).toBe('tiny')
+    }
+  })
+
+  test('compresses at the exact threshold and honors a refusal there', async () => {
+    for (const [encoding, expected] of [['gzip', 'gzip'], ['gzip;q=0, deflate', 'deflate'], ['gzip;q=0, deflate;q=0', null]] as const) {
+      const response = html('tiny')
+      const answer = await applyResponseCompression(response, asked(encoding), { threshold: 4 })
+
+      expect(answer.headers.get('content-encoding')).toBe(expected)
+      if (expected) {
+        const decoded = new Response(answer.body!.pipeThrough(new DecompressionStream(expected)))
+        expect(await decoded.text()).toBe('tiny')
+      }
+      else {
+        expect(answer).toBe(response)
+        expect(await answer.text()).toBe('tiny')
+      }
+    }
+  })
+
+  test('keeps absent and malformed lengths eligible for compression', async () => {
+    for (const length of [null, 'unknown']) {
+      const response = html(LONG)
+      if (length === null)
+        response.headers.delete('content-length')
+      else
+        response.headers.set('content-length', length)
+      const answer = await applyResponseCompression(response, asked())
+
+      expect(answer.headers.get('content-encoding')).toBe('gzip')
+      expect(new TextDecoder().decode(Bun.gunzipSync(new Uint8Array(await answer.arrayBuffer())))).toBe(LONG)
+    }
+  })
+
+  test('does not read an unknown-length body when the client refuses compression', async () => {
+    const response = new Response('tiny', { headers: { 'content-type': 'text/plain' } })
+    Object.defineProperty(response, 'body', {
+      get() { throw new Error('the body must stay untouched') },
+    })
+
+    expect(applyResponseCompression(response, asked('gzip;q=0, deflate;q=0'))).toBe(response)
+    expect(await response.text()).toBe('tiny')
+  })
+
+  test('preserves non-finite threshold decisions for known lengths', async () => {
+    for (const threshold of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      const response = html('tiny')
+      expect(applyResponseCompression(response, asked(), { threshold })).toBe(response)
+      expect(response.headers.get('vary')).toBe('Accept-Encoding')
+      expect(await response.text()).toBe('tiny')
+    }
+  })
+})
+
 describe('compressing', () => {
   test('keeps the common uncompressed path synchronous', () => {
     const noEncoding = applyResponseCompression(html(LONG), new Request('http://localhost/'))
