@@ -105,6 +105,7 @@ export interface UrlOptions {
  * // → 'https://app.example/users/42'  (when APP_URL=https://app.example)
  * ```
  */
+// eslint-disable-next-line pickier/no-unused-vars -- overload parameters describe the public call signature
 export function url<TName extends KnownRouteName>(
   name: TName,
   ...rest: RequiresParams<TName> extends true

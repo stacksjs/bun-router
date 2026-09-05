@@ -25,6 +25,7 @@ export interface CookieAccessorSinks {
   remove?: (name: string, options: CookieOptions) => void
 }
 
+// eslint-disable-next-line pickier/no-unused-vars -- sinks is read by the destructuring assignment below
 export function createCookieAccessor(sinks: CookieAccessorSinks): CookieAccessor {
   const { read, write, remove } = sinks
   const accessor = ((): Record<string, string> => ({ ...read() })) as CookieAccessor
