@@ -12,7 +12,7 @@
     },
     "packages/bun-router": {
       "name": "@stacksjs/bun-router",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "bin": {
         "bun-router": "./dist/cli.js",
         "router": "./bin/cli.ts",

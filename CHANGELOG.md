@@ -1,3 +1,9 @@
+## v0.1.11
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.10...v0.1.11)
+
+- Skip encoding negotiation for known responses below the compression threshold while preserving Vary and streaming behavior.
+
 ## v0.1.10
 
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.9...v0.1.10)
