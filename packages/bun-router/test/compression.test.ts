@@ -60,6 +60,32 @@ describe('what is worth compressing', () => {
 })
 
 describe('the rules', () => {
+
+  test('does not materialize the body stream for a known short response', async () => {
+    const response = html('tiny')
+    let bodyReads = 0
+    const getBody = Object.getOwnPropertyDescriptor(Response.prototype, 'body')!.get!
+    Object.defineProperty(response, 'body', {
+      get() {
+        bodyReads++
+        return getBody.call(this)
+      },
+    })
+    const answer = applyResponseCompression(response, asked())
+
+    expect(answer).toBe(response)
+    expect(bodyReads).toBe(0)
+    expect(response.headers.get('vary')).toBe('Accept-Encoding')
+    expect(await response.text()).toBe('tiny')
+  })
+
+  test('requires a body even when its declared length exceeds the threshold', () => {
+    const response = new Response(null, {
+      headers: { 'content-type': 'text/plain', 'content-length': '4096' },
+    })
+    expect(shouldCompress(response, 'gzip', 1024)).toBe(false)
+  })
+
   test('a body below the threshold is left alone', () => {
     expect(shouldCompress(html('small'), 'gzip', 1024)).toBe(false)
     expect(shouldCompress(html(LONG), 'gzip', 1024)).toBe(true)

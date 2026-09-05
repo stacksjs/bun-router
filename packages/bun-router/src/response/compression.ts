@@ -159,12 +159,13 @@ export function shouldCompress(response: Response, encoding: string | null, thre
   if (!isCompressible(response.headers.get('content-type')))
     return false
 
-  if (!response.body)
+  const length = Number(response.headers.get('content-length') ?? Number.NaN)
+  // Reading Response.body can materialize a stream. A known short body does
+  // not need one just to decide that it will be sent without compression.
+  if (Number.isFinite(length) && !(length >= threshold))
     return false
 
-  const length = Number(response.headers.get('content-length') ?? Number.NaN)
-
-  return Number.isFinite(length) ? length >= threshold : true
+  return Boolean(response.body)
 }
 
 /**
