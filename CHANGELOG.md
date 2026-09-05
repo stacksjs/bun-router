@@ -1,3 +1,10 @@
+## v0.1.10
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.9...v0.1.10)
+
+- Avoid materializing response streams when Content-Length is below the compression threshold.
+- Suppress two existing lint false positives without changing runtime behavior.
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.8...v0.1.9)
 
 ## ⚡ Performance Improvements
