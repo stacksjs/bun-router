@@ -93,8 +93,8 @@
     "typecheck": "bunx --bun tsc --noEmit"
   },
   "dependencies": {
-    "@stacksjs/clapp": "^0.2.0",
-    "ts-rate-limiter": "^0.4.2"
+    "@stacksjs/clapp": "^0.2.15",
+    "ts-rate-limiter": "^0.4.8"
   },
   "peerDependencies": {
     "@stacksjs/stx": ">=0.2.227"

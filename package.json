@@ -72,9 +72,9 @@
     "typecheck": "bunx --bun tsc --noEmit && bunx --bun tsc --noEmit -p packages/bun-router/tsconfig.registry-types.json"
   },
   "devDependencies": {
-    "@stacksjs/bunpress": "^0.2.12",
-    "@stacksjs/stx": "^0.2.227",
-    "better-dx": "^0.2.7"
+    "@stacksjs/bunpress": "^0.2.14",
+    "@stacksjs/stx": "^0.2.278",
+    "better-dx": "^0.2.25"
   },
   "workspaces": [
     "packages/*"
