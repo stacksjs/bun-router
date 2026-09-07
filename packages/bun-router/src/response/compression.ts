@@ -66,6 +66,22 @@ export function isCompressible(contentType: string | null): boolean {
   if (!contentType)
     return false
 
+  // Bun emits these exact lowercase shapes for the two most common route
+  // responses. Keep the normalizing path below for user-supplied casing and
+  // whitespace, but do not split and lowercase values that are already in
+  // their canonical form.
+  if (contentType === 'application/json')
+    return true
+
+  if (contentType.startsWith('text/')) {
+    if (!contentType.startsWith('text/event-stream'))
+      return true
+    if (contentType.length === 17)
+      return false
+    const boundary = contentType.charCodeAt(17)
+    return boundary > 32 && boundary !== 59
+  }
+
   const type = contentType.split(';')[0]?.trim().toLowerCase() ?? ''
 
   /*

@@ -390,6 +390,8 @@ describe('an event stream', () => {
     // compressed event stream arrives in clumps - or, on a quiet channel, not
     // until it closes.
     expect(isCompressible('text/event-stream')).toBe(false)
+    expect(isCompressible('text/event-stream; charset=utf-8')).toBe(false)
+    expect(isCompressible('text/event-streaming')).toBe(true)
 
     const events = new Response(new ReadableStream(), { headers: { 'content-type': 'text/event-stream' } })
     const answer = await compressResponse(events, asked())
