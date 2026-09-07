@@ -49,6 +49,29 @@ async function finishAsyncMatchedResponse(
     : new Response('No response from middleware chain', { status: 500 })
 }
 
+function finishNativeRouteError(router: Router, req: Request, error: unknown): Response | Promise<Response> {
+  console.error('Error handling request:', error)
+  const handled = router.errorHandler
+    ? router.errorHandler(error as Error)
+    : new Response(JSON.stringify({
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : String(error),
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+        },
+      })
+
+  return handled instanceof Promise
+    ? handled.then(response => applyResponseCompression(response, req, router.config.compression))
+    : applyResponseCompression(handled, req, router.config.compression)
+}
+
 // Helpers that frameworks layered on bun-router treat as guaranteed but
 // that aren't shaped as built-in macros. Registered once at module load —
 // they ride the shared macro prototype instead of being closure-assigned
@@ -417,42 +440,30 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         const self = this
         const wrapRoute = (route: Route, isWildcard: boolean) => {
           return (req: Request & { params?: Record<string, string> }) => {
-            return runWithRequest(req as EnhancedRequest, async () => {
-              let response: Response
-              try {
-                let params: Record<string, string> = req.params ?? {}
-                if (isWildcard) {
-                  // Bun doesn't expose the wildcard remainder as a param;
-                  // mirror the fetch matcher's `wildcard` key
-                  const pathname = new URL(req.url).pathname
-                  const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
-                  params = { ...params, wildcard: pathname.slice(basePath.length) }
-                }
-                response = await self._dispatchMatchedRoute(route, req, params)
-              }
-              catch (error) {
-                console.error('Error handling request:', error)
-                if (self.errorHandler) {
-                  response = await self.errorHandler(error as Error)
-                }
-                else {
-                  response = new Response(JSON.stringify({
-                    success: false,
-                    message: 'Internal Server Error',
-                    error: error instanceof Error ? error.message : String(error),
-                  }), {
-                    status: 500,
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Access-Control-Allow-Origin': '*',
-                      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-                      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-                    },
-                  })
-                }
+            return runWithRequest(req as EnhancedRequest, () => {
+              let params: Record<string, string> = req.params ?? {}
+              if (isWildcard) {
+                // Bun doesn't expose the wildcard remainder as a param;
+                // mirror the fetch matcher's `wildcard` key
+                const pathname = new URL(req.url).pathname
+                const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
+                params = { ...params, wildcard: pathname.slice(basePath.length) }
               }
 
-              return applyResponseCompression(response, req, self.config?.compression)
+              let response: Response | Promise<Response>
+              try {
+                response = self._dispatchMatchedRoute(route, req, params)
+              }
+              catch (error) {
+                return finishNativeRouteError(self, req, error)
+              }
+
+              return response instanceof Promise
+                ? response.then(
+                    resolved => applyResponseCompression(resolved, req, self.config.compression),
+                    error => finishNativeRouteError(self, req, error),
+                  )
+                : applyResponseCompression(response, req, self.config.compression)
             })
           }
         }

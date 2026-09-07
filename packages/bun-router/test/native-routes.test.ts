@@ -98,6 +98,34 @@ describe('native routes (serve({ nativeRoutes: true }))', () => {
 })
 
 describe('native routes dispatch routing', () => {
+  it('returns synchronous handler responses without a Promise boundary', () => {
+    const router: any = new Router()
+    router.get('/sync', () => new Response('sync'))
+
+    const routes = router._buildNativeRoutes()
+    const result = routes['/sync'].GET(new Request('http://localhost/sync'))
+
+    expect(result).toBeInstanceOf(Response)
+  })
+
+  it('preserves asynchronous handlers and custom error handling', async () => {
+    const router: any = new Router()
+    router.errorHandler = (error: Error) => new Response(error.message, { status: 418 })
+    router.get('/async', async () => new Response('async'))
+    router.get('/rejects', async () => {
+      throw new Error('rejected')
+    })
+
+    const routes = router._buildNativeRoutes()
+    const pending = routes['/async'].GET(new Request('http://localhost/async'))
+
+    expect(pending).toBeInstanceOf(Promise)
+    expect(await (await pending).text()).toBe('async')
+    const rejected = await routes['/rejects'].GET(new Request('http://localhost/rejects'))
+    expect(rejected.status).toBe(418)
+    expect(await rejected.text()).toBe('rejected')
+  })
+
   it('applies response compression on the native path', async () => {
     const router = new Router()
     router.get('/compressed', () => new Response('x'.repeat(2048), {
