@@ -76,6 +76,7 @@ export class Router {
   precompiledPatterns: Map<string, RegExp> = new Map()
   domainPatternCache: Map<string, RegExp> = new Map()
   routeCompiler: RouteCompiler | null = null
+  _hasDomainRoutes = false
 
   // Advanced middleware features
   private middlewareGroups: Map<string, MiddlewareHandler[]> = new Map()

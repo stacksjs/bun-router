@@ -118,6 +118,7 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
 
         // Add to the appropriate collection
         if (domain) {
+          this._hasDomainRoutes = true
           if (!this.domains[domain]) {
             this.domains[domain] = []
           }

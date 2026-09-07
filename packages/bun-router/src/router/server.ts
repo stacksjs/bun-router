@@ -7,6 +7,22 @@ import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
 
+function getRequestPathname(url: string): string {
+  const schemeEnd = url.indexOf('://')
+  const pathStart = url.indexOf('/', schemeEnd === -1 ? 0 : schemeEnd + 3)
+  if (pathStart === -1)
+    return '/'
+
+  const queryStart = url.indexOf('?', pathStart)
+  const hashStart = url.indexOf('#', pathStart)
+  let pathEnd = url.length
+  if (queryStart !== -1)
+    pathEnd = queryStart
+  if (hashStart !== -1 && hashStart < pathEnd)
+    pathEnd = hashStart
+  return url.slice(pathStart, pathEnd)
+}
+
 async function finishAsyncMatchedResponse(
   router: Router,
   pending: Response | null | Promise<Response | null>,
@@ -495,17 +511,23 @@ export function registerServerHandling(RouterClass: typeof Router): void {
     handleRequestImpl: {
       async value(req: Request): Promise<Response> {
         try {
-          // Create URL for route matching, and share it with the request
-          // macros (path()/root()/get()/fingerprint() reuse it instead of
-          // reparsing req.url)
-          const url = new URL(req.url)
-          ;(req as any)._parsedURL = url
-
-          // Get domain from the host header
-          const hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
+          let pathname: string
+          let hostname = 'localhost'
+          // Domain routing needs the parsed hostname. Ordinary routes leave
+          // URL construction to the request macros, which create it lazily
+          // only if user code asks for URL or query helpers.
+          if (this._hasDomainRoutes) {
+            const url = new URL(req.url)
+            ;(req as any)._parsedURL = url
+            pathname = url.pathname
+            hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
+          }
+          else {
+            pathname = getRequestPathname(req.url)
+          }
 
           // Find a matching route
-          const match = this.matchRoute(url.pathname, req.method as HTTPMethod, hostname)
+          const match = this.matchRoute(pathname, req.method as HTTPMethod, hostname)
 
           // CORS preflight: when no explicit OPTIONS route is registered,
           // answer with a generic preflight response. A request with an
@@ -545,7 +567,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // debugging is one grep away, and (b) flow through globalMiddleware so cross-cutting
           // concerns (X-Request-ID, Server-Timing, audit logging, custom CORS) can observe
           // them. Previously these paths short-circuited entirely.
-          const allowedMethods = this.getAllowedMethods(url.pathname, hostname)
+          const allowedMethods = this.getAllowedMethods(pathname, hostname)
           const corsHeaders = {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
@@ -558,7 +580,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
               return new Response(JSON.stringify({
                 success: false,
                 message: 'Method Not Allowed',
-                path: url.pathname,
+                path: pathname,
                 method: req.method,
                 allowed: allowedMethods,
               }), {
@@ -586,7 +608,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             return new Response(JSON.stringify({
               success: false,
               message: 'Not Found',
-              path: url.pathname,
+              path: pathname,
               method: req.method,
             }), { status: 404, headers: corsHeaders })
           }
