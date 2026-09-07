@@ -184,13 +184,17 @@ export function applyResponseCompression(
   if (!enabled)
     return response
 
+  const headers = response.headers
+  if (!isCompressible(headers.get('content-type')) || headers.has('content-encoding'))
+    return response
+
   const threshold = options.threshold ?? DEFAULT_COMPRESSION.threshold
   const acceptEncoding = request.headers.get('accept-encoding')
-  const length = acceptEncoding ? Number(response.headers.get('content-length') ?? Number.NaN) : Number.NaN
+  const length = acceptEncoding ? Number(headers.get('content-length') ?? Number.NaN) : Number.NaN
   // A known short response cannot use any encoding, so avoid parsing the offers.
   const encoding = Number.isFinite(length) && !(length >= threshold) ? null : negotiateEncoding(acceptEncoding)
 
-  if (!shouldCompress(response, encoding, threshold)) {
+  if (!encoding || response.status === 204 || response.status === 304 || response.status === 206 || !response.body) {
     /*
      * `Vary` even when nothing was compressed.
      *
@@ -199,8 +203,7 @@ export function applyResponseCompression(
      * Adding it only on the compressed branch is the classic way to poison a
      * shared cache.
      */
-    if (isCompressible(response.headers.get('content-type')) && !response.headers.has('content-encoding'))
-      appendVary(response.headers, 'Accept-Encoding')
+    appendVary(headers, 'Accept-Encoding')
 
     return response
   }
@@ -215,8 +218,7 @@ export function applyResponseCompression(
    * kilobyte was never a stream at all - it was a small answer that gzip would
    * have made bigger. `/api/health` is 356 bytes, and it was being compressed.
    */
-  const known = Number(response.headers.get('content-length') ?? Number.NaN)
-  if (!Number.isFinite(known))
+  if (!Number.isFinite(length))
     return compressUnknownLengthResponse(response, encoding as 'gzip' | 'deflate', threshold)
 
   return createCompressedResponse(
