@@ -2,6 +2,7 @@ import type { Server } from 'bun'
 import type { Router } from './router/router'
 import type { KnownActionPath, MiddlewareReference } from './types/registry'
 import type { SessionManager } from './session/index'
+import type { CompressionOptions } from './response/compression'
 import type { QueryPreservationConfig } from './utils/query-preservation'
 import type {
   AuthContext,
@@ -713,6 +714,7 @@ export interface ViewRenderOptions {
 
 export interface RouterConfig {
   verbose: boolean
+  compression?: CompressionOptions
   routesPath?: string
   apiRoutesPath?: string
   webRoutesPath?: string

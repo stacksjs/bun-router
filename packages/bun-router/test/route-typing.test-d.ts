@@ -22,6 +22,10 @@ type Equal<TLeft, TRight>
 type Expect<T extends true> = T
 
 const router = new Router()
+new Router({ compression: { enabled: true, threshold: 2048, level: 6 } })
+
+// @ts-expect-error compression levels follow zlib's supported range
+new Router({ compression: { level: 10 } })
 
 // ── an inline handler is typed, and its params are the path's ─────────────
 
