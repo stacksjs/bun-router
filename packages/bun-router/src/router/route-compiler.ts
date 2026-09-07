@@ -268,7 +268,7 @@ export class RouteCompiler {
     if (this.options.enableCaching) {
       const cacheKey = `${method}:${path}`
       const cached = this.matchCache.get(cacheKey)
-      if (cached !== undefined || this.matchCache.has(cacheKey)) {
+      if (cached !== undefined) {
         this.stats.cacheHits++
         if (startTime)
           this.updateMatchTime(startTime)
