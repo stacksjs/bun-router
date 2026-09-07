@@ -307,7 +307,7 @@ export class RouteCompiler {
   private addToCache(key: string, value: MatchResult | null): void {
     // If cache is full, evict the least recently used entry (oldest key
     // in Map iteration order)
-    if (this.matchCache.size >= this.options.cacheSize && !this.matchCache.has(key)) {
+    if (this.matchCache.size >= this.options.cacheSize) {
       const lruKey = this.matchCache.keys().next().value
       if (lruKey !== undefined) {
         this.matchCache.delete(lruKey)
