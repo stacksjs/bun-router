@@ -46,7 +46,7 @@ export { createCookieAccessor, createInMemoryCookieAccessor } from './request/co
 export type { CookieAccessorSinks } from './request/cookie-accessor'
 
 // Request context (AsyncLocalStorage-backed current request; lazy — see enableRequestContext)
-export { enableRequestContext, getCurrentRequest, request, runWithRequest, setCurrentRequest } from './request/context'
+export { enableRequestContext, getCurrentRequest, request, runWithRequest, runWithRequestArguments, setCurrentRequest } from './request/context'
 
 // Session stores and manager
 export * from './session'

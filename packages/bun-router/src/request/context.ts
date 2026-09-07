@@ -67,6 +67,38 @@ export function runWithRequest<T>(initial: EnhancedRequest | Request, fn: () => 
 }
 
 /**
+ * Run a two-argument dispatcher inside request context without allocating a
+ * callback closure. This is useful for routing adapters whose dispatcher and
+ * request-local state are already available as stable arguments.
+ */
+export function runWithRequestArguments<T, A, B>(
+  initial: EnhancedRequest | Request,
+  fn: (first: A, second: B) => T | Promise<T>,
+  first: A,
+  second: B,
+): T | Promise<T> {
+  if (!contextEnabled) {
+    syncCurrent = initial as EnhancedRequest
+    let result: T | Promise<T>
+    try {
+      result = fn(first, second)
+    }
+    catch (error) {
+      syncCurrent = null
+      throw error
+    }
+    if (result instanceof Promise) {
+      return result.finally(() => {
+        syncCurrent = null
+      }) as Promise<T>
+    }
+    syncCurrent = null
+    return result
+  }
+  return storage.run({ current: initial as EnhancedRequest }, fn, first, second)
+}
+
+/**
  * Update the request stored in the current context. The Router calls this
  * after enhancing the request with matched route params, so subsequent
  * `request()` calls see the enhanced object.

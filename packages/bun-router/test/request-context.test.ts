@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { enableRequestContext, getCurrentRequest, request, runWithRequest } from '../src/request/context'
+import { enableRequestContext, getCurrentRequest, request, runWithRequest, runWithRequestArguments } from '../src/request/context'
 import { Router } from '../src/router'
 
 /**
@@ -56,6 +56,17 @@ describe('request context', () => {
       return getCurrentRequest()
     })
     expect(seen).toBe(req)
+    expect(getCurrentRequest()).toBeUndefined()
+  })
+
+  it('passes callback arguments without losing request context', () => {
+    const req = new Request('http://localhost/arguments') as any
+    const result = runWithRequestArguments(req, (prefix: string, value: number) => {
+      expect(getCurrentRequest()).toBe(req)
+      return `${prefix}:${value}`
+    }, 'answer', 42)
+
+    expect(result).toBe('answer:42')
     expect(getCurrentRequest()).toBeUndefined()
   })
 })
