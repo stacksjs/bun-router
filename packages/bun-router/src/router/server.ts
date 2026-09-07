@@ -2,7 +2,7 @@ import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
 import { getParsedCookies, getParsedQuery, getParsedURL, RequestWithMacros } from '../request/macros'
-import { runWithRequest, setCurrentRequest } from '../request/context'
+import { runWithRequest, runWithRequestArguments, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
@@ -70,6 +70,46 @@ function finishNativeRouteError(router: Router, req: Request, error: unknown): R
   return handled instanceof Promise
     ? handled.then(response => applyResponseCompression(response, req, router.config.compression))
     : applyResponseCompression(handled, req, router.config.compression)
+}
+
+interface NativeRouteDispatchRouter extends Router {
+  _dispatchMatchedRoute: (route: Route, request: Request, params: Record<string, string>) => Response | Promise<Response>
+}
+
+interface NativeRouteDispatchContext {
+  router: NativeRouteDispatchRouter
+  route: Route
+  isWildcard: boolean
+}
+
+function dispatchNativeRoute(
+  context: NativeRouteDispatchContext,
+  req: Request & { params?: Record<string, string> },
+): Response | Promise<Response> {
+  const { router, route, isWildcard } = context
+  let params: Record<string, string> = req.params ?? {}
+  if (isWildcard) {
+    // Bun doesn't expose the wildcard remainder as a param; mirror the
+    // fetch matcher's `wildcard` key.
+    const pathname = new URL(req.url).pathname
+    const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
+    params = { ...params, wildcard: pathname.slice(basePath.length) }
+  }
+
+  let response: Response | Promise<Response>
+  try {
+    response = router._dispatchMatchedRoute(route, req, params)
+  }
+  catch (error) {
+    return finishNativeRouteError(router, req, error)
+  }
+
+  return response instanceof Promise
+    ? response.then(
+        resolved => applyResponseCompression(resolved, req, router.config.compression),
+        error => finishNativeRouteError(router, req, error),
+      )
+    : applyResponseCompression(response, req, router.config.compression)
 }
 
 // Helpers that frameworks layered on bun-router treat as guaranteed but
@@ -437,34 +477,11 @@ export function registerServerHandling(RouterClass: typeof Router): void {
 
         // Wrap a route in the same context/error envelope the fetch
         // handler provides, so handlers can't tell which router matched
-        const self = this
+        const self = this as NativeRouteDispatchRouter
         const wrapRoute = (route: Route, isWildcard: boolean) => {
+          const context: NativeRouteDispatchContext = { router: self, route, isWildcard }
           return (req: Request & { params?: Record<string, string> }) => {
-            return runWithRequest(req as EnhancedRequest, () => {
-              let params: Record<string, string> = req.params ?? {}
-              if (isWildcard) {
-                // Bun doesn't expose the wildcard remainder as a param;
-                // mirror the fetch matcher's `wildcard` key
-                const pathname = new URL(req.url).pathname
-                const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
-                params = { ...params, wildcard: pathname.slice(basePath.length) }
-              }
-
-              let response: Response | Promise<Response>
-              try {
-                response = self._dispatchMatchedRoute(route, req, params)
-              }
-              catch (error) {
-                return finishNativeRouteError(self, req, error)
-              }
-
-              return response instanceof Promise
-                ? response.then(
-                    resolved => applyResponseCompression(resolved, req, self.config.compression),
-                    error => finishNativeRouteError(self, req, error),
-                  )
-                : applyResponseCompression(response, req, self.config.compression)
-            })
+            return runWithRequestArguments(req as EnhancedRequest, dispatchNativeRoute, context, req)
           }
         }
 
