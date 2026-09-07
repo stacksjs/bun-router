@@ -265,8 +265,9 @@ export class RouteCompiler {
     this.stats.totalMatches++
 
     // Check cache first if enabled
+    let cacheKey: string | undefined
     if (this.options.enableCaching) {
-      const cacheKey = `${method}:${path}`
+      cacheKey = `${method}:${path}`
       const cached = this.matchCache.get(cacheKey)
       if (cached !== undefined) {
         this.stats.cacheHits++
@@ -291,8 +292,7 @@ export class RouteCompiler {
     }
 
     // Cache the result if enabled
-    if (this.options.enableCaching) {
-      const cacheKey = `${method}:${path}`
+    if (cacheKey !== undefined) {
       this.addToCache(cacheKey, result)
     }
 
