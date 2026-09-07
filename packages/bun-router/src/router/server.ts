@@ -576,7 +576,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           }
 
           if (allowedMethods.length > 0) {
-            const methodNotAllowedHandler = async (_req: EnhancedRequest, _next: any) => {
+            const methodNotAllowedHandler = (_req: EnhancedRequest, _next: any) => {
               return new Response(JSON.stringify({
                 success: false,
                 message: 'Method Not Allowed',
@@ -593,7 +593,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
               const response = await this.runMiddleware(enhancedReq, stack)
               if (response) return this.applyModifiedCookies(response, enhancedReq)
             }
-            return await methodNotAllowedHandler(enhancedReq, async () => null as any)
+            return methodNotAllowedHandler(enhancedReq, async () => null as any)
           }
 
           // No route found, try the fallback handler
@@ -604,7 +604,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
 
           // No fallback — emit a 404 enriched with path + method, also through
           // globalMiddleware so user middleware sees it.
-          const notFoundHandler = async (_req: EnhancedRequest, _next: any) => {
+          const notFoundHandler = (_req: EnhancedRequest, _next: any) => {
             return new Response(JSON.stringify({
               success: false,
               message: 'Not Found',
@@ -617,7 +617,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             const response = await this.runMiddleware(enhancedReq, stack)
             if (response) return this.applyModifiedCookies(response, enhancedReq)
           }
-          return await notFoundHandler(enhancedReq, async () => null as any)
+          return notFoundHandler(enhancedReq, async () => null as any)
         }
         catch (error) {
           console.error('Error handling request:', error)
