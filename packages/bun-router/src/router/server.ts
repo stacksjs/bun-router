@@ -8,19 +8,26 @@ import { applyResponseCompression } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
 
 function getRequestPathname(url: string): string {
-  const schemeEnd = url.indexOf('://')
-  const pathStart = url.indexOf('/', schemeEnd === -1 ? 0 : schemeEnd + 3)
+  let authorityStart: number
+  if (url.startsWith('http://'))
+    authorityStart = 7
+  else if (url.startsWith('https://'))
+    authorityStart = 8
+  else {
+    const schemeEnd = url.indexOf('://')
+    authorityStart = schemeEnd === -1 ? 0 : schemeEnd + 3
+  }
+
+  const pathStart = url.indexOf('/', authorityStart)
   if (pathStart === -1)
     return '/'
 
   const queryStart = url.indexOf('?', pathStart)
-  const hashStart = url.indexOf('#', pathStart)
-  let pathEnd = url.length
   if (queryStart !== -1)
-    pathEnd = queryStart
-  if (hashStart !== -1 && hashStart < pathEnd)
-    pathEnd = hashStart
-  return url.slice(pathStart, pathEnd)
+    return url.slice(pathStart, queryStart)
+
+  const hashStart = url.indexOf('#', pathStart)
+  return hashStart === -1 ? url.slice(pathStart) : url.slice(pathStart, hashStart)
 }
 
 async function finishAsyncMatchedResponse(

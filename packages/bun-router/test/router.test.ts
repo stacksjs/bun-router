@@ -80,6 +80,15 @@ describe('Router', () => {
         expect(await response.text()).toBe('Any')
       }
     })
+
+    it('matches the pathname of an HTTPS request with query and fragment', async () => {
+      router.get('/normalized', () => new Response('Normalized'))
+
+      const response = await router.handleRequest(new Request('https://example.com/normalized?query=yes#section'))
+
+      expect(response.status).toBe(200)
+      expect(await response.text()).toBe('Normalized')
+    })
   })
 
   describe('Route Parameters', () => {
