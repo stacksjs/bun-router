@@ -527,7 +527,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           }
 
           // Find a matching route
-          const match = this.matchRoute(pathname, req.method as HTTPMethod, hostname)
+          const match = this.matchRoute(pathname, req.method as HTTPMethod, hostname, true)
 
           // CORS preflight: when no explicit OPTIONS route is registered,
           // answer with a generic preflight response. A request with an

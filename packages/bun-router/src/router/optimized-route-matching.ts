@@ -43,7 +43,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
      * Optimized route matching using trie structure
      */
     matchRoute: {
-      value(path: string, method: HTTPMethod, domain?: string): MatchResult | undefined {
+      value(path: string, method: HTTPMethod, domain?: string, pathIsNormalized = false): MatchResult | undefined {
         this.initializeRouteCompiler()
 
         // Domain-scoped routes are matched by the domain-aware fallback.
@@ -51,7 +51,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
         // answer for hosts with registered domain routes would let one
         // domain's cached match poison another's.
         if (domain && this.domains[domain]) {
-          const domainMatch = this.fallbackMatchRoute(path, method, domain)
+          const domainMatch = this.fallbackMatchRoute(path, method, domain, pathIsNormalized)
           if (domainMatch) {
             return domainMatch
           }
@@ -65,7 +65,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
           }
 
           // Fallback to original matching for edge cases (optional params, etc.)
-          const fallback = this.fallbackMatchRoute(path, method, domain)
+          const fallback = this.fallbackMatchRoute(path, method, domain, pathIsNormalized)
           if (fallback) {
             return fallback
           }
@@ -74,7 +74,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
         // A HEAD request is served by the matching GET route when no
         // explicit HEAD route exists (RFC 9110 §9.3.2)
         if (method === 'HEAD') {
-          return this.matchRoute(path, 'GET', domain)
+          return this.matchRoute(path, 'GET', domain, pathIsNormalized)
         }
 
         return undefined
@@ -87,11 +87,16 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
      * Fallback to original route matching logic
      */
     fallbackMatchRoute: {
-      value(path: string, method: HTTPMethod, domain?: string): MatchResult | undefined {
-        const url = new URL(path, 'http://localhost')
+      value(path: string, method: HTTPMethod, domain?: string, pathIsNormalized = false): MatchResult | undefined {
+        let url: URL | undefined
+        let pathname = path
+        if (!pathIsNormalized) {
+          url = new URL(path, 'http://localhost')
+          pathname = url.pathname
+        }
 
         // Generate cache key
-        const cacheKey = `${domain || ''}:${method}:${url.pathname}`
+        const cacheKey = `${domain || ''}:${method}:${pathname}`
 
         // Check legacy cache first
         if (this.routeCache.has(cacheKey)) {
@@ -106,7 +111,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
 
         // Fast path for static routes
         if (this.staticRoutes.has(method)) {
-          const staticRoute = this.staticRoutes.get(method)!.get(url.pathname)
+          const staticRoute = this.staticRoutes.get(method)!.get(pathname)
           if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
             const result = {
               route: staticRoute,
@@ -127,7 +132,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
 
         // First, try to find an exact match
         for (const route of methodRoutes) {
-          if (route.path === url.pathname) {
+          if (route.path === pathname) {
             const result = {
               route,
               params: {},
@@ -140,7 +145,7 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
         // If no exact match, try matching patterns
         for (const route of methodRoutes) {
           if (route.pattern) {
-            const match = route.pattern.exec(url)
+            const match = route.pattern.exec(url ??= new URL(pathname, 'http://localhost'))
             if (match) {
               const result = {
                 route,
@@ -163,10 +168,10 @@ export function registerOptimizedRouteMatching(RouterClass: typeof Router): void
               continue
             }
             const basePath = route.path.slice(0, -1) // Remove the '*'
-            if (url.pathname.startsWith(basePath)) {
+            if (pathname.startsWith(basePath)) {
               const result = {
                 route,
-                params: { wildcard: url.pathname.slice(basePath.length) },
+                params: { wildcard: pathname.slice(basePath.length) },
               }
               this.routeCache.set(cacheKey, result)
               return result
