@@ -528,7 +528,11 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           }
 
           if (match) {
-            return await this._dispatchMatchedRoute(match.route, req, match.params)
+            const response = this._dispatchMatchedRoute(match.route, req, match.params)
+            // Avoid suspending this async function for synchronous handlers.
+            // Promise results still need `await` so the surrounding catch
+            // handles rejected async handlers exactly as before.
+            return response instanceof Promise ? await response : response
           }
 
           // Enhance the request with params and other utilities (the
