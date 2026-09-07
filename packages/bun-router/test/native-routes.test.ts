@@ -98,6 +98,23 @@ describe('native routes (serve({ nativeRoutes: true }))', () => {
 })
 
 describe('native routes dispatch routing', () => {
+  it('applies response compression on the native path', async () => {
+    const router = new Router()
+    router.get('/compressed', () => new Response('x'.repeat(2048), {
+      headers: { 'Content-Type': 'text/plain' },
+    }))
+
+    const server = await (router as any).serve({ port: 0, nativeRoutes: true })
+    const response = await fetch(`http://localhost:${server.port}/compressed`, {
+      headers: { 'Accept-Encoding': 'gzip' },
+    })
+
+    expect(response.headers.get('content-encoding')).toBe('gzip')
+    expect(response.headers.get('vary')).toContain('Accept-Encoding')
+
+    server.stop(true)
+  })
+
   it('withoutNativeDispatch() keeps a route on the fetch handler', async () => {
     const router: any = new Router()
     router.get('/native-path', () => new Response('native'))

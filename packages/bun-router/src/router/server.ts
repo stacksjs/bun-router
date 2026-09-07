@@ -334,7 +334,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      * when nothing qualifies.
      */
     _buildNativeRoutes: {
-      value(): Record<string, Record<string, (req: Request) => Promise<Response>>> | null {
+      value(): Record<string, Record<string, (req: Request) => Response | Promise<Response>>> | null {
         const NATIVE_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'])
 
         // Convert `{param}` paths to Bun's `:param` syntax. Returns null
@@ -376,6 +376,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         const wrapRoute = (route: Route, isWildcard: boolean) => {
           return (req: Request & { params?: Record<string, string> }) => {
             return runWithRequest(req as EnhancedRequest, async () => {
+              let response: Response
               try {
                 let params: Record<string, string> = req.params ?? {}
                 if (isWildcard) {
@@ -385,32 +386,36 @@ export function registerServerHandling(RouterClass: typeof Router): void {
                   const basePath = route.path === '*' ? '/' : route.path.slice(0, -1)
                   params = { ...params, wildcard: pathname.slice(basePath.length) }
                 }
-                return await self._dispatchMatchedRoute(route, req, params)
+                response = await self._dispatchMatchedRoute(route, req, params)
               }
               catch (error) {
                 console.error('Error handling request:', error)
                 if (self.errorHandler) {
-                  return self.errorHandler(error as Error)
+                  response = await self.errorHandler(error as Error)
                 }
-                return new Response(JSON.stringify({
-                  success: false,
-                  message: 'Internal Server Error',
-                  error: error instanceof Error ? error.message : String(error),
-                }), {
-                  status: 500,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-                  },
-                })
+                else {
+                  response = new Response(JSON.stringify({
+                    success: false,
+                    message: 'Internal Server Error',
+                    error: error instanceof Error ? error.message : String(error),
+                  }), {
+                    status: 500,
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+                      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+                    },
+                  })
+                }
               }
+
+              return applyResponseCompression(response, req, self.config?.compression)
             })
           }
         }
 
-        const natives: Record<string, Record<string, (req: Request) => Promise<Response>>> = {}
+        const natives: Record<string, Record<string, (req: Request) => Response | Promise<Response>>> = {}
         // Bun resolves same-shape patterns by specificity, not by our
         // registration order — only the first registration of a given
         // shape goes native; later ones would silently shadow it
