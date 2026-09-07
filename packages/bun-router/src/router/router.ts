@@ -790,12 +790,17 @@ export class Router {
    * Get all allowed HTTP methods for a given path
    * Used to determine if a 405 Method Not Allowed should be returned instead of 404
    */
-  getAllowedMethods(path: string, domain?: string): string[] {
-    const url = new URL(path, 'http://localhost')
+  getAllowedMethods(path: string, domain?: string, pathIsNormalized = false): string[] {
+    let url: URL | undefined
+    let pathname = path
+    if (!pathIsNormalized) {
+      url = new URL(path, 'http://localhost')
+      pathname = url.pathname
+    }
 
     // Memoized per path: every unmatched request pays this scan for its
     // 405-vs-404 decision, and 404 floods tend to hammer the same paths
-    const cacheKey = `${domain || ''}:${url.pathname}`
+    const cacheKey = `${domain || ''}:${pathname}`
     const cached = this._allowedMethodsCache.get(cacheKey)
     if (cached) {
       return cached
@@ -805,7 +810,7 @@ export class Router {
 
     // Static routes: one map lookup per registered method
     for (const [method, routesByPath] of this.staticRoutes) {
-      const staticRoute = routesByPath.get(url.pathname)
+      const staticRoute = routesByPath.get(pathname)
       if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
         methods.add(method)
       }
@@ -822,15 +827,15 @@ export class Router {
       if (methods.has(route.method)) {
         continue
       }
-      if (route.path === url.pathname) {
+      if (route.path === pathname) {
         methods.add(route.method)
         continue
       }
-      if (route.pattern && route.pattern.exec(url)) {
+      if (route.pattern && route.pattern.exec(url ??= new URL(pathname, 'http://localhost'))) {
         methods.add(route.method)
         continue
       }
-      if (route.path.endsWith('*') && url.pathname.startsWith(route.path.slice(0, -1))) {
+      if (route.path.endsWith('*') && pathname.startsWith(route.path.slice(0, -1))) {
         methods.add(route.method)
       }
     }

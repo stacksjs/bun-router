@@ -567,7 +567,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // debugging is one grep away, and (b) flow through globalMiddleware so cross-cutting
           // concerns (X-Request-ID, Server-Timing, audit logging, custom CORS) can observe
           // them. Previously these paths short-circuited entirely.
-          const allowedMethods = this.getAllowedMethods(pathname, hostname)
+          const allowedMethods = this.getAllowedMethods(pathname, hostname, true)
           const corsHeaders = {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
