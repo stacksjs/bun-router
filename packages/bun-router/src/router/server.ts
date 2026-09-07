@@ -7,6 +7,25 @@ import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
 import { createHandlerInvoker } from './handler-resolver'
 
+async function finishAsyncMatchedResponse(
+  router: Router,
+  pending: Response | null | Promise<Response | null>,
+  req: EnhancedRequest,
+): Promise<Response> {
+  let response: Response | null
+  try {
+    response = await pending
+  }
+  catch (error) {
+    if (!router.errorHandler)
+      throw error
+    response = await router.errorHandler(error as Error)
+  }
+  return response
+    ? router.applyModifiedCookies(response, req)
+    : new Response('No response from middleware chain', { status: 500 })
+}
+
 // Helpers that frameworks layered on bun-router treat as guaranteed but
 // that aren't shaped as built-in macros. Registered once at module load —
 // they ride the shared macro prototype instead of being closure-assigned
@@ -260,7 +279,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
      * Bun route wrappers.
      */
     _dispatchMatchedRoute: {
-      async value(matchedRoute: Route, req: Request, params: Record<string, string>): Promise<Response> {
+      value(matchedRoute: Route, req: Request, params: Record<string, string>): Response | Promise<Response> {
         const enhancedReq = this.enhanceRequest(req, params)
         setCurrentRequest(enhancedReq)
 
@@ -279,6 +298,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         }
         const epoch: number = this._mwEpoch || 0
         const routeMwLen = route.middleware ? route.middleware.length : 0
+        const globalMwLen = this.globalMiddleware.length
 
         let chain = route._compiledChain
         if (!chain || route._chainEpoch !== epoch || route._chainMwLen !== routeMwLen) {
@@ -286,7 +306,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // action) is resolved once here instead of per request
           const invoke = createHandlerInvoker(route.handler, this.config)
 
-          if (routeMwLen === 0 && this.globalMiddleware.length === 0) {
+          if (routeMwLen === 0 && globalMwLen === 0) {
             // No middleware: the chain is the bare invoker — no
             // closure tower, no next() allocations per request
             chain = invoke
@@ -303,26 +323,25 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           route._chainMwLen = routeMwLen
         }
 
-        let response: Response | null
         try {
-          response = await chain!(enhancedReq)
+          const response = chain!(enhancedReq)
+          if (routeMwLen !== 0 || globalMwLen !== 0)
+            return finishAsyncMatchedResponse(this, response, enhancedReq)
+          if (response instanceof Promise)
+            return finishAsyncMatchedResponse(this, response, enhancedReq)
+          return response
+            ? this.applyModifiedCookies(response, enhancedReq)
+            : new Response('No response from middleware chain', { status: 500 })
         }
         catch (error) {
-          if (this.errorHandler) {
-            response = await this.errorHandler(error as Error)
-          }
-          else {
+          if (!this.errorHandler)
             throw error
-          }
-        }
 
-        // Apply modified cookies to the response
-        if (response) {
-          return this.applyModifiedCookies(response, enhancedReq)
+          const response = this.errorHandler(error as Error)
+          return response instanceof Promise
+            ? response.then((handled: Response) => this.applyModifiedCookies(handled, enhancedReq))
+            : this.applyModifiedCookies(response, enhancedReq)
         }
-
-        // This should not happen since we're always returning a response now
-        return new Response('No response from middleware chain', { status: 500 })
       },
       writable: true,
       configurable: true,
