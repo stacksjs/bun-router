@@ -300,15 +300,20 @@ export function createHandlerResolver(config: RouterConfig): (handler: unknown, 
 export function createHandlerInvoker(
   handler: unknown,
   config: RouterConfig,
-): (req: EnhancedRequest) => Promise<Response> {
+): (req: EnhancedRequest) => Response | Promise<Response> {
   // Static Response routes
   if (handler instanceof Response) {
-    return async () => handler.clone() as Response
+    return () => handler.clone() as Response
   }
 
   // Plain function handlers (the common case)
   if (isCallableHandler(handler)) {
-    return async (req: EnhancedRequest) => wrapResponse(await handler(req))
+    return (req: EnhancedRequest) => {
+      const result = handler(req)
+      if (result instanceof Response)
+        return result
+      return result instanceof Promise ? result.then(wrapResponse) : wrapResponse(result)
+    }
   }
 
   // Class constructors with a handle() method
@@ -318,7 +323,12 @@ export function createHandlerInvoker(
     && typeof handler.prototype.handle === 'function'
   ) {
     const HandlerClass = handler as new () => { handle: (req: EnhancedRequest) => unknown }
-    return async (req: EnhancedRequest) => wrapResponse(await new HandlerClass().handle(req))
+    return (req: EnhancedRequest) => {
+      const result = new HandlerClass().handle(req)
+      if (result instanceof Response)
+        return result
+      return result instanceof Promise ? result.then(wrapResponse) : wrapResponse(result)
+    }
   }
 
   // Strings (action paths, Controller@method) and anything exotic keep

@@ -273,7 +273,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // changes — building the closure chain per request was a
         // hot-path cost.
         const route = matchedRoute as Route & {
-          _compiledChain?: (req: EnhancedRequest) => Promise<Response | null>
+          _compiledChain?: (req: EnhancedRequest) => Response | null | Promise<Response | null>
           _chainEpoch?: number
           _chainMwLen?: number
         }
