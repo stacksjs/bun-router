@@ -8,6 +8,15 @@ import { Router } from '../src/router'
  * These tests cover both phases and the handler-visible behavior.
  */
 describe('request context', () => {
+  it('clears the synchronous fallback when a callback throws', () => {
+    const req = new Request('http://localhost/throws') as any
+
+    expect(() => runWithRequest(req, () => {
+      throw new Error('boom')
+    })).toThrow('boom')
+    expect(getCurrentRequest()).toBeUndefined()
+  })
+
   it('resolves the current request inside a handler', async () => {
     const router = new Router()
     router.get('/ctx', () => {

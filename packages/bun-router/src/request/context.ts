@@ -47,7 +47,14 @@ export function enableRequestContext(): void {
 export function runWithRequest<T>(initial: EnhancedRequest | Request, fn: () => T | Promise<T>): T | Promise<T> {
   if (!contextEnabled) {
     syncCurrent = initial as EnhancedRequest
-    const result = fn()
+    let result: T | Promise<T>
+    try {
+      result = fn()
+    }
+    catch (error) {
+      syncCurrent = null
+      throw error
+    }
     if (result instanceof Promise) {
       return result.finally(() => {
         syncCurrent = null
