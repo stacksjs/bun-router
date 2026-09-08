@@ -12,6 +12,7 @@ import type {
   RouteGroup,
   RouteHandler,
   RouterConfig,
+  ServerOptions,
   ThrottlePattern,
   TypedRouteHandler,
   WebSocketConfig,
@@ -572,7 +573,7 @@ export class Router {
   /**
    * Start the HTTP server
    */
-  async serve(options?: { port?: number, hostname?: string }): Promise<Server<WebSocketData>> {
+  async serve(options?: ServerOptions): Promise<Server<WebSocketData>> {
     // Invalidate route cache before starting server
     this.invalidateCache()
 
