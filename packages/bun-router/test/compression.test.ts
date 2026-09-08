@@ -40,6 +40,30 @@ describe('what the client offered', () => {
   test('and `*` covers what was not named', () => {
     expect(negotiateEncoding('*')).toBe('gzip')
   })
+
+  test('chooses the highest quality, using server order only to break ties', () => {
+    expect(negotiateEncoding('gzip;q=0.2, deflate;q=0.8')).toBe('deflate')
+    expect(negotiateEncoding('deflate;q=0.2, gzip;q=0.8')).toBe('gzip')
+    expect(negotiateEncoding('deflate;q=0.5, gzip;q=0.5')).toBe('gzip')
+    expect(negotiateEncoding('gzip;q=0.1')).toBe('gzip')
+    expect(negotiateEncoding('gzip;q=0.2, identity;q=0.8')).toBeNull()
+    expect(negotiateEncoding('identity;q=0.2, deflate;q=0.8')).toBe('deflate')
+  })
+
+  test('explicit offers override wildcard quality, including refusals', () => {
+    expect(negotiateEncoding('gzip;q=0, *;q=0.8')).toBe('deflate')
+    expect(negotiateEncoding('gzip;q=0.2, *;q=0.8')).toBe('deflate')
+    expect(negotiateEncoding('deflate;q=0.2, *;q=0.8')).toBe('gzip')
+    expect(negotiateEncoding('*;q=0, gzip;q=0.2')).toBe('gzip')
+  })
+
+  test('requires complete tokens and valid HTTP quality values', () => {
+    for (const offer of ['x-gzip-extra', 'gzipx', 'gzip deflate', 'gzip;q=bogus', 'gzip;q=-1', 'gzip;q=2', 'gzip;q=0.1234', 'gzip;q=1.001', 'gzip;q=0;q=1', 'gzip;level=1'])
+      expect(negotiateEncoding(offer)).toBeNull()
+    expect(negotiateEncoding('GZIP;Q=0.250, DEFLATE; q=0.750')).toBe('deflate')
+    expect(negotiateEncoding('gzip;q=0., deflate;q=1.000')).toBe('deflate')
+    expect(negotiateEncoding('gzip;q=bad, *;q=1')).toBe('deflate')
+  })
 })
 
 describe('what is worth compressing', () => {
@@ -182,6 +206,18 @@ describe('compression eligibility before negotiation', () => {
 })
 
 describe('compressing', () => {
+  test('encodes the actual bytes with the highest-quality supported coding', async () => {
+    for (const knownLength of [false, true]) {
+      const response = html(LONG)
+      if (!knownLength)
+        response.headers.delete('content-length')
+      const answer = await applyResponseCompression(response, asked('gzip;q=0.2, deflate;q=0.8'))
+      expect(answer.headers.get('content-encoding')).toBe('deflate')
+      expect(await new Response(answer.body!.pipeThrough(new DecompressionStream('deflate'))).text()).toBe(LONG)
+      expect(answer.headers.get('vary')).toBe('Accept-Encoding')
+    }
+  })
+
   test('keeps the common uncompressed path synchronous', () => {
     const noEncoding = applyResponseCompression(html(LONG), new Request('http://localhost/'))
     const tooSmall = applyResponseCompression(html('tiny'), asked())

@@ -117,35 +117,49 @@ export function isCompressible(contentType: string | null): boolean {
 /**
  * The encoding to use, from what the client offered.
  *
- * gzip before deflate, and `q=0` respected - a client that says
- * `gzip;q=0` means it, and sending gzip anyway is how you get an unreadable
- * page in the one browser that asked.
- *
- * Brotli is not offered even though Bun can produce it: `Bun.gzipSync` is
- * synchronous and brotli is not, and a compression step that awaits inside the
- * response path is a different change from this one.
+ * Highest quality first, with gzip before deflate on ties. Only these two
+ * codings are supported by this CompressionStream path. An explicit identity
+ * preference can win; an implicit identity offer remains the fallback.
+ * Malformed named weights are unavailable, including through a wildcard.
  */
 export function negotiateEncoding(header: string | null): 'gzip' | 'deflate' | null {
   if (!header)
     return null
 
-  const offers = new Map<string, number>()
+  let gzip: number | undefined
+  let deflate: number | undefined
+  let identity = 0
+  let wildcard = 0
 
   for (const part of header.split(',')) {
-    const [name = '', ...parameters] = part.trim().split(';')
-    const quality = parameters
-      .map(parameter => /^\s*q=([\d.]+)\s*$/i.exec(parameter))
-      .find(Boolean)
+    const separator = part.indexOf(';')
+    const name = (separator < 0 ? part : part.slice(0, separator)).trim().toLowerCase()
+    if (name !== 'gzip' && name !== 'deflate' && name !== 'identity' && name !== '*')
+      continue
 
-    offers.set(name.trim().toLowerCase(), quality ? Number(quality[1]) : 1)
+    let quality = 1
+    if (separator >= 0) {
+      // RFC 9110 weight syntax: 0..1 with at most three fractional digits.
+      const weight = /^;[\t ]*q=(0(?:\.\d{0,3})?|1(?:\.0{0,3})?)[\t ]*$/i.exec(part.slice(separator))
+      quality = weight ? Number(weight[1]) : 0
+    }
+    if (name === 'gzip')
+      gzip = quality
+    else if (name === 'deflate')
+      deflate = quality
+    else if (name === 'identity')
+      identity = quality
+    else
+      wildcard = quality
   }
 
-  const wanted = (name: string): boolean => (offers.get(name) ?? offers.get('*') ?? 0) > 0
-
-  if (wanted('gzip'))
+  gzip ??= wildcard
+  deflate ??= wildcard
+  if (identity > Math.max(gzip, deflate))
+    return null
+  if (gzip > 0 && gzip >= deflate)
     return 'gzip'
-
-  if (wanted('deflate'))
+  if (deflate > 0)
     return 'deflate'
 
   return null
