@@ -14,7 +14,9 @@
  *   is a cache that breaks that client.
  * - **Only when it is worth it.** Below a kilobyte the header costs more than
  *   the saving, and already-compressed bytes (an image, a woff2, a zip) get
- *   bigger rather than smaller.
+ *   bigger rather than smaller. A client that excludes identity still needs
+ *   an acceptable encoding for small text bodies, or an empty 406 when the
+ *   available response cannot be encoded.
  * - **Never by buffering.** The body is piped through a `CompressionStream`
  *   rather than read into memory, so a response that streams keeps streaming:
  *   the diff manifest that sends a hundred files as they parse still arrives a
@@ -43,7 +45,7 @@ export interface CompressionOptions {
    * does not make.
    */
   level?: CompressionLevel
-  /** Bodies below this many bytes are sent as they are. */
+  /** Bodies below this many bytes stay unencoded when identity is acceptable. */
   threshold?: number
 }
 
@@ -123,13 +125,22 @@ export function isCompressible(contentType: string | null): boolean {
  * Malformed named weights are unavailable, including through a wildcard.
  */
 export function negotiateEncoding(header: string | null): 'gzip' | 'deflate' | null {
+  return negotiateResponseEncoding(header).encoding
+}
+
+interface EncodingNegotiation {
+  encoding: 'gzip' | 'deflate' | null
+  identityAllowed: boolean
+}
+
+function negotiateResponseEncoding(header: string | null): EncodingNegotiation {
   if (!header)
-    return null
+    return { encoding: null, identityAllowed: true }
 
   let gzip: number | undefined
   let deflate: number | undefined
-  let identity = 0
-  let wildcard = 0
+  let identity: number | undefined
+  let wildcard: number | undefined
 
   for (const part of header.split(',')) {
     const separator = part.indexOf(';')
@@ -153,16 +164,17 @@ export function negotiateEncoding(header: string | null): 'gzip' | 'deflate' | n
       wildcard = quality
   }
 
-  gzip ??= wildcard
-  deflate ??= wildcard
-  if (identity > Math.max(gzip, deflate))
-    return null
+  gzip ??= wildcard ?? 0
+  deflate ??= wildcard ?? 0
+  const identityAllowed = identity !== undefined ? identity > 0 : wildcard !== 0
+  if (identity !== undefined && identity > Math.max(gzip, deflate))
+    return { encoding: null, identityAllowed }
   if (gzip > 0 && gzip >= deflate)
-    return 'gzip'
+    return { encoding: 'gzip', identityAllowed }
   if (deflate > 0)
-    return 'deflate'
+    return { encoding: 'deflate', identityAllowed }
 
-  return null
+  return { encoding: null, identityAllowed }
 }
 
 /**
@@ -202,7 +214,9 @@ export function shouldCompress(response: Response, encoding: string | null, thre
  * The response, compressed when that is the right thing to do.
  *
  * Returns the response it was given when it is not, so a caller can apply this
- * unconditionally at the end of the pipeline.
+ * unconditionally at the end of the pipeline. When identity is refused and
+ * no available coding is acceptable, replaces an unencoded body with an empty
+ * 406. Caller-encoded responses and explicit disable options remain untouched.
  */
 export function applyResponseCompression(
   response: Response,
@@ -215,16 +229,35 @@ export function applyResponseCompression(
     return response
 
   const headers = response.headers
-  if (!isCompressible(headers.get('content-type')) || headers.has('content-encoding'))
+  if (headers.has('content-encoding'))
     return response
 
   const threshold = options.threshold ?? DEFAULT_COMPRESSION.threshold
   const acceptEncoding = request.headers.get('accept-encoding')
   const length = acceptEncoding ? Number(headers.get('content-length') ?? Number.NaN) : Number.NaN
-  // A known short response cannot use any encoding, so avoid parsing the offers.
-  const encoding = Number.isFinite(length) && !(length >= threshold) ? null : negotiateEncoding(acceptEncoding)
+  const belowThreshold = Number.isFinite(length) && !(length >= threshold)
+  // Only a weighted identity or wildcard offer can refuse identity. Other
+  // offers keep the short-body path without parsing or opening its stream.
+  // This deliberately broad match can parse extra tokens, but never skips a
+  // possible identity refusal; the parser below validates their boundaries.
+  if (!acceptEncoding || (belowThreshold && (!acceptEncoding.includes(';') || !/identity|\*/i.test(acceptEncoding)))) {
+    appendVary(headers, 'Accept-Encoding')
+    return response
+  }
 
-  if (!encoding || response.status === 204 || response.status === 304 || response.status === 206 || !response.body) {
+  const { encoding, identityAllowed } = negotiateResponseEncoding(acceptEncoding)
+  const compressible = isCompressible(headers.get('content-type')) && response.status !== 206
+
+  if (!identityAllowed && response.status !== 204 && response.status !== 304 && response.body) {
+    if (!encoding || !compressible)
+      return notAcceptableResponse(response)
+    // Size is only a heuristic. When identity is excluded, even a small body
+    // must use an acceptable coding. Piping directly also avoids a needless
+    // threshold peek for an unknown-length stream that must be encoded.
+    return createCompressedResponse(response, response.body, encoding)
+  }
+
+  if (!encoding || belowThreshold || !compressible || response.status === 204 || response.status === 304 || !response.body) {
     /*
      * `Vary` even when nothing was compressed.
      *
@@ -256,6 +289,23 @@ export function applyResponseCompression(
     response.body as ReadableStream<Uint8Array>,
     encoding as 'gzip' | 'deflate',
   )
+}
+
+function notAcceptableResponse(response: Response): Response {
+  // Releasing an abandoned stream must not turn the empty 406 back into the
+  // refused representation if its producer fails during cancellation.
+  void response.body?.cancel().catch(() => {})
+  const headers = new Headers(response.headers)
+  for (const name of [
+    'content-type', 'content-length', 'content-encoding', 'content-range',
+    'content-disposition', 'etag', 'last-modified', 'content-md5', 'digest',
+    'content-digest', 'repr-digest', 'expires',
+  ]) {
+    headers.delete(name)
+  }
+  headers.set('Cache-Control', 'no-store')
+  appendVary(headers, 'Accept-Encoding')
+  return new Response(null, { status: 406, headers })
 }
 
 /**
