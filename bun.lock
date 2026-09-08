@@ -15,12 +15,18 @@
       "version": "0.1.11",
       "bin": {
         "bun-router": "./dist/cli.js",
-        "router": "./bin/cli.ts",
+        "router": "./dist/cli.js",
       },
       "dependencies": {
         "@stacksjs/clapp": "^0.2.0",
         "ts-rate-limiter": "^0.4.2",
       },
+      "peerDependencies": {
+        "@stacksjs/stx": ">=0.2.227",
+      },
+      "optionalPeers": [
+        "@stacksjs/stx",
+      ],
     },
   },
   "overrides": {

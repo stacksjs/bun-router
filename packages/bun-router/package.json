@@ -60,7 +60,7 @@
   "types": "./dist/index.d.ts",
   "bin": {
     "bun-router": "./dist/cli.js",
-    "router": "./bin/cli.ts"
+    "router": "./dist/cli.js"
   },
   "files": [
     "README.md",
