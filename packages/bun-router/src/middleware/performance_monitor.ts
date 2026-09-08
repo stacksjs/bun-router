@@ -1,7 +1,7 @@
 import type { EnhancedRequest as BaseEnhancedRequest, Middleware, NextFunction } from '../types'
-import crypto from 'node:crypto'
 import process from 'node:process'
 import { config } from '../config'
+import { getNodeCrypto } from '../crypto'
 
 type Timer = ReturnType<typeof setTimeout>
 
@@ -629,7 +629,7 @@ export default class PerformanceMonitor implements Middleware {
     const endMemory = process.memoryUsage()
     const endCpu = process.cpuUsage(startCPU)
     const url = new URL(req.url)
-    const requestId = req.requestId || crypto.randomUUID()
+    const requestId = req.requestId || getNodeCrypto().randomUUID()
 
     // Calculate CPU usage
     const cpuUsage = {
@@ -720,7 +720,7 @@ export default class PerformanceMonitor implements Middleware {
 
     // Setup profiling if enabled
     if (this.options.profiling?.enabled) {
-      const requestId = req.requestId || crypto.randomUUID()
+      const requestId = req.requestId || getNodeCrypto().randomUUID()
 
       // Initialize profiling data on the request
       if (!req.profiling) {

@@ -1,10 +1,10 @@
 import type { EnhancedRequest, NextFunction } from '../types'
-import { randomUUID } from 'node:crypto'
+import { getNodeCrypto } from '../crypto'
 
 export default class RequestId {
   async handle(req: EnhancedRequest, next: NextFunction): Promise<Response> {
     // Check if there's already a request ID in the headers
-    const requestId = req.headers.get('X-Request-ID') || randomUUID()
+    const requestId = req.headers.get('X-Request-ID') || getNodeCrypto().randomUUID()
 
     // Store the request ID on the request object
     Object.defineProperty(req, 'requestId', {

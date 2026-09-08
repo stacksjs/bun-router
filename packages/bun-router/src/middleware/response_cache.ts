@@ -1,7 +1,7 @@
 import type { EnhancedRequest, Middleware, NextFunction } from '../types'
-import crypto from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { getNodeCrypto } from '../crypto'
 
 export interface CacheEntry {
   key: string
@@ -244,7 +244,7 @@ export class ResponseCache implements Middleware {
       ...varyParts,
     ].join('|')
 
-    return crypto.createHash('sha256').update(keyData).digest('hex')
+    return getNodeCrypto().createHash('sha256').update(keyData).digest('hex')
   }
 
   private defaultShouldCache(req: EnhancedRequest, res: Response): boolean {
@@ -297,7 +297,7 @@ export class ResponseCache implements Middleware {
   }
 
   private generateETag(content: string | Uint8Array): string {
-    const hash = crypto.createHash('sha1')
+    const hash = getNodeCrypto().createHash('sha1')
     hash.update(content)
     const etag = hash.digest('hex').substring(0, 16)
     return this.options.etag.weak ? `W/"${etag}"` : `"${etag}"`

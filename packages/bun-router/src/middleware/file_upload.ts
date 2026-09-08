@@ -1,8 +1,8 @@
 import type { EnhancedRequest, NextFunction } from '../types'
 import type { FileSecurityConfig } from './file_security'
-import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { basename, extname, join } from 'node:path'
+import { getNodeCrypto } from '../crypto'
 import FileSecurity from './file_security'
 
 export interface UploadedFile {
@@ -203,7 +203,7 @@ export default class FileUpload {
     const baseName = basename(sanitizedName, extension)
 
     if (this.config.generateUniqueFilename) {
-      const uuid = randomUUID()
+      const uuid = getNodeCrypto().randomUUID()
       return this.config.preserveOriginalName
         ? `${baseName}_${uuid}${extension}`
         : `${uuid}${extension}`

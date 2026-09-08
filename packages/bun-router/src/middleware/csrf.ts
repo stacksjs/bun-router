@@ -1,6 +1,6 @@
 import type { EnhancedRequest, NextFunction, SecurityConfig } from '../types'
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { config } from '../config'
+import { getNodeCrypto } from '../crypto'
 
 /** Maximum number of issued tokens kept for verification (oldest evicted first). */
 const MAX_TOKENS = 10_000
@@ -113,7 +113,7 @@ export default class Csrf {
     if (bufA.length !== bufB.length) {
       return false
     }
-    return timingSafeEqual(bufA, bufB)
+    return getNodeCrypto().timingSafeEqual(bufA, bufB)
   }
 
   private static storeToken(token: string): void {
@@ -140,6 +140,7 @@ export default class Csrf {
   }
 
   private generateToken(secret: string): string {
+    const { createHash, randomBytes } = getNodeCrypto()
     const randomString = randomBytes(16).toString('hex')
     return createHash('sha256')
       .update(`${randomString}${secret}`)

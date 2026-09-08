@@ -1,5 +1,5 @@
 import type { EnhancedRequest, JwtHeader, JwtPayload } from './types'
-import { timingSafeEqual } from 'node:crypto'
+import { getNodeCrypto } from './crypto'
 
 // Types
 export interface JwtVerifyOptions {
@@ -176,7 +176,7 @@ export class JWT {
       // matched through response timing
       const sigBuf = Buffer.from(signature)
       const expectedBuf = Buffer.from(expectedSignature)
-      if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+      if (sigBuf.length !== expectedBuf.length || !getNodeCrypto().timingSafeEqual(sigBuf, expectedBuf)) {
         throw new Error('Invalid signature')
       }
 
