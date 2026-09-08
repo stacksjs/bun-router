@@ -1,3 +1,14 @@
+## v0.1.12
+
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.11...v0.1.12)
+
+- Keep completed synchronous dispatch synchronous and avoid repeated URL parsing, context closures, and route-cache lookups.
+- Defer native crypto loading until a feature first needs it.
+- Finalize compression for native routes and expose supported compression and server options.
+- Honor weighted encoding preferences and identity refusal, including small responses and unavailable representations.
+- Point both published CLI aliases at the built JavaScript entrypoint.
+- Remove obsolete generated chunks and declarations before rebuilding.
+
 ## v0.1.11
 
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.10...v0.1.11)
