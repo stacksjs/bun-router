@@ -838,14 +838,18 @@ export function getParsedQuery(req: EnhancedRequest): Record<string, string | st
   const cache = req as EnhancedRequest & RequestParseCache
   if (!cache._parsedQuery) {
     const query: Record<string, string | string[]> = {}
-    for (const [key, value] of getParsedURL(req).searchParams) {
-      const existing = query[key]
-      if (existing === undefined)
-        query[key] = value
-      else if (Array.isArray(existing))
-        existing.push(value)
-      else
-        query[key] = [existing, value]
+    // Reuse a URL another helper already exposed, including searchParams edits.
+    // Otherwise a query-free request needs only its own empty query cache.
+    if (cache._parsedURL || req.url.includes('?')) {
+      for (const [key, value] of getParsedURL(req).searchParams) {
+        const existing = query[key]
+        if (existing === undefined)
+          query[key] = value
+        else if (Array.isArray(existing))
+          existing.push(value)
+        else
+          query[key] = [existing, value]
+      }
     }
     cache._parsedQuery = query
   }
