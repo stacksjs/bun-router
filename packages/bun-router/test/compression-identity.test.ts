@@ -108,6 +108,15 @@ describe('identity refusal', () => {
     expect(await vary(new Response(null, { status: 204 }))).toBeNull()
     expect(await vary(new Response(null, { status: 304, headers: { 'content-type': 'text/plain' } })))
       .toBe('Accept-Encoding')
+
+    // The offer-less request is the case a preflight actually makes, and it
+    // takes the earliest return in the function - the one a later 204 guard
+    // never reaches.
+    const noOffer = await applyResponseCompression(
+      new Response(null, { status: 204, headers: { vary: 'Origin' } }),
+      new Request('http://localhost/', { method: 'OPTIONS' }),
+    )
+    expect(noOffer.headers.get('vary')).toBe('Origin')
   })
 
   test('preserves bodyless, caller-encoded and explicitly disabled responses', () => {

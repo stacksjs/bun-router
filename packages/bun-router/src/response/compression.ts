@@ -232,6 +232,25 @@ export function applyResponseCompression(
   if (headers.has('content-encoding'))
     return response
 
+  /*
+   * A 204 leaves before any of this.
+   *
+   * It has no representation, so there is nothing to compress and - the part
+   * that is easy to miss - nothing that varies either. Every branch below ends
+   * in `Vary: Accept-Encoding`, which on a 204 advertises a dimension that
+   * cannot exist: the answer to "what do these bytes look like" is identical
+   * for every offer, including no offer at all. The common one is a CORS
+   * preflight, where it lands beside Origin, Access-Control-Request-Method and
+   * Access-Control-Request-Headers as the only entry that is not a real
+   * dimension of the answer.
+   *
+   * 304 is deliberately not here: that carries the `Vary` of the
+   * representation it is refreshing, and dropping an entry from it is how a
+   * revalidating cache selects the wrong stored copy.
+   */
+  if (response.status === 204)
+    return response
+
   const threshold = options.threshold ?? DEFAULT_COMPRESSION.threshold
   const acceptEncoding = request.headers.get('accept-encoding')
   const length = acceptEncoding ? Number(headers.get('content-length') ?? Number.NaN) : Number.NaN
@@ -248,7 +267,7 @@ export function applyResponseCompression(
   const { encoding, identityAllowed } = negotiateResponseEncoding(acceptEncoding)
   const compressible = isCompressible(headers.get('content-type')) && response.status !== 206
 
-  if (!identityAllowed && response.status !== 204 && response.status !== 304 && response.body) {
+  if (!identityAllowed && response.status !== 304 && response.body) {
     if (!encoding || !compressible)
       return notAcceptableResponse(response)
     // Size is only a heuristic. When identity is excluded, even a small body
@@ -257,7 +276,7 @@ export function applyResponseCompression(
     return createCompressedResponse(response, response.body, encoding)
   }
 
-  if (!encoding || belowThreshold || !compressible || response.status === 204 || response.status === 304 || !response.body) {
+  if (!encoding || belowThreshold || !compressible || response.status === 304 || !response.body) {
     /*
      * `Vary` even when nothing was compressed.
      *
@@ -265,18 +284,8 @@ export function applyResponseCompression(
      * copy has to know it cannot serve it to a client that asked differently.
      * Adding it only on the compressed branch is the classic way to poison a
      * shared cache.
-     *
-     * Except on a 204, which has no representation at all: the answer to
-     * "what does this response body look like" is the same for every
-     * `Accept-Encoding`, so claiming it varies advertises a dimension that
-     * cannot exist. The common one is a CORS preflight, where it lands beside
-     * `Origin, Access-Control-Request-Method, Access-Control-Request-Headers`
-     * and is the only entry that is not a real dimension of the answer. A 304
-     * keeps it: that carries the `Vary` of the representation it is refreshing,
-     * and dropping an entry there is how a revalidating cache picks wrong.
      */
-    if (response.status !== 204)
-      appendVary(headers, 'Accept-Encoding')
+    appendVary(headers, 'Accept-Encoding')
 
     return response
   }
