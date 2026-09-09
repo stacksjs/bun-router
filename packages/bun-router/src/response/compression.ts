@@ -265,8 +265,18 @@ export function applyResponseCompression(
      * copy has to know it cannot serve it to a client that asked differently.
      * Adding it only on the compressed branch is the classic way to poison a
      * shared cache.
+     *
+     * Except on a 204, which has no representation at all: the answer to
+     * "what does this response body look like" is the same for every
+     * `Accept-Encoding`, so claiming it varies advertises a dimension that
+     * cannot exist. The common one is a CORS preflight, where it lands beside
+     * `Origin, Access-Control-Request-Method, Access-Control-Request-Headers`
+     * and is the only entry that is not a real dimension of the answer. A 304
+     * keeps it: that carries the `Vary` of the representation it is refreshing,
+     * and dropping an entry there is how a revalidating cache picks wrong.
      */
-    appendVary(headers, 'Accept-Encoding')
+    if (response.status !== 204)
+      appendVary(headers, 'Accept-Encoding')
 
     return response
   }

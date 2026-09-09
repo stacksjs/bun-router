@@ -85,6 +85,31 @@ describe('identity refusal', () => {
     }
   })
 
+  /**
+   * A 204 has no representation, so nothing about it varies by
+   * `Accept-Encoding`; a 304 carries the `Vary` of the representation it
+   * refreshes, and dropping an entry there is how a revalidating cache picks
+   * the wrong stored copy.
+   *
+   * The case this shows up in is a CORS preflight, where the header would
+   * otherwise read `Origin, Access-Control-Request-Method,
+   * Access-Control-Request-Headers, Accept-Encoding` - three real dimensions
+   * of the answer and one that is not.
+   */
+  test('advertises Accept-Encoding on a 304 but not on a representation-less 204', async () => {
+    const vary = async (response: Response): Promise<string | null> =>
+      (await applyResponseCompression(response, request('gzip'))).headers.get('vary')
+
+    const preflight = new Response(null, {
+      status: 204,
+      headers: { vary: 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers' },
+    })
+    expect(await vary(preflight)).toBe('Origin, Access-Control-Request-Method, Access-Control-Request-Headers')
+    expect(await vary(new Response(null, { status: 204 }))).toBeNull()
+    expect(await vary(new Response(null, { status: 304, headers: { 'content-type': 'text/plain' } })))
+      .toBe('Accept-Encoding')
+  })
+
   test('preserves bodyless, caller-encoded and explicitly disabled responses', () => {
     for (const status of [204, 304]) {
       const response = new Response(null, { status, headers: { 'content-type': 'text/plain' } })
