@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.14...v0.1.15)
+
+## 🐛 Bug Fixes
+
+- **compression**: exit on a 204 before any Vary branch ([165c64a](https://github.com/stacksjs/bun-router/commit/165c64a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.15 ([0c0a6ec](https://github.com/stacksjs/bun-router/commit/0c0a6ec)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.13...v0.1.14)
 
 ## 🐛 Bug Fixes
