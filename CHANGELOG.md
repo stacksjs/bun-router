@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.13...v0.1.14)
+
+## 🐛 Bug Fixes
+
+- **compression**: stop advertising Accept-Encoding on a 204 ([6ed6e4b](https://github.com/stacksjs/bun-router/commit/6ed6e4b)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.14 ([105b53c](https://github.com/stacksjs/bun-router/commit/105b53c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 ## v0.1.12
 
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.11...v0.1.12)
