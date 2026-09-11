@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.17...v0.1.18)
+
+## ⚡ Performance Improvements
+
+- state the length of every body the response helpers serialize ([7005a43](https://github.com/stacksjs/bun-router/commit/7005a43)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.18 ([57a39e1](https://github.com/stacksjs/bun-router/commit/57a39e1)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.16...v0.1.17)
 
 ## 🐛 Bug Fixes
