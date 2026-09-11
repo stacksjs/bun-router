@@ -435,3 +435,34 @@ describe('an event stream', () => {
     expect(answer.headers.get('content-encoding')).toBeNull()
   })
 })
+
+describe('small bodies keep their stream closed', () => {
+  test('answers a length-stated sub-threshold body without reading it', async () => {
+    const body = JSON.stringify({ hello: 'world' })
+    const response = new Response(body, {
+      headers: { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(body)) },
+    })
+    const request = new Request('http://localhost/x', { headers: { 'accept-encoding': 'gzip' } })
+
+    const result = applyResponseCompression(response, request)
+
+    // The same Response, not a replacement built around a peeked prefix, and
+    // synchronously: no reader was opened, which is the point of the length.
+    expect(result).toBe(response)
+    expect(response.bodyUsed).toBe(false)
+    expect(response.headers.get('Content-Encoding')).toBeNull()
+    expect(response.headers.get('Vary')).toBe('Accept-Encoding')
+  })
+
+  test('still peeks a body whose length nobody stated', async () => {
+    const response = new Response(JSON.stringify({ hello: 'world' }), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const request = new Request('http://localhost/x', { headers: { 'accept-encoding': 'gzip' } })
+
+    const result = await applyResponseCompression(response, request)
+
+    expect(result.headers.get('Content-Encoding')).toBeNull()
+    expect(await result.text()).toBe(JSON.stringify({ hello: 'world' }))
+  })
+})

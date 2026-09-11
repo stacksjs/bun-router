@@ -37,6 +37,29 @@ describe('Handler Resolver', () => {
       expect(await wrapped.text()).toBe('true')
     })
 
+    test('states the byte length of every body it serializes', async () => {
+      // Bytes, not characters: a length in UTF-16 units truncates the reply.
+      const json = wrapResponse({ hello: 'wörld' })
+      expect(json.headers.get('Content-Length')).toBe(String(Buffer.byteLength(await json.clone().text())))
+
+      const text = wrapResponse('héllo')
+      expect(text.headers.get('Content-Length')).toBe('6')
+
+      expect(wrapResponse(42).headers.get('Content-Length')).toBe('2')
+      expect(wrapResponse(true).headers.get('Content-Length')).toBe('4')
+      expect(wrapResponse(new Uint8Array([1, 2, 3])).headers.get('Content-Length')).toBe('3')
+    })
+
+    test('leaves a length off what it cannot measure', () => {
+      // A stream has no length until it ends, and a handler's own Response is
+      // its own business - stating a length for either would be a guess.
+      const stream = wrapResponse(new ReadableStream())
+      expect(stream.headers.get('Content-Length')).toBeNull()
+
+      const own = new Response('hello')
+      expect(wrapResponse(own)).toBe(own)
+    })
+
     test('should wrap null/undefined as 204 No Content', () => {
       const wrappedNull = wrapResponse(null)
       expect(wrappedNull.status).toBe(204)

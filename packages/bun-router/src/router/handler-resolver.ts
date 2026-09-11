@@ -10,7 +10,32 @@
  * - Class instances with handle() method
  */
 
+import { Buffer } from 'node:buffer'
 import type { EnhancedRequest, RouterConfig } from '../types'
+
+/**
+ * A text response whose length is stated, because this function knows it.
+ *
+ * Every body built here is already whole in memory, and the exact number of
+ * bytes is one call away. Leaving it off was not free: `Content-Length` is
+ * what lets the compression layer decide a small body is not worth encoding
+ * without opening its stream, so a response with no length sent every request
+ * through `peekBody` - a reader, a prefix buffer and a re-emitting stream, for
+ * seventeen bytes of JSON. Measured against the routing benchmark's static
+ * JSON route, that machinery was the majority of the router's per-request CPU.
+ *
+ * Only for bodies this function serialized. A `Response` a handler built, and
+ * a `ReadableStream` whose length nobody can know until it ends, are left
+ * exactly as they are.
+ */
+function textResponse(body: string, contentType: string): Response {
+  return new Response(body, {
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(Buffer.byteLength(body)),
+    },
+  })
+}
 
 /**
  * Wraps a value in a Response object if it's not already a Response
@@ -28,22 +53,21 @@ export function wrapResponse(value: unknown): Response {
 
   // String - return as text/plain
   if (typeof value === 'string') {
-    return new Response(value, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    })
+    return textResponse(value, 'text/plain; charset=utf-8')
   }
 
   // Number or boolean - convert to string
   if (typeof value === 'number' || typeof value === 'boolean') {
-    return new Response(String(value), {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    })
+    return textResponse(String(value), 'text/plain; charset=utf-8')
   }
 
   // ArrayBuffer or Uint8Array - return as binary
   if (value instanceof ArrayBuffer || value instanceof Uint8Array) {
     return new Response(value as any, {
-      headers: { 'Content-Type': 'application/octet-stream' },
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(value.byteLength),
+      },
     })
   }
 
@@ -54,15 +78,11 @@ export function wrapResponse(value: unknown): Response {
 
   // Object or array - return as JSON
   if (typeof value === 'object') {
-    return new Response(JSON.stringify(value), {
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    })
+    return textResponse(JSON.stringify(value), 'application/json; charset=utf-8')
   }
 
   // Fallback - convert to string
-  return new Response(String(value), {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  })
+  return textResponse(String(value), 'text/plain; charset=utf-8')
 }
 
 /**
