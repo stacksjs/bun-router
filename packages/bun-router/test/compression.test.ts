@@ -398,7 +398,10 @@ describe('the threshold without a length', () => {
 
     expect(peeked.ended).toBe(true)
     expect(peeked.size).toBe(13)
-    expect(await new Response(peeked.stream).text()).toBe('one:two:three')
+    // Bytes, not a stream: this body ended inside the prefix, so there is
+    // nothing left to stream and nothing to build a controller for.
+    expect(peeked.body).toBeInstanceOf(Uint8Array)
+    expect(await new Response(peeked.body as Uint8Array).text()).toBe('one:two:three')
   })
 
   test('and stops reading once it has enough', async () => {
@@ -417,6 +420,8 @@ describe('the threshold without a length', () => {
     expect(produced).toBeLessThanOrEqual(3)
     expect(peeked.ended).toBe(false)
     expect(peeked.size).toBeGreaterThanOrEqual(128)
+    // Still going, so it is still a stream, prefix re-attached.
+    expect(peeked.body).toBeInstanceOf(ReadableStream)
   })
 })
 
