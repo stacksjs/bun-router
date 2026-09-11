@@ -471,3 +471,24 @@ describe('Response Factory - Edge Cases', () => {
     expect(body[500].id).toBe(500)
   })
 })
+
+describe('a serialized body states its length', () => {
+  it('counts bytes, not characters, for every helper that builds one', () => {
+    // A length in UTF-16 units truncates the reply: the JSON below is 17
+    // characters and 18 bytes.
+    expect(response.json({ hello: 'wörld' }).headers.get('Content-Length')).toBe('18')
+    expect(response.text('héllo').headers.get('Content-Length')).toBe('6')
+    expect(response.view('<p>ok</p>').headers.get('Content-Length')).toBe('9')
+    expect(response.xml('<a/>').headers.get('Content-Length')).toBe('4')
+    expect(response.tooManyRequests('slow down').headers.get('Content-Length'))
+      .toBe(String(Buffer.byteLength(JSON.stringify({ message: 'slow down' }))))
+  })
+
+  it('lets a caller state its own', () => {
+    expect(response.text('hi', 200, { 'Content-Length': '99' }).headers.get('Content-Length')).toBe('99')
+  })
+
+  it('leaves a length off a body it did not build', () => {
+    expect(response.noContent().headers.get('Content-Length')).toBeNull()
+  })
+})

@@ -4,6 +4,7 @@
  * Implements fluent response helpers with full TypeScript support
  */
 
+import { Buffer } from 'node:buffer'
 import type { ContentType, ResponseStatus } from '../types'
 
 // ============================================================================
@@ -87,6 +88,26 @@ export interface ResponseFactory {
 /**
  * Response factory with common response helpers
  */
+/**
+ * A response whose length is stated, because this module knows it.
+ *
+ * Every body built here is whole in memory and one call away from its exact
+ * byte count. Leaving `Content-Length` off is not free: it is what lets the
+ * compression layer reject a sub-threshold body without opening its stream,
+ * and a reader loop over an in-memory body costs several times what the
+ * response itself does. A caller's own `Content-Length` still wins.
+ */
+function serialized(body: string, contentType: string, status: ResponseStatus, headers: Record<string, string>): Response {
+  return new Response(body, {
+    status,
+    headers: {
+      'Content-Type': contentType,
+      'Content-Length': String(Buffer.byteLength(body)),
+      ...headers,
+    },
+  })
+}
+
 export const response: ResponseFactory = {
   /**
    * Create a JSON response with proper typing.
@@ -103,13 +124,7 @@ export const response: ResponseFactory = {
     const { status = 200, headers = {}, pretty = false } = opts
     const body = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data)
 
-    return new Response(body, {
-      status,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-    })
+    return serialized(body, 'application/json', status, headers)
   },
 
   /**
@@ -255,39 +270,21 @@ export const response: ResponseFactory = {
    * Create a view response (HTML)
    */
   view: (html: string, status: ResponseStatus = 200, headers: Record<string, string> = {}): Response => {
-    return new Response(html, {
-      status,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        ...headers,
-      },
-    })
+    return serialized(html, 'text/html; charset=utf-8', status, headers)
   },
 
   /**
    * Create a text response
    */
   text: (text: string, status: ResponseStatus = 200, headers: Record<string, string> = {}): Response => {
-    return new Response(text, {
-      status,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        ...headers,
-      },
-    })
+    return serialized(text, 'text/plain; charset=utf-8', status, headers)
   },
 
   /**
    * Create an XML response
    */
   xml: (xml: string, status: ResponseStatus = 200, headers: Record<string, string> = {}): Response => {
-    return new Response(xml, {
-      status,
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        ...headers,
-      },
-    })
+    return serialized(xml, 'application/xml; charset=utf-8', status, headers)
   },
 
   /**
@@ -428,13 +425,7 @@ export const response: ResponseFactory = {
     if (retryAfter) {
       headers['Retry-After'] = String(retryAfter)
     }
-    return new Response(JSON.stringify({ message }), {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-    })
+    return serialized(JSON.stringify({ message }), 'application/json', 429, headers)
   },
 }
 
