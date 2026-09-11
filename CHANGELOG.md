@@ -1,3 +1,18 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.15...v0.1.16)
+
+## ⚡ Performance Improvements
+
+- hand back bytes when a peeked body already ended ([b9f1526](https://github.com/stacksjs/bun-router/commit/b9f1526)) _(by Chris <chrisbreuer93@gmail.com>)_
+- state the length of every body wrapResponse serializes ([3a69663](https://github.com/stacksjs/bun-router/commit/3a69663)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.16 ([564fb83](https://github.com/stacksjs/bun-router/commit/564fb83)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.14...v0.1.15)
 
 ## 🐛 Bug Fixes
