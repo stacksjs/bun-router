@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.16...v0.1.17)
+
+## 🐛 Bug Fixes
+
+- **types**: let a handler return the plain values the resolver documents ([6e1d16a](https://github.com/stacksjs/bun-router/commit/6e1d16a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.17 ([4f86184](https://github.com/stacksjs/bun-router/commit/4f86184)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.15...v0.1.16)
 
 ## ⚡ Performance Improvements
