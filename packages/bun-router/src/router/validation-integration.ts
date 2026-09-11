@@ -7,6 +7,7 @@
 
 import type { EnhancedRequest, MiddlewareHandler, NextFunction, RouteHandler } from '../types'
 import type { ValidationRules, ValidatorConfig } from '../validation/validator'
+import { wrapResponse } from './handler-resolver'
 import { RequestWithMacros } from '../request/macros'
 import { ResponseWithMacros } from '../response/macros'
 import { createValidationMiddleware } from '../validation/validator'
@@ -271,7 +272,7 @@ export const RouteHelpers: {
         return ResponseWithMacros.callMacro('error', 'API endpoint requires JSON Accept header', undefined, 406)
       }
 
-      return await handler(req)
+      return wrapResponse(await handler(req))
     })
 
     if (rules) {

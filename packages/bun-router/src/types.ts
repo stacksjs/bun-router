@@ -949,7 +949,29 @@ export interface UploadedFile {
   buffer: ArrayBuffer
 }
 
-export type RouteHandler = (_req: EnhancedRequest) => Response | Promise<Response>
+/**
+ * What a handler may return.
+ *
+ * The resolver has always wrapped a plain value - `wrapResponse` turns a
+ * string, a number, a boolean, bytes, a stream, or an object into a Response,
+ * and the handler-resolver documents that as a supported shape. The types said
+ * otherwise, so the documented idiom did not compile and every example that
+ * returns an object had to be cast. Widening this is safe for existing
+ * handlers: a `Response` is still a `RouteResult`.
+ */
+export type RouteResult
+  = | Response
+    | string
+    | number
+    | boolean
+    | ArrayBuffer
+    | Uint8Array
+    | ReadableStream
+    | object
+    | null
+    | undefined
+
+export type RouteHandler = (_req: EnhancedRequest) => RouteResult | Promise<RouteResult>
 
 /**
  * Interface for handling route actions.
@@ -1469,7 +1491,7 @@ export type RequestFor<TPath extends string>
   = Omit<EnhancedRequest, 'params'> & { params: ExtractRouteParams<TPath> }
 
 export interface TypedRouteHandler<TPath extends string> {
-  (req: RequestFor<TPath>): Response | Promise<Response>
+  (req: RequestFor<TPath>): RouteResult | Promise<RouteResult>
 }
 
 /**

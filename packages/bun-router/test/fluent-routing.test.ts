@@ -19,6 +19,20 @@ describe('FluentRouter (canonical)', () => {
     expect(await res!.json()).toEqual({ id: '42', postId: '7' })
   })
 
+  it('wraps a plain return value, like every other dispatch path', async () => {
+    // The documented idiom. This path handed Bun a bare object, which is a
+    // 500 rather than a response, and the types hid it by forbidding the
+    // return shape the resolver has always supported.
+    const router = new FluentRouter()
+    router.register(router.get('/plain', () => ({ hello: 'world' })))
+
+    const res = await router.handle(mkReq('/plain'))
+    expect(res).not.toBeNull()
+    expect(res!.headers.get('Content-Type')).toBe('application/json; charset=utf-8')
+    expect(res!.headers.get('Content-Length')).toBe('17')
+    expect(await res!.json()).toEqual({ hello: 'world' })
+  })
+
   it('does not let regex metacharacters in static segments over-match', async () => {
     const router = new FluentRouter()
     router.register(router.get('/api/v1.0/users', () => new Response('ok')))

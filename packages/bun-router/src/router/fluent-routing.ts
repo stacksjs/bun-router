@@ -2,6 +2,7 @@ import type { BunQueryBuilderModel } from '../model-binding'
 import type { RouteCacheConfig } from '../routing/route-caching'
 import type { ThrottleConfig } from '../routing/route-throttling'
 import type { EnhancedRequest, MiddlewareHandler, NextFunction, RouteHandler, ThrottlePattern } from '../types'
+import { wrapResponse } from './handler-resolver'
 import { createModelBindingMiddleware } from '../model-binding'
 import { createRouteCacheMiddleware, RouteCacheFactory } from '../routing/route-caching'
 import { createRateLimitMiddleware, parseThrottleString, ThrottleFactory } from '../routing/route-throttling'
@@ -714,7 +715,10 @@ export class FluentRouter {
         const result = await middleware(request, next)
         return result ?? new Response(null)
       }
-      return await route.handler(request)
+      // The same wrapping every other dispatch path applies. Without it a
+      // handler that returns a plain value - the documented idiom - reached
+      // Bun as a bare object on this path only.
+      return wrapResponse(await route.handler(request))
     }
 
     return await next()
