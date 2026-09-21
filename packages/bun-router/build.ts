@@ -12,7 +12,7 @@ const [build] = await Promise.all([
   Bun.build({
     // container/index is its own entrypoint so the documented
     // `@stacksjs/bun-router/container` subpath import resolves at runtime
-    entrypoints: ['src/index.ts', 'src/cli.ts', 'src/container/index.ts'],
+    entrypoints: ['src/index.ts', 'src/runtime.ts', 'src/cli.ts', 'src/container/index.ts'],
     outdir: './dist',
     splitting: true,
     target: 'bun',
@@ -52,7 +52,7 @@ if (!cli.startsWith('#!'))
 // Adding "sideEffects": false to this package.json is what triggered it: the
 // bundler applies the field to our own sources and drops module bodies while
 // keeping their re-exported names. Do not re-add it without checking this passes.
-for (const entry of ['./dist/index.js', './dist/cli.js', './dist/container/index.js']) {
+for (const entry of ['./dist/index.js', './dist/runtime.js', './dist/cli.js', './dist/container/index.js']) {
   try {
     await import(entry)
   }

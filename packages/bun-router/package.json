@@ -28,6 +28,11 @@
       "bun": "./dist/index.js",
       "import": "./dist/index.js"
     },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "bun": "./dist/runtime.js",
+      "import": "./dist/runtime.js"
+    },
     "./container": {
       "types": "./dist/container/index.d.ts",
       "bun": "./dist/container/index.js",
@@ -44,6 +49,11 @@
         "types": "./dist/index.d.ts",
         "bun": "./dist/index.js",
         "import": "./dist/index.js"
+      },
+      "./runtime": {
+        "types": "./dist/runtime.d.ts",
+        "bun": "./dist/runtime.js",
+        "import": "./dist/runtime.js"
       },
       "./container": {
         "types": "./dist/container/index.d.ts",

@@ -49,6 +49,23 @@ route.serve({
 })
 ```
 
+## Runtime Entry
+
+Frameworks and API servers that only need route registration and serving can
+import `@stacksjs/bun-router/runtime`. It exposes the registered `Router`, typed
+routing, request context, response factories, and compression helpers without
+loading root-only auth, container, session, or testing exports.
+
+```typescript
+import { Router } from '@stacksjs/bun-router/runtime'
+
+const router = new Router()
+router.get('/health', () => ({ ok: true }))
+await router.serve({ port: 3000 })
+```
+
+The root `@stacksjs/bun-router` entry keeps its complete existing API.
+
 ## Action Classes
 
 Action classes provide a clean way to organize your route handlers. Create a class that implements a `handle` method:
