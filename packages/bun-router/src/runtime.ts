@@ -5,7 +5,7 @@
  * that only need to register and serve routes can import this entry without
  * loading auth, containers, sessions, or testing utilities.
  */
-export { applyRequestEnhancements, Router } from './router'
+export { applyRequestEnhancements, Router } from './router/runtime'
 export {
   enableRequestContext,
   getCurrentRequest,

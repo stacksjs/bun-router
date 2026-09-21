@@ -53,6 +53,16 @@ describe('router runtime entry', () => {
       expect(reachable.has('./index.js'), [...reachable].join('\n')).toBe(false)
       for (const rootOnly of ['/auth.ts', '/container/', '/session/', '/testing/'])
         expect([...inputs].some(input => input.includes(rootOnly)), `${rootOnly}\n${[...reachable].join('\n')}`).toBe(false)
+      for (const rootHelper of [
+        '/middleware/pipeline.ts',
+        '/response/macros.ts',
+        '/router/fluent-routing.ts',
+        '/router/validation-integration.ts',
+        '/routing/route-caching.ts',
+        '/routing/subdomain-routing.ts',
+        '/validation/validator.ts',
+      ])
+        expect([...inputs].some(input => input.includes(rootHelper)), `${rootHelper}\n${[...reachable].join('\n')}`).toBe(false)
 
       const runtimeEntry = resolve(outdir, 'runtime.js')
       expect(result.outputs.some(output => resolve(output.path) === runtimeEntry)).toBe(true)
@@ -68,11 +78,26 @@ describe('router runtime entry', () => {
         fingerprints.push(smoke.stdout.toString().trim())
       }
       expect(fingerprints[1]).toBe(fingerprints[0])
-      expect(JSON.parse(fingerprints[0]!)).toEqual({
+      const fingerprint = JSON.parse(fingerprints[0]!)
+      expect(fingerprint).toMatchObject({
         status: 200,
         contentType: 'application/json; charset=utf-8',
         body: '{"runtime":true}',
       })
+      expect(fingerprint.methods).toEqual(expect.arrayContaining([
+        'domain',
+        'get',
+        'matchRoute',
+        'middleware',
+        'model',
+        'resource',
+        'serve',
+        'streamFile',
+        'view',
+        'websocket',
+        'where',
+        'withoutNativeDispatch',
+      ]))
     }
     finally {
       await rm(outdir, { recursive: true, force: true })

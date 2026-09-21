@@ -18,6 +18,7 @@ try {
     status: response.status,
     contentType: response.headers.get('content-type'),
     body: await response.text(),
+    methods: Object.getOwnPropertyNames(runtime.Router.prototype).sort(),
   }))
 }
 finally {
