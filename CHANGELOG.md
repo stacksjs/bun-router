@@ -1,5 +1,9 @@
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.18...v0.1.19)
 
+## 🐛 Bug Fixes
+
+- **router**: scope static responses by HTTP method ([c3baec0](https://github.com/stacksjs/bun-router/commit/c3baec0)) _(by Chris <chrisbreuer93@gmail.com>)_
+
 ## ⚡ Performance Improvements
 
 - **router**: isolate the runtime initializer from root helpers ([65e3919](https://github.com/stacksjs/bun-router/commit/65e3919)) _(by Chris <chrisbreuer93@gmail.com>)_
@@ -7,6 +11,7 @@
 
 ## bench
 
+- **router**: record built import graphs ([429dc0c](https://github.com/stacksjs/bun-router/commit/429dc0c)) _(by Chris <chrisbreuer93@gmail.com>)_
 - **router**: record runtime import diagnostics ([19c592a](https://github.com/stacksjs/bun-router/commit/19c592a)) _(by Chris <chrisbreuer93@gmail.com>)_
 
 ## Contributors
