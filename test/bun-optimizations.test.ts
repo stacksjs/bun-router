@@ -328,44 +328,25 @@ describe('Bun Optimizations', () => {
   })
 
   describe('Performance Benchmarks', () => {
-    it('should benchmark function optimization', () => {
+    it('should reuse memoized values across repeated argument patterns', () => {
       optimizer = new BunOptimizer()
 
-      const testFunction = (x: number) => x * 2
-
-      // Benchmark unoptimized
-      const start1 = performance.now()
-      for (let i = 0; i < 100; i++) {
-        testFunction(i)
+      let callCount = 0
+      const testFunction = (x: number) => {
+        callCount++
+        return x * 2
       }
-      const unoptimizedTime = performance.now() - start1
-
-      // Benchmark optimized with memoization
       const optimized = optimizer.optimizeFunction(testFunction, {
         memoize: true,
       })
 
-      const start2 = performance.now()
+      const results: number[] = []
       for (let i = 0; i < 100; i++) {
-        optimized(i % 10) // Repeat values to benefit from memoization
+        results.push(optimized(i % 10))
       }
-      const optimizedTime = performance.now() - start2
 
-      // In test environment, memoization overhead might be significant
-      // Just verify that both functions work and memoization is functional
-      expect(optimizedTime).toBeGreaterThan(0)
-      expect(unoptimizedTime).toBeGreaterThan(0)
-
-      // Test that memoization is working by checking cache hits
-      const optimized2 = optimizer.optimizeFunction(testFunction, { memoize: true })
-      const start3 = performance.now()
-      for (let i = 0; i < 50; i++) {
-        optimized2(5) // Same value repeatedly
-      }
-      const memoizedTime = performance.now() - start3
-
-      // Memoized version should be faster for repeated values
-      expect(memoizedTime).toBeLessThan(optimizedTime)
+      expect(results).toEqual(Array.from({ length: 100 }, (_, index) => (index % 10) * 2))
+      expect(callCount).toBe(10)
     })
 
     it('should benchmark buffer operations', () => {
