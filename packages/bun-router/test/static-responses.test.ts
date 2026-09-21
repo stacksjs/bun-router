@@ -12,6 +12,13 @@ describe('static response routes', () => {
 
   it('keeps a prebuilt response scoped to its HTTP method', async () => {
     const router = new Router()
+    const internals = router as Router & { handleRequestImpl: (request: Request) => Promise<Response> }
+    const originalHandleRequest = internals.handleRequestImpl.bind(router)
+    let fetchHits = 0
+    internals.handleRequestImpl = (request: Request) => {
+      fetchHits++
+      return originalHandleRequest(request)
+    }
     router.post('/ready', new Response('posted'))
     server = await router.serve({ port: 0 })
     const base = `http://127.0.0.1:${server.port}`
@@ -19,10 +26,12 @@ describe('static response routes', () => {
     const getResponse = await fetch(`${base}/ready`)
     expect(getResponse.status).toBe(405)
     expect(getResponse.headers.get('allow')).toContain('POST')
+    expect(fetchHits).toBe(1)
 
     const postResponse = await fetch(`${base}/ready`, { method: 'POST' })
     expect(postResponse.status).toBe(200)
     expect(await postResponse.text()).toBe('posted')
+    expect(fetchHits).toBe(1)
   })
 
   it('serves different static responses for methods on the same path', async () => {
