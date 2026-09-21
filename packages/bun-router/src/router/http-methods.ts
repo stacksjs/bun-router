@@ -110,10 +110,20 @@ export function registerHttpMethods(RouterClass: typeof Router): void {
           },
         }
 
-        // If handler is a Response object, register it for Bun's native static dispatch.
-        // Static responses bypass the fetch handler entirely for zero-allocation serving.
-        if (handler instanceof Response) {
-          this.staticResponses.set(routePath, handler)
+        // If the first handler for this method/path is a Response object,
+        // retain the HTTP method for Bun's native zero-allocation dispatch.
+        // A path-only map makes a POST response answer GET (and every other
+        // method), while overwriting another response registered at the same
+        // path. Domain routes stay on the domain-aware fetch matcher.
+        const alreadyRegistered = domain
+          ? this.domains[domain]?.some((registered: Route) => registered.method === route.method && registered.path === routePath) === true
+          : this.routes.some((registered: Route) => registered.method === route.method && registered.path === routePath)
+        if (handler instanceof Response && !domain && !alreadyRegistered) {
+          const methodResponses = this.staticResponses.get(routePath) ?? new Map<string, Response>()
+          if (!methodResponses.has(route.method)) {
+            methodResponses.set(route.method, handler)
+            this.staticResponses.set(routePath, methodResponses)
+          }
         }
 
         // Add to the appropriate collection

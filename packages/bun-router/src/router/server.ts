@@ -82,6 +82,43 @@ interface NativeRouteDispatchContext {
   isWildcard: boolean
 }
 
+type NativeRouteHandler = (req: Request) => Response | Promise<Response>
+type NativeRouteValue = NativeRouteHandler | Response
+type NativeRouteTable = Record<string, Record<string, NativeRouteValue>>
+
+interface ServeRouteRouter extends Router {
+  _buildNativeRoutes: () => Record<string, Record<string, NativeRouteHandler>> | null
+}
+
+/**
+ * Build Bun's method-scoped native route table.
+ *
+ * Prebuilt responses always join this table because their method has to be
+ * retained. Dynamic handlers join only when native routing is enabled. A
+ * retained response wins over a later duplicate dynamic registration, which
+ * matches the fetch router's first-registration contract.
+ */
+function buildServeRoutes(
+  router: ServeRouteRouter,
+  includeDynamicRoutes: boolean,
+  userStaticRoutes?: Record<string, Response>,
+): NativeRouteTable | null {
+  const routes: NativeRouteTable = includeDynamicRoutes
+    ? (router._buildNativeRoutes() ?? {})
+    : {}
+
+  for (const [path, methodResponses] of router.staticResponses) {
+    if (userStaticRoutes?.[path])
+      continue
+    const entry = routes[path] ??= {}
+    for (const [method, response] of methodResponses) {
+      entry[method] = response
+    }
+  }
+
+  return Object.keys(routes).length > 0 ? routes : null
+}
+
 function dispatchNativeRoute(
   context: NativeRouteDispatchContext,
   req: Request & { params?: Record<string, string> },
@@ -233,22 +270,6 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           fetch: this.handleRequest.bind(this),
         }
 
-        // Build Bun's static option from registered static Response routes.
-        // Static responses use Bun's native zero-allocation dispatch (~15% faster).
-        const staticRouteMap: Record<string, Response> = {}
-        if (this.staticResponses && this.staticResponses.size > 0) {
-          for (const [path, response] of this.staticResponses) {
-            staticRouteMap[path] = response
-          }
-        }
-        // Merge with user-provided static routes (user options take precedence)
-        if (options.static) {
-          Object.assign(staticRouteMap, options.static)
-        }
-        if (Object.keys(staticRouteMap).length > 0) {
-          serverOptions.static = staticRouteMap
-        }
-
         // Forward development options for HMR and console streaming
         if (options.development !== undefined) {
           serverOptions.development = options.development
@@ -259,11 +280,9 @@ export function registerServerHandling(RouterClass: typeof Router): void {
         // Incompatible routes and 404/405/HEAD/preflight semantics keep
         // flowing through the fetch fallback unchanged.
         this._nativeRoutesEnabled = options.nativeRoutes === true
-        if (this._nativeRoutesEnabled) {
-          const nativeRoutes = this._buildNativeRoutes()
-          if (nativeRoutes) {
-            serverOptions.routes = nativeRoutes
-          }
+        const serveRoutes = buildServeRoutes(this as ServeRouteRouter, this._nativeRoutesEnabled, options.static)
+        if (serveRoutes) {
+          serverOptions.routes = serveRoutes
         }
 
         // Apply WebSocket configuration if provided
@@ -314,11 +333,9 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           fetch: this.handleRequest.bind(this),
           websocket: this.wsConfig || undefined,
         }
-        if (this._nativeRoutesEnabled) {
-          const nativeRoutes = this._buildNativeRoutes()
-          if (nativeRoutes) {
-            reloadOptions.routes = nativeRoutes
-          }
+        const serveRoutes = buildServeRoutes(this as ServeRouteRouter, this._nativeRoutesEnabled)
+        if (serveRoutes) {
+          reloadOptions.routes = serveRoutes
         }
         this.serverInstance = Bun.serve(reloadOptions)
 
