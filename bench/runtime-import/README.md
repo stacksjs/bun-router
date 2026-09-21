@@ -10,8 +10,9 @@ bun run bench:runtime-import -- --pairs=30
 
 Each variant runs in a fresh Bun process and verifies the same serving symbols.
 Order alternates by pair. The JSON result retains every import-time and RSS
-sample plus medians and paired ratios. RSS is read after a forced garbage
-collection and a short settling period.
+sample plus medians and paired ratios. It also records every statically
+reachable built JavaScript file and the byte delta between entries. RSS is read
+after a forced garbage collection and a short settling period.
 
 Results from developer machines and hosted runners are diagnostic evidence,
 not publishable rankings. Record a host-load policy and dedicated hardware

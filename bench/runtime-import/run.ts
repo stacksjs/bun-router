@@ -1,6 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { arch, platform, release } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
 
 type Variant = 'root' | 'runtime'
@@ -11,6 +11,12 @@ interface Sample {
   variant: Variant
   importMs: number
   rssBytes: number
+}
+
+interface StaticGraph {
+  files: Array<{ path: string, bytes: number }>
+  fileCount: number
+  totalBytes: number
 }
 
 function option(name: string): string | undefined {
@@ -40,6 +46,33 @@ function gitState(): { commit: string | null, dirty: boolean | null, status: str
   }
 }
 
+async function staticGraph(entry: string): Promise<StaticGraph> {
+  const transpiler = new Bun.Transpiler({ loader: 'js' })
+  const pending = [entry]
+  const visited = new Set<string>()
+
+  while (pending.length > 0) {
+    const file = pending.pop()!
+    if (visited.has(file)) continue
+    visited.add(file)
+
+    const source = await Bun.file(file).text()
+    for (const imported of transpiler.scanImports(source)) {
+      if (imported.kind !== 'import-statement' || !imported.path.startsWith('.')) continue
+      pending.push(resolve(dirname(file), imported.path))
+    }
+  }
+
+  const files = [...visited]
+    .sort()
+    .map(file => ({ path: relative(packageRoot, file), bytes: statSync(file).size }))
+  return {
+    files,
+    fileCount: files.length,
+    totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
+  }
+}
+
 const here = dirname(import.meta.path)
 const repositoryRoot = resolve(here, '../..')
 const packageRoot = join(repositoryRoot, 'packages/bun-router')
@@ -59,6 +92,8 @@ for (const entry of Object.values(entries)) {
 const output = resolve(repositoryRoot, option('output') ?? 'bench/runtime-import/results/latest.json')
 const samples: Sample[] = []
 const gitBefore = gitState()
+const rootGraph = await staticGraph(entries.root)
+const runtimeGraph = await staticGraph(entries.runtime)
 for (let pair = 0; pair < pairs; pair++) {
   const order: Variant[] = pair % 2 === 0 ? ['root', 'runtime'] : ['runtime', 'root']
   for (const [orderIndex, variant] of order.entries()) {
@@ -121,6 +156,13 @@ const result = {
   },
   pairs,
   entries,
+  staticGraph: {
+    root: rootGraph,
+    runtime: runtimeGraph,
+    fileCountDelta: runtimeGraph.fileCount - rootGraph.fileCount,
+    byteDelta: runtimeGraph.totalBytes - rootGraph.totalBytes,
+    bytePercentChange: ((runtimeGraph.totalBytes / rootGraph.totalBytes) - 1) * 100,
+  },
   importMs: metric('importMs'),
   rssBytes: metric('rssBytes'),
   samples,
