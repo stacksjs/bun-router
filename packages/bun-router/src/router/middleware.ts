@@ -1,6 +1,7 @@
 import type { EnhancedRequest, MiddlewareHandler, MiddlewareReference, NextFunction, Route } from '../types'
 import type { Router } from './router'
 import { resolveHandler as resolveHandlerUtil, wrapResponse } from './handler-resolver'
+import { buildMiddlewareChain, resolveMiddlewareChain } from './middleware-chain'
 
 /**
  * Middleware handling extension for Router class
@@ -89,28 +90,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
      * Build an optimized middleware chain
      */
     buildMiddlewareChain: {
-      value(middlewares: MiddlewareHandler[]): (req: EnhancedRequest) => Promise<Response | null> {
-        if (middlewares.length === 0) {
-          return async (_req: EnhancedRequest) => null
-        }
-
-        // Build the chain from the end to start for better performance
-        let chain = async (_req: EnhancedRequest): Promise<Response | null> => null
-
-        for (let i = middlewares.length - 1; i >= 0; i--) {
-          const middleware = middlewares[i]
-          const nextChain = chain
-          chain = async (req: EnhancedRequest): Promise<Response | null> => {
-            const next = async (): Promise<Response> => {
-              const result = await nextChain(req)
-              return result || new Response(null, { status: 200 })
-            }
-            return middleware(req, next)
-          }
-        }
-
-        return chain
-      },
+      value: buildMiddlewareChain,
       writable: true,
       configurable: true,
     },
@@ -126,7 +106,7 @@ export function registerMiddlewareHandling(RouterClass: typeof Router): void {
 
         try {
           // Build and execute optimized middleware chain
-          const chain = this.buildMiddlewareChain(middlewareStack)
+          const chain = resolveMiddlewareChain(this, middlewareStack)
           return await chain(req)
         }
         catch (error) {

@@ -7,6 +7,7 @@ import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
 import { markEnrichedNotFoundResponse } from '../response/markers'
 import { createHandlerInvoker } from './handler-resolver'
+import { resolveMiddlewareChain } from './middleware-chain'
 
 function getRequestPathname(url: string): string {
   let authorityStart: number
@@ -420,7 +421,7 @@ export function registerServerHandling(RouterClass: typeof Router): void {
               ? [...this.globalMiddleware, ...route.middleware]
               : [...this.globalMiddleware]
             middlewareStack.push((handlerReq: EnhancedRequest, _next: any) => invoke(handlerReq))
-            chain = this.buildMiddlewareChain(middlewareStack)!
+            chain = resolveMiddlewareChain(this, middlewareStack)
           }
           route._compiledChain = chain
           route._chainEpoch = epoch

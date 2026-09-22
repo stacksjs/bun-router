@@ -24,6 +24,7 @@ import { markEnrichedNotFoundResponse } from '../response/markers'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
+import { buildMiddlewareChain as buildCompatibleMiddlewareChain, resolveMiddlewareChain } from './middleware-chain'
 
 /**
  * Route compiler interface for pattern matching
@@ -1307,26 +1308,7 @@ export class Router {
    * Build an optimized middleware chain
    */
   buildMiddlewareChain(middlewares: MiddlewareHandler[]): (req: EnhancedRequest) => Promise<Response | null> {
-    if (middlewares.length === 0) {
-      return async (_req: EnhancedRequest) => null
-    }
-
-    // Build the chain from the end to start for better performance
-    let chain = async (_req: EnhancedRequest): Promise<Response | null> => null
-
-    for (let i = middlewares.length - 1; i >= 0; i--) {
-      const middleware = middlewares[i]
-      const nextChain = chain
-      chain = async (req: EnhancedRequest): Promise<Response | null> => {
-        const next = async (): Promise<Response> => {
-          const result = await nextChain(req)
-          return result || new Response(null, { status: 200 })
-        }
-        return middleware(req, next)
-      }
-    }
-
-    return chain
+    return buildCompatibleMiddlewareChain(middlewares)
   }
 
   /**
@@ -1339,7 +1321,7 @@ export class Router {
 
     try {
       // Build and execute optimized middleware chain
-      const chain = this.buildMiddlewareChain(middlewareStack)
+      const chain = resolveMiddlewareChain(this, middlewareStack)
       return await chain(req)
     }
     catch (error) {
