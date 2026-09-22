@@ -20,6 +20,7 @@ import type {
 } from '../types'
 import { createCookieAccessor } from '../request/cookie-accessor'
 import { getParsedQuery } from '../request/macros'
+import { markEnrichedNotFoundResponse } from '../response/markers'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
@@ -709,14 +710,14 @@ export class Router {
           if (this.fallbackHandler) {
             return await this.resolveHandler(this.fallbackHandler, enhancedReq)
           }
-          return new Response(JSON.stringify({
+          return markEnrichedNotFoundResponse(new Response(JSON.stringify({
             error: 'Not Found',
             path: url.pathname,
             method: req.method,
           }), {
             status: 404,
             headers: { 'Content-Type': 'application/json' },
-          })
+          }))
         }
         const middlewareStack = [...this.globalMiddleware, notFoundHandler]
         const response = await this.runMiddleware(enhancedReq, middlewareStack)
@@ -732,14 +733,14 @@ export class Router {
       }
 
       // No fallback handler, return a 404 with path context
-      return new Response(JSON.stringify({
+      return markEnrichedNotFoundResponse(new Response(JSON.stringify({
         error: 'Not Found',
         path: url.pathname,
         method: req.method,
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },
-      })
+      }))
     }
     catch (error) {
       console.error('Error handling request:', error)

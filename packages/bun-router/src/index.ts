@@ -54,6 +54,7 @@ export * from './session'
 // Response factory helpers
 export * from './response/compression'
 export * from './response/response-factory'
+export { ENRICHED_NOT_FOUND_RESPONSE } from './response/markers'
 
 // The Router class and routing features (fluent API, throttling, caching, …)
 export * from './router'

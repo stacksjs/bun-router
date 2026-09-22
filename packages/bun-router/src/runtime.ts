@@ -23,6 +23,7 @@ export {
   ResponseBuilder,
   responseBuilder,
 } from './response/response-factory'
+export { ENRICHED_NOT_FOUND_RESPONSE } from './response/markers'
 export { createTypedRouter } from './typed/router'
 
 export type {

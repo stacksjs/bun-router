@@ -5,9 +5,15 @@
  */
 
 import { describe, expect, it } from 'bun:test'
-import { Router } from '../src'
+import { ENRICHED_NOT_FOUND_RESPONSE, Router } from '../src'
+import { ENRICHED_NOT_FOUND_RESPONSE as RUNTIME_ENRICHED_NOT_FOUND_RESPONSE } from '../src/runtime'
 
 describe('Router 404/405 enrichment', () => {
+  it('exports one stable marker from both public entries', () => {
+    expect(ENRICHED_NOT_FOUND_RESPONSE).toBe(RUNTIME_ENRICHED_NOT_FOUND_RESPONSE)
+    expect(ENRICHED_NOT_FOUND_RESPONSE).toBe(Symbol.for('@stacksjs/bun-router:enriched-not-found-response') as typeof ENRICHED_NOT_FOUND_RESPONSE)
+  })
+
   it('404 body includes path + method', async () => {
     const router = new Router()
     router.get('/exists', () => new Response('ok'))
@@ -21,6 +27,18 @@ describe('Router 404/405 enrichment', () => {
     // server.ts) emits `success/message` shape; the legacy router.ts
     // path (still kept for non-serve callers) emits `error`. Accept either.
     expect(body.message === 'Not Found' || body.error === 'Not Found').toBe(true)
+  })
+
+  it('marks only the router default enriched 404', async () => {
+    const router = new Router()
+    const generated = await router.handleRequest(new Request('http://localhost/missing'))
+    expect((generated as Response & { [ENRICHED_NOT_FOUND_RESPONSE]?: true })[ENRICHED_NOT_FOUND_RESPONSE]).toBe(true)
+
+    const custom = new Response(JSON.stringify({ error: 'Not Found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect((custom as Response & { [ENRICHED_NOT_FOUND_RESPONSE]?: true })[ENRICHED_NOT_FOUND_RESPONSE]).toBeUndefined()
   })
 
   it('405 body includes path + method + allowed methods + Allow header', async () => {

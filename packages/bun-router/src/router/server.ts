@@ -5,6 +5,7 @@ import { getParsedCookies, getParsedQuery, getParsedURL, RequestWithMacros } fro
 import { runWithRequest, runWithRequestArguments, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
+import { markEnrichedNotFoundResponse } from '../response/markers'
 import { createHandlerInvoker } from './handler-resolver'
 
 function getRequestPathname(url: string): string {
@@ -657,12 +658,12 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // No fallback — emit a 404 enriched with path + method, also through
           // globalMiddleware so user middleware sees it.
           const notFoundHandler = (_req: EnhancedRequest, _next: any) => {
-            return new Response(JSON.stringify({
+            return markEnrichedNotFoundResponse(new Response(JSON.stringify({
               success: false,
               message: 'Not Found',
               path: pathname,
               method: req.method,
-            }), { status: 404, headers: corsHeaders })
+            }), { status: 404, headers: corsHeaders }))
           }
           if (this.globalMiddleware.length > 0) {
             const stack = [...this.globalMiddleware, notFoundHandler]
