@@ -6,6 +6,7 @@
 
 ## ⚡ Performance Improvements
 
+- **router**: identify enriched default 404 responses ([6f4a75d](https://github.com/stacksjs/bun-router/commit/6f4a75d)) _(by Chris <chrisbreuer93@gmail.com>)_
 - **router**: isolate the runtime initializer from root helpers ([65e3919](https://github.com/stacksjs/bun-router/commit/65e3919)) _(by Chris <chrisbreuer93@gmail.com>)_
 - **router**: publish a narrow runtime entry ([0ca8f67](https://github.com/stacksjs/bun-router/commit/0ca8f67)) _(by Chris <chrisbreuer93@gmail.com>)_
 
