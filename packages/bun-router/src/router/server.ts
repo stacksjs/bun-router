@@ -428,15 +428,11 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           route._chainMwLen = routeMwLen
         }
 
+        let response: Response | null | Promise<Response | null>
         try {
-          const response = chain!(enhancedReq)
-          if (routeMwLen !== 0 || globalMwLen !== 0)
-            return finishAsyncMatchedResponse(this, response, enhancedReq)
+          response = chain!(enhancedReq)
           if (response instanceof Promise)
             return finishAsyncMatchedResponse(this, response, enhancedReq)
-          return response
-            ? this.applyModifiedCookies(response, enhancedReq)
-            : new Response('No response from middleware chain', { status: 500 })
         }
         catch (error) {
           if (!this.errorHandler)
@@ -447,6 +443,10 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             ? response.then((handled: Response) => this.applyModifiedCookies(handled, enhancedReq))
             : this.applyModifiedCookies(response, enhancedReq)
         }
+
+        return response
+          ? this.applyModifiedCookies(response, enhancedReq)
+          : new Response('No response from middleware chain', { status: 500 })
       },
       writable: true,
       configurable: true,

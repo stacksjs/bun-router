@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import type { EnhancedRequest } from '../src/types'
+import { runInNewContext } from 'node:vm'
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { Router } from '../src/router'
 
@@ -98,19 +99,25 @@ describe('native routes (serve({ nativeRoutes: true }))', () => {
 })
 
 describe('native routes dispatch routing', () => {
-  it('returns synchronous handler responses without a Promise boundary', () => {
+  it('returns synchronous middleware responses without a Promise boundary', () => {
     const router: any = new Router()
+    router.use((req: EnhancedRequest, next: () => Response) => {
+      req.cookies.set('chain', 'sync')
+      return next()
+    })
     router.get('/sync', () => new Response('sync'))
 
     const routes = router._buildNativeRoutes()
     const result = routes['/sync'].GET(new Request('http://localhost/sync'))
 
     expect(result).toBeInstanceOf(Response)
+    expect(result.headers.get('set-cookie')).toContain('chain=sync')
   })
 
   it('preserves asynchronous handlers and custom error handling', async () => {
     const router: any = new Router()
-    router.errorHandler = (error: Error) => new Response(error.message, { status: 418 })
+    router.errorHandler = async (error: Error) => new Response(error.message, { status: 418 })
+    router.use(async (_request: EnhancedRequest, next: () => Response | Promise<Response>) => next())
     router.get('/async', async () => new Response('async'))
     router.get('/rejects', async () => {
       throw new Error('rejected')
@@ -124,6 +131,71 @@ describe('native routes dispatch routing', () => {
     const rejected = await routes['/rejects'].GET(new Request('http://localhost/rejects'))
     expect(rejected.status).toBe(418)
     expect(await rejected.text()).toBe('rejected')
+  })
+
+  it('assimilates cross-realm promises returned by middleware builder overrides', async () => {
+    const router: any = new Router()
+    const expected = new Response('payload', { status: 201 })
+    router.use((_req: EnhancedRequest, next: () => Response) => next())
+    router.buildMiddlewareChain = () => (req: EnhancedRequest) => {
+      req.cookies.set('chain', 'foreign')
+      return runInNewContext('Promise.resolve(value)', { value: expected })
+    }
+    router.get('/foreign', () => new Response('unused'))
+
+    const routes = router._buildNativeRoutes()
+    const pending = routes['/foreign'].GET(new Request('http://localhost/foreign'))
+    const response = await pending
+
+    expect(pending).toBeInstanceOf(Promise)
+    expect(response.status).toBe(201)
+    expect(await response.text()).toBe('payload')
+    expect(response.headers.get('set-cookie')).toContain('chain=foreign')
+  })
+
+  it('preserves an empty response from a middleware builder override', () => {
+    const router: any = new Router()
+    router.use((_req: EnhancedRequest, next: () => Response) => next())
+    router.buildMiddlewareChain = () => () => null
+    router.get('/empty', () => new Response('unused'))
+
+    const routes = router._buildNativeRoutes()
+    const response = routes['/empty'].GET(new Request('http://localhost/empty'))
+
+    expect(response).toBeInstanceOf(Response)
+    expect(response.status).toBe(500)
+  })
+
+  it('invokes custom error handlers once when synchronous cookie finalization fails', async () => {
+    const createRouter = () => {
+      const router: any = new Router()
+      let errorHandlerCalls = 0
+      router.errorHandler = () => new Response(String(++errorHandlerCalls))
+      router.use((req: EnhancedRequest, next: () => Response) => {
+        req.cookies.set('invalid', '\uD800')
+        return next()
+      })
+      router.get('/invalid-cookie', () => new Response('unused'))
+      return { router, getErrorHandlerCalls: () => errorHandlerCalls }
+    }
+
+    const originalConsoleError = console.error
+    console.error = () => {}
+    try {
+      const generic = createRouter()
+      const genericResponse = await generic.router.handleRequest(new Request('http://localhost/invalid-cookie'))
+      expect(await genericResponse.text()).toBe('1')
+      expect(generic.getErrorHandlerCalls()).toBe(1)
+
+      const native = createRouter()
+      const routes = native.router._buildNativeRoutes()
+      const nativeResponse = await routes['/invalid-cookie'].GET(new Request('http://localhost/invalid-cookie'))
+      expect(await nativeResponse.text()).toBe('1')
+      expect(native.getErrorHandlerCalls()).toBe(1)
+    }
+    finally {
+      console.error = originalConsoleError
+    }
   })
 
   it('applies response compression on the native path', async () => {

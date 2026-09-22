@@ -55,7 +55,9 @@ export function buildMiddlewareChain(middlewares: MiddlewareHandler[]): PublicMi
 }
 
 export function resolveMiddlewareChain(host: MiddlewareChainHost, middlewares: MiddlewareHandler[]): CompiledMiddlewareChain {
-  return host.buildMiddlewareChain === buildMiddlewareChain
-    ? compileMiddlewareChain(middlewares)
-    : host.buildMiddlewareChain(middlewares)
+  if (host.buildMiddlewareChain === buildMiddlewareChain)
+    return compileMiddlewareChain(middlewares)
+
+  const chain = host.buildMiddlewareChain(middlewares)
+  return request => normalizeMiddlewareResult(chain(request))
 }
