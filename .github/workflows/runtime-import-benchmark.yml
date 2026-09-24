@@ -36,7 +36,7 @@ jobs:
         run: bun run bench:runtime-import -- --pairs="$BENCH_PAIRS" --output=bench/runtime-import/results/ci.json
 
       - name: Upload raw diagnostic
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: runtime-import-diagnostic
           path: bench/runtime-import/results/ci.json
