@@ -6,6 +6,7 @@ import { runWithRequest, runWithRequestArguments, setCurrentRequest } from '../r
 import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
 import { markEnrichedNotFoundResponse } from '../response/markers'
+import { methodNotAllowedResponse } from '../response/method-not-allowed'
 import { createHandlerInvoker } from './handler-resolver'
 import { resolveMiddlewareChain } from './middleware-chain'
 
@@ -621,7 +622,8 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // debugging is one grep away, and (b) flow through globalMiddleware so cross-cutting
           // concerns (X-Request-ID, Server-Timing, audit logging, custom CORS) can observe
           // them. Previously these paths short-circuited entirely.
-          const allowedMethods = this.getAllowedMethods(pathname, hostname, true)
+          const allowedScan = this.scanAllowedMethods(pathname, hostname, true)
+          const allowedMethods = allowedScan.methods
           const corsHeaders = {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
@@ -629,18 +631,9 @@ export function registerServerHandling(RouterClass: typeof Router): void {
             'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
           }
 
-          if (allowedMethods.length > 0) {
+          if (this.shouldAnswerMethodNotAllowed(allowedScan)) {
             const methodNotAllowedHandler = (_req: EnhancedRequest, _next: any) => {
-              return new Response(JSON.stringify({
-                success: false,
-                message: 'Method Not Allowed',
-                path: pathname,
-                method: req.method,
-                allowed: allowedMethods,
-              }), {
-                status: 405,
-                headers: { ...corsHeaders, Allow: allowedMethods.join(', ') },
-              })
+              return methodNotAllowedResponse(pathname, req.method, allowedMethods, corsHeaders)
             }
             if (this.globalMiddleware.length > 0) {
               const stack = [...this.globalMiddleware, methodNotAllowedHandler]

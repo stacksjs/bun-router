@@ -21,10 +21,25 @@ import type {
 import { createCookieAccessor } from '../request/cookie-accessor'
 import { getParsedQuery } from '../request/macros'
 import { markEnrichedNotFoundResponse } from '../response/markers'
+import { methodNotAllowedResponse } from '../response/method-not-allowed'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
 import { buildMiddlewareChain as buildCompatibleMiddlewareChain, resolveMiddlewareChain } from './middleware-chain'
+
+/**
+ * Result of the route scan behind the 405-vs-404 decision.
+ *
+ * `methods` is every method registered for the path — what `Allow:` advertises.
+ * `concrete` is the subset matched by a literal or parameterised route rather
+ * than by a catch-all wildcard. The distinction matters because a wildcard
+ * matches every path under its prefix, so it carries no information about
+ * whether one particular path exists.
+ */
+export interface AllowedMethodsScan {
+  methods: string[]
+  concrete: string[]
+}
 
 /**
  * Route compiler interface for pattern matching
@@ -93,9 +108,9 @@ export class Router {
   // cache against this epoch and rebuild when it moves
   _mwEpoch = 0
 
-  // Memoized getAllowedMethods results (the 405-vs-404 scan), keyed by
+  // Memoized scanAllowedMethods results (the 405-vs-404 scan), keyed by
   // domain:pathname. Cleared whenever routes change.
-  _allowedMethodsCache: Map<string, string[]> = new Map()
+  _allowedMethodsCache: Map<string, AllowedMethodsScan> = new Map()
 
   config: RouterConfig = {
     verbose: false,
@@ -676,21 +691,13 @@ export class Router {
       // endpoint, stale SPA cache, missing route registration) is one grep away.
       // Both responses still flow through globalMiddleware so user middleware
       // (X-Request-ID, audit, custom CORS) sees them.
-      const allowedMethods = this.getAllowedMethods(url.pathname, hostname)
+      const allowedScan = this.scanAllowedMethods(url.pathname, hostname)
+      const allowedMethods = allowedScan.methods
 
-      if (allowedMethods.length > 0) {
+      if (this.shouldAnswerMethodNotAllowed(allowedScan)) {
         const methodNotAllowedHandler = async (_req: EnhancedRequest, _next: NextFunction) => {
-          return new Response(JSON.stringify({
-            error: 'Method Not Allowed',
-            path: url.pathname,
-            method: req.method,
-            allowed: allowedMethods,
-          }), {
-            status: 405,
-            headers: {
-              'Content-Type': 'application/json',
-              'Allow': allowedMethods.join(', '),
-            },
+          return methodNotAllowedResponse(url.pathname, req.method, allowedMethods, {
+            'Content-Type': 'application/json',
           })
         }
 
@@ -790,10 +797,28 @@ export class Router {
   }
 
   /**
-   * Get all allowed HTTP methods for a given path
-   * Used to determine if a 405 Method Not Allowed should be returned instead of 404
+   * Get all allowed HTTP methods for a given path — what a 405 advertises in
+   * its `Allow` header.
+   *
+   * Whether to answer 405 at all is `shouldAnswerMethodNotAllowed`'s call, not
+   * a question of this list being non-empty: see `scanAllowedMethods`.
    */
   getAllowedMethods(path: string, domain?: string, pathIsNormalized = false): string[] {
+    return this.scanAllowedMethods(path, domain, pathIsNormalized).methods
+  }
+
+  /**
+   * The same scan as `getAllowedMethods`, additionally reporting which methods
+   * were matched by a concrete (literal or parameterised) route.
+   *
+   * `shouldAnswerMethodNotAllowed` needs that split. A catch-all preflight
+   * route — `route.options('/api/*')`, the pattern Stacks' default CORS
+   * middleware documents — matches every path under its prefix, so on its own
+   * it is no evidence that a given path exists. Counting it as evidence made
+   * 404 unreachable for the whole prefix: unmatched paths answered 405 with
+   * `Allow: OPTIONS`, and `fallback()` stopped firing. See stacksjs/bun-router#908.
+   */
+  scanAllowedMethods(path: string, domain?: string, pathIsNormalized = false): AllowedMethodsScan {
     let url: URL | undefined
     let pathname = path
     if (!pathIsNormalized) {
@@ -810,12 +835,17 @@ export class Router {
     }
 
     const methods: Set<string> = new Set()
+    // Methods backed by a route that is not a catch-all wildcard
+    const concrete: Set<string> = new Set()
 
-    // Static routes: one map lookup per registered method
+    // Static routes: one map lookup per registered method. The registration
+    // guard keeps `*` and `{param}` paths out of this map, so every hit here
+    // is by definition concrete.
     for (const [method, routesByPath] of this.staticRoutes) {
       const staticRoute = routesByPath.get(pathname)
       if (staticRoute && (!domain || !staticRoute.domain || staticRoute.domain === domain)) {
         methods.add(method)
+        concrete.add(method)
       }
     }
 
@@ -827,19 +857,35 @@ export class Router {
       : this.routes
 
     for (const route of potentialRoutes) {
-      if (methods.has(route.method)) {
+      // Once a method is backed by a concrete route there is nothing left to
+      // learn about it, so this keeps the original early-out for the common
+      // (wildcard-free) table, where `concrete` and `methods` move together.
+      if (concrete.has(route.method)) {
         continue
       }
-      if (route.path === pathname) {
-        methods.add(route.method)
+
+      // Classified by the route's own shape, not by which branch below matches:
+      // `matchPath` short-circuits wildcards, so a `/api/*` route is matched by
+      // the pattern branch and never reaches the explicit wildcard check.
+      const isCatchAll = route.path.includes('*')
+      if (isCatchAll && methods.has(route.method)) {
         continue
       }
-      if (route.pattern && route.pattern.exec(url ??= new URL(pathname, 'http://localhost'))) {
-        methods.add(route.method)
+
+      let matched = route.path === pathname
+      if (!matched && route.pattern && route.pattern.exec(url ??= new URL(pathname, 'http://localhost'))) {
+        matched = true
+      }
+      if (!matched && route.path.endsWith('*') && pathname.startsWith(route.path.slice(0, -1))) {
+        matched = true
+      }
+      if (!matched) {
         continue
       }
-      if (route.path.endsWith('*') && pathname.startsWith(route.path.slice(0, -1))) {
-        methods.add(route.method)
+
+      methods.add(route.method)
+      if (!isCatchAll) {
+        concrete.add(route.method)
       }
     }
 
@@ -847,13 +893,40 @@ export class Router {
     if (methods.has('GET')) {
       methods.add('HEAD')
     }
+    if (concrete.has('GET')) {
+      concrete.add('HEAD')
+    }
 
-    const result = Array.from(methods)
+    const result: AllowedMethodsScan = { methods: Array.from(methods), concrete: Array.from(concrete) }
     if (this._allowedMethodsCache.size >= 10_000) {
       this._allowedMethodsCache.clear()
     }
     this._allowedMethodsCache.set(cacheKey, result)
     return result
+  }
+
+  /**
+   * Whether an unmatched request should answer 405 rather than 404.
+   *
+   * A 405 asserts "this path exists, try another verb", which is only honest if
+   * some other method really would match this path. Any non-OPTIONS method is
+   * taken at face value — a functional wildcard like `route.get('/files/*')`
+   * genuinely serves `GET /files/anything`, so a `PUT` there is a real method
+   * mismatch and still earns 405 with `Allow: GET, HEAD`.
+   *
+   * OPTIONS is the exception. A bare preflight catch-all exists to answer CORS,
+   * not to expose a resource, so when OPTIONS is all that is on offer and it
+   * came from a wildcard, the honest answer is 404. A literal
+   * `route.options('/api/health')` still answers 405, because that registration
+   * names a path.
+   */
+  shouldAnswerMethodNotAllowed(scan: AllowedMethodsScan): boolean {
+    for (const method of scan.methods) {
+      if (method !== 'OPTIONS') {
+        return true
+      }
+    }
+    return scan.concrete.includes('OPTIONS')
   }
 
   /**
