@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.21...v0.1.22)
+
+## 🐛 Bug Fixes
+
+- **security**: read the client address through clientAddress() everywhere ([332527a](https://github.com/stacksjs/bun-router/commit/332527a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.22 ([b8fe2b1](https://github.com/stacksjs/bun-router/commit/b8fe2b1)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.20...v0.1.21)
 
 ## 🐛 Bug Fixes
