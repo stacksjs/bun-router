@@ -49,7 +49,9 @@ export type { CookieAccessorSinks } from './request/cookie-accessor'
 export {
   addressInRanges,
   clientAddress,
+  clientAddressChain,
   CLOUDFLARE_IP_RANGES,
+  isTrustedProxyPeer,
   normalizeAddress,
   peerAddress,
   PRIVATE_NETWORK_RANGES,

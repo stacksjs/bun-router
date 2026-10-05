@@ -1,5 +1,6 @@
 import type { EnhancedRequest, MiddlewareHandler, Route } from '../types'
 import type { Router } from './router'
+import { clientAddress } from '../request/client-address'
 
 // Type placeholders for middleware pipeline
 export type SkipConditionFn = (_req: EnhancedRequest) => boolean
@@ -180,7 +181,7 @@ export class MiddlewareFactory {
         return next()
       }
 
-      const clientId = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
+      const clientId = clientAddress(req) ?? 'unknown'
       const key = `rate_limit:${clientId}`
 
       const current: RateLimitEntry = cache.get<RateLimitEntry>(key) || { count: 0, resetTime: Date.now() + options.windowMs }

@@ -1,5 +1,7 @@
+import type { ClientAddressOptions } from '../request/client-address'
 import type { EnhancedRequest, NextFunction } from '../types'
 import { config } from '../config'
+import { addressInRanges, clientAddress } from '../request/client-address'
 
 export interface DDoSProtectionOptions {
   enabled?: boolean
@@ -9,9 +11,17 @@ export interface DDoSProtectionOptions {
   burstLimit?: number
   windowSize?: number
   blockDuration?: number
+  /** Addresses or CIDR ranges never limited. */
   whitelistedIPs?: string[]
+  /** Addresses or CIDR ranges always refused. */
   blacklistedIPs?: string[]
+  /**
+   * Read the client from forwarding headers when a trusted proxy delivered
+   * the request (see `clientAddress`). False keys on the socket peer alone.
+   */
   trustProxy?: boolean
+  /** Which proxies count as trusted - see `clientAddress()`. */
+  clientAddress?: ClientAddressOptions
   skipSuccessfulRequests?: boolean
   skipFailedRequests?: boolean
   keyGenerator?: (req: EnhancedRequest) => string
@@ -39,6 +49,11 @@ export interface DDoSRateLimitInfo extends RequestInfo {
   retryAfter: number
 }
 
+/** `address` is listed outright, or falls inside a listed CIDR range. */
+function matchesAddress(address: string, list: readonly string[] | undefined): boolean {
+  return !!list && (list.includes(address) || addressInRanges(address, list))
+}
+
 export default class DDoSProtection {
   private options: DDoSProtectionOptions
   private requestStore: Map<string, RequestInfo> = new Map()
@@ -58,6 +73,7 @@ export default class DDoSProtection {
       whitelistedIPs: options.whitelistedIPs ?? ddosConfig.whitelistedIPs ?? [],
       blacklistedIPs: options.blacklistedIPs ?? ddosConfig.blacklistedIPs ?? [],
       trustProxy: options.trustProxy ?? ddosConfig.trustProxy ?? true,
+      clientAddress: options.clientAddress,
       skipSuccessfulRequests: options.skipSuccessfulRequests ?? ddosConfig.skipSuccessfulRequests ?? false,
       skipFailedRequests: options.skipFailedRequests ?? ddosConfig.skipFailedRequests ?? false,
       keyGenerator: options.keyGenerator ?? this.defaultKeyGenerator.bind(this),
@@ -72,16 +88,16 @@ export default class DDoSProtection {
     }
   }
 
+  /**
+   * The client's address as trusted proxies report it. This used to take the
+   * first `X-Forwarded-For` entry, which the client writes: a fresh one per
+   * request never hit a limit, and naming a whitelisted address skipped them.
+   */
   private defaultKeyGenerator(req: EnhancedRequest): string {
-    const forwarded = req.headers.get('x-forwarded-for')
-    const realIP = req.headers.get('x-real-ip')
-    const cfIP = req.headers.get('cf-connecting-ip')
-
-    if (this.options.trustProxy && forwarded) {
-      return forwarded.split(',')[0].trim()
-    }
-
-    return realIP || cfIP || 'unknown'
+    const options = this.options.trustProxy
+      ? this.options.clientAddress
+      : { ...this.options.clientAddress, trustedProxies: [] }
+    return clientAddress(req, options) ?? 'unknown'
   }
 
   private startCleanupInterval(): void {
@@ -104,11 +120,11 @@ export default class DDoSProtection {
   }
 
   private isWhitelisted(ip: string): boolean {
-    return this.options.whitelistedIPs?.includes(ip) ?? false
+    return matchesAddress(ip, this.options.whitelistedIPs)
   }
 
   private isBlacklisted(ip: string): boolean {
-    return this.options.blacklistedIPs?.includes(ip) ?? false
+    return matchesAddress(ip, this.options.blacklistedIPs)
   }
 
   private getRateLimitInfo(key: string, now: number): RequestInfo {

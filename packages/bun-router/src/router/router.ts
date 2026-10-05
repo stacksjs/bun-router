@@ -153,7 +153,6 @@ export class Router {
       return createRateLimitMiddleware({
         maxAttempts: config.maxAttempts || 60,
         windowMs: config.windowMs,
-        keyGenerator: (req: EnhancedRequest) => req.headers.get('x-forwarded-for') || 'anonymous',
       })
     })
 

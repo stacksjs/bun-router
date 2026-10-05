@@ -5,6 +5,7 @@
  */
 
 import type { EnhancedRequest } from '../types'
+import { clientAddress } from '../request/client-address'
 
 export interface TraceConfig {
   serviceName: string
@@ -527,7 +528,7 @@ export function createTracingMiddleware(_config?: Partial<TraceConfig>) {
       'http.method': req.method,
       'http.url': req.url,
       'http.user_agent': req.headers.get('user-agent') || '',
-      'http.remote_addr': req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      'http.remote_addr': clientAddress(req) ?? 'unknown',
     })
 
     // Add span to request for access in handlers

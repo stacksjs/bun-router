@@ -1,5 +1,6 @@
 import type { EnhancedRequest, MiddlewareHandler } from '../types'
 import type { LRUCacheOptions } from './lru-cache'
+import { clientAddress } from '../request/client-address'
 import { LRUCache } from './lru-cache'
 
 /**
@@ -434,7 +435,7 @@ export class MemoizationPatterns {
     return new MiddlewareMemoizer({
       ...options,
       keyGenerator: (req) => {
-        const clientId = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
+        const clientId = clientAddress(req) ?? 'unknown'
         return `ratelimit:${clientId}`
       },
       shouldMemoize: (_req, _result) => {

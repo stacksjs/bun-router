@@ -1,5 +1,7 @@
+import type { ClientAddressOptions } from '../request/client-address'
 import type { EnhancedRequest, NextFunction } from '../types'
 import { config } from '../config'
+import { addressInRanges, clientAddress, PRIVATE_NETWORK_RANGES } from '../request/client-address'
 
 export interface SecurityOptions {
   // Input validation and sanitization
@@ -26,7 +28,9 @@ export interface SecurityOptions {
   // IP filtering and geoblocking
   ipFiltering?: {
     enabled?: boolean
+    /** Addresses or CIDR ranges allowed through; anything else is refused. */
     whitelist?: string[]
+    /** Addresses or CIDR ranges refused. */
     blacklist?: string[]
     blockPrivateIPs?: boolean
     blockCloudProviders?: boolean
@@ -53,6 +57,13 @@ export interface SecurityOptions {
     }>
   }
 
+  /**
+   * Which proxies' forwarding headers name the client - see `clientAddress()`.
+   * Loopback and private networks by default, plus `CF-Connecting-IP` when the
+   * delivering hop is Cloudflare.
+   */
+  clientAddress?: ClientAddressOptions
+
   // Response security
   responseSecurity?: {
     enabled?: boolean
@@ -61,6 +72,11 @@ export interface SecurityOptions {
     sanitizeErrors?: boolean
     preventInfoDisclosure?: boolean
   }
+}
+
+/** `address` is listed outright, or falls inside a listed CIDR range. */
+function matchesAddress(address: string, list: readonly string[]): boolean {
+  return list.includes(address) || addressInRanges(address, list)
 }
 
 export default class Security {
@@ -143,6 +159,7 @@ export default class Security {
         preventInfoDisclosure: true,
         ...options.responseSecurity,
       },
+      clientAddress: options.clientAddress,
     }
 
     this.initializePatterns()
@@ -217,26 +234,18 @@ export default class Security {
     ]
   }
 
+  /**
+   * The client's address as trusted proxies report it. This used to take the
+   * first `X-Forwarded-For` entry, which the client writes - so the whitelist
+   * let in anyone who named a whitelisted address, and the blacklist let out
+   * anyone who named a different one.
+   */
   private getClientIP(req: EnhancedRequest): string {
-    return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || req.headers.get('x-real-ip')
-      || req.headers.get('cf-connecting-ip')
-      || req.headers.get('x-client-ip')
-      || 'unknown'
+    return clientAddress(req, this.options.clientAddress) ?? 'unknown'
   }
 
   private isPrivateIP(ip: string): boolean {
-    const privateRanges = [
-      /^10\./,
-      /^172\.(1[6-9]|2\d|3[01])\./,
-      /^192\.168\./,
-      /^127\./,
-      /^169\.254\./,
-      /^::1$/,
-      /^fc00:/,
-      /^fe80:/,
-    ]
-    return privateRanges.some(range => range.test(ip))
+    return addressInRanges(ip, PRIVATE_NETWORK_RANGES)
   }
 
   private validateInput(input: string): { isValid: boolean, threats: string[] } {
@@ -329,12 +338,12 @@ export default class Security {
       const ipConfig = this.options.ipFiltering
 
       // Check whitelist
-      if (ipConfig.whitelist?.length && !ipConfig.whitelist.includes(clientIP)) {
+      if (ipConfig.whitelist?.length && !matchesAddress(clientIP, ipConfig.whitelist)) {
         return new Response('Access Denied', { status: 403 })
       }
 
       // Check blacklist
-      if (ipConfig.blacklist?.includes(clientIP)) {
+      if (ipConfig.blacklist && matchesAddress(clientIP, ipConfig.blacklist)) {
         return new Response('Access Denied', { status: 403 })
       }
 

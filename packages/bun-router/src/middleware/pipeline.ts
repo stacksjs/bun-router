@@ -1,5 +1,6 @@
 import type { EnhancedRequest, MiddlewareHandler, NextFunction } from '../types'
 import process from 'node:process'
+import { clientAddress } from '../request/client-address'
 
 /**
  * Middleware pipeline with composition caching, conditional execution,
@@ -421,7 +422,7 @@ export const MiddlewareFactory = {
     const requests = new Map<string, number[]>()
 
     return async (req, next) => {
-      const ip = req.headers.get('x-forwarded-for') || 'unknown'
+      const ip = clientAddress(req) ?? 'unknown'
       const now = Date.now()
       const windowStart = now - options.windowMs
 

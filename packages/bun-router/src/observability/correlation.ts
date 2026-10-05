@@ -5,6 +5,7 @@
  */
 
 import type { EnhancedRequest } from '../types'
+import { clientAddress } from '../request/client-address'
 
 export interface CorrelationConfig {
   headerName?: string
@@ -141,9 +142,7 @@ export class CorrelationManager {
         method: req.method,
         url: req.url,
         userAgent: headers.get('user-agent') || '',
-        remoteAddr: headers.get('x-forwarded-for')
-          || headers.get('x-real-ip')
-          || 'unknown',
+        remoteAddr: clientAddress(req) ?? 'unknown',
       },
       startTime: Date.now(),
       headers: propagationHeaders,

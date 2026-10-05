@@ -5,6 +5,8 @@
  */
 
 import type { EnhancedRequest } from '../types'
+import type { ClientAddressOptions } from './client-address'
+import { clientAddress, clientAddressChain, isTrustedProxyPeer } from './client-address'
 
 export interface RequestMacro {
   name: string
@@ -302,25 +304,27 @@ export const BuiltInRequestMacros = {
   },
 
   /**
-   * Get client IP address
+   * The client's address, as far as it can be trusted - see `clientAddress()`.
+   *
+   * Forwarding headers count only when the socket peer is a trusted proxy
+   * (loopback and private networks by default), walked from the right, and
+   * `CF-Connecting-IP` only when the hop that delivered the request is
+   * Cloudflare. This used to return the first `X-Forwarded-For` entry, which
+   * is whatever the client wrote: anything keyed on it - an allow-list, a
+   * block-list, a rate limit - could be talked past with one header.
    */
-  ip(this: EnhancedRequest): string {
-    return this.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || this.headers.get('x-real-ip')
-      || this.headers.get('cf-connecting-ip')
-      || this.headers.get('x-client-ip')
-      || 'unknown'
+  ip(this: EnhancedRequest, options?: ClientAddressOptions): string {
+    return clientAddress(this, options) ?? 'unknown'
   },
 
   /**
-   * Get all client IPs (including proxies)
+   * The client's address followed by each trusted proxy that relayed the
+   * request (see `clientAddressChain()`). Hops a client wrote to the left of
+   * its own address are not included.
    */
-  ips(this: EnhancedRequest): string[] {
-    const forwardedFor = this.headers.get('x-forwarded-for')
-    if (forwardedFor) {
-      return forwardedFor.split(',').map(ip => ip.trim())
-    }
-    return [BuiltInRequestMacros.ip.call(this)]
+  ips(this: EnhancedRequest, options?: ClientAddressOptions): string[] {
+    const chain = clientAddressChain(this, options)
+    return chain.length > 0 ? chain : ['unknown']
   },
 
   /**
@@ -683,11 +687,13 @@ export const BuiltInRequestMacros = {
   },
 
   /**
-   * Check if request is from trusted proxy
+   * Whether the socket peer that delivered the request is one of
+   * `trustedProxies` (addresses or CIDR ranges; loopback and private networks
+   * by default). Reads the connection, not a header: it used to compare the
+   * first `X-Forwarded-For` entry, so a client could claim to be the proxy.
    */
-  isFromTrustedProxy(this: EnhancedRequest, trustedProxies: string[] = []): boolean {
-    const ip = BuiltInRequestMacros.ip.call(this)
-    return trustedProxies.includes(ip)
+  isFromTrustedProxy(this: EnhancedRequest, trustedProxies?: string[]): boolean {
+    return isTrustedProxyPeer(this, trustedProxies)
   },
 
   /**

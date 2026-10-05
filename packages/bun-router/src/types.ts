@@ -1,4 +1,5 @@
 import type { Server } from 'bun'
+import type { ClientAddressOptions } from './request/client-address'
 import type { Router } from './router/router'
 import type { KnownActionPath, MiddlewareReference } from './types/registry'
 import type { SessionManager } from './session/index'
@@ -2088,8 +2089,8 @@ export interface RequestMacroMethods {
   isSecure: () => boolean
 
   // Client information
-  ip: () => string
-  ips: () => string[]
+  ip: (options?: ClientAddressOptions) => string
+  ips: (options?: ClientAddressOptions) => string[]
   userAgent: () => string
   referer: () => string | null
 

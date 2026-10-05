@@ -2,6 +2,7 @@ import type { EnhancedRequest as BaseEnhancedRequest, Middleware, NextFunction }
 import process from 'node:process'
 import { config } from '../config'
 import { getNodeCrypto } from '../crypto'
+import { clientAddress } from '../request/client-address'
 
 type Timer = ReturnType<typeof setTimeout>
 
@@ -304,10 +305,7 @@ export default class PerformanceMonitor implements Middleware {
   }
 
   private getClientIP(req: EnhancedRequest): string {
-    return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || req.headers.get('x-real-ip')
-      || req.headers.get('cf-connecting-ip')
-      || 'unknown'
+    return clientAddress(req) ?? 'unknown'
   }
 
   private async collectSystemMetrics(): Promise<{

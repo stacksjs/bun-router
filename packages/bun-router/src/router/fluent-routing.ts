@@ -85,7 +85,6 @@ export class FluentRouteBuilder {
       this.throttleConfig = {
         maxAttempts: parsed.maxAttempts ?? 60,
         windowMs: parsed.windowMs,
-        keyGenerator: (req: EnhancedRequest) => req.headers.get('x-forwarded-for') || 'anonymous',
       }
     }
     else {
@@ -293,7 +292,6 @@ export class FluentRouter {
       const handler = createRateLimitMiddleware({
         maxAttempts: parsed.maxAttempts,
         windowMs: parsed.windowMs,
-        keyGenerator: (req: EnhancedRequest) => req.headers.get('x-forwarded-for') || 'anonymous',
       })
 
       const adapted: MiddlewareHandler = async (req: EnhancedRequest, next: NextFunction) => {

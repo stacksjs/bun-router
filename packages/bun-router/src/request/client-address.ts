@@ -192,6 +192,43 @@ function forwardedHops(req: Request): string[] {
 }
 
 /**
+ * The client's address followed by each trusted proxy that relayed the
+ * request, ending with the socket peer when there is one - the part of the
+ * forwarding chain that can be believed (see the module comment). Hops to the
+ * left of the client were written by the client and are left out.
+ *
+ * Empty only when there is nothing at all to go on: no socket peer and no
+ * forwarding header.
+ */
+export function clientAddressChain(req: Request, options: ClientAddressOptions = {}): string[] {
+  const trusted = options.trustedProxies ?? PRIVATE_NETWORK_RANGES
+  const peer = peerAddress(req)
+
+  if (peer && !addressInRanges(peer, trusted))
+    return [peer]
+
+  const hops = forwardedHops(req)
+  const chain: string[] = peer ? [peer] : []
+  for (let i = hops.length - 1; i >= 0; i--) {
+    chain.unshift(hops[i])
+    if (!addressInRanges(hops[i], trusted))
+      break
+  }
+
+  const client = chain[0]
+  if (client && options.cloudflare !== false && addressInRanges(client, CLOUDFLARE_IP_RANGES)) {
+    const visitor = req.headers.get('cf-connecting-ip')
+    if (visitor) {
+      const address = normalizeAddress(visitor)
+      if (isIP(address) !== 0)
+        chain.unshift(address)
+    }
+  }
+
+  return chain
+}
+
+/**
  * The client's address, believing forwarding headers only as far as trusted
  * proxies vouch for them (see the module comment). Returns `null` only when
  * there is nothing at all to go on: no socket peer and no forwarding header.
@@ -201,28 +238,15 @@ function forwardedHops(req: Request): string[] {
  * as a trusted proxy's would be.
  */
 export function clientAddress(req: Request, options: ClientAddressOptions = {}): string | null {
-  const trusted = options.trustedProxies ?? PRIVATE_NETWORK_RANGES
+  return clientAddressChain(req, options)[0] ?? null
+}
+
+/**
+ * Whether the request was delivered by a trusted proxy: its socket peer is in
+ * `trustedProxies` (addresses or CIDR ranges, default `PRIVATE_NETWORK_RANGES`).
+ * False when there is no socket peer to read, since then no proxy delivered it.
+ */
+export function isTrustedProxyPeer(req: Request, trustedProxies: readonly string[] = PRIVATE_NETWORK_RANGES): boolean {
   const peer = peerAddress(req)
-
-  if (peer && !addressInRanges(peer, trusted))
-    return peer
-
-  const hops = forwardedHops(req)
-  let client: string | null = peer
-  for (let i = hops.length - 1; i >= 0; i--) {
-    client = hops[i]
-    if (!addressInRanges(client, trusted))
-      break
-  }
-
-  if (client && options.cloudflare !== false && addressInRanges(client, CLOUDFLARE_IP_RANGES)) {
-    const visitor = req.headers.get('cf-connecting-ip')
-    if (visitor) {
-      const address = normalizeAddress(visitor)
-      if (isIP(address) !== 0)
-        return address
-    }
-  }
-
-  return client
+  return peer !== null && addressInRanges(peer, trustedProxies)
 }
