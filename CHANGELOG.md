@@ -1,3 +1,21 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.20...v0.1.21)
+
+## 🐛 Bug Fixes
+
+- **throttle**: key anonymous requests on the client a trusted proxy names ([f322e0b](https://github.com/stacksjs/bun-router/commit/f322e0b)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **router**: do not let a preflight catch-all make 404 unreachable ([282e89f](https://github.com/stacksjs/bun-router/commit/282e89f)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.21 ([2789962](https://github.com/stacksjs/bun-router/commit/2789962)) _(by Chris <chrisbreuer93@gmail.com>)_
+- run @stacksjs/logsmith, not the unrelated npm 'logsmith' ([ce39dee](https://github.com/stacksjs/bun-router/commit/ce39dee)) _(by Chris <chrisbreuer93@gmail.com>)_
+- release through @stacksjs/bumpx, not the unrelated npm 'bumpx' ([fdc415a](https://github.com/stacksjs/bun-router/commit/fdc415a)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.18...v0.1.19)
 
 ## 🐛 Bug Fixes
