@@ -2,6 +2,7 @@ import type { Server } from 'bun'
 import type { EnhancedRequest, HTTPMethod, Route, ServerOptions } from '../types'
 import type { Router } from './router'
 import { getParsedCookies, getParsedQuery, getParsedURL, RequestWithMacros } from '../request/macros'
+import { registerPeerSource } from '../request/client-address'
 import { runWithRequest, runWithRequestArguments, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
@@ -295,6 +296,8 @@ export function registerServerHandling(RouterClass: typeof Router): void {
 
         // Start the server
         this.serverInstance = Bun.serve(serverOptions)
+        // Middleware holding only a request asks this server for its socket peer.
+        registerPeerSource(this.serverInstance)
 
         if (this.config.verbose) {
           const port = this.serverInstance.port
@@ -341,6 +344,8 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           reloadOptions.routes = serveRoutes
         }
         this.serverInstance = Bun.serve(reloadOptions)
+        // Middleware holding only a request asks this server for its socket peer.
+        registerPeerSource(this.serverInstance)
 
         if (this.config.verbose) {
           console.log(`🔄 Server reloaded at http://${hostname}:${port}`)

@@ -18,6 +18,7 @@ import type {
   WebSocketConfig,
   WebSocketData,
 } from '../types'
+import { registerPeerSource } from '../request/client-address'
 import { createCookieAccessor } from '../request/cookie-accessor'
 import { getParsedQuery } from '../request/macros'
 import { markEnrichedNotFoundResponse } from '../response/markers'
@@ -603,6 +604,7 @@ export class Router {
 
     // Start the server
     this.serverInstance = Bun.serve(serverOptions) as Server<WebSocketData>
+    registerPeerSource(this.serverInstance)
 
     if (this.config.verbose) {
       const port = this.serverInstance.port

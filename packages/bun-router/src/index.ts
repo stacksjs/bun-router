@@ -45,6 +45,18 @@ export { decodeParam } from './utils/decode-param'
 export { createCookieAccessor, createInMemoryCookieAccessor } from './request/cookie-accessor'
 export type { CookieAccessorSinks } from './request/cookie-accessor'
 
+// The client's address, believing forwarding headers only from trusted proxies
+export {
+  addressInRanges,
+  clientAddress,
+  CLOUDFLARE_IP_RANGES,
+  normalizeAddress,
+  peerAddress,
+  PRIVATE_NETWORK_RANGES,
+  registerPeerSource,
+} from './request/client-address'
+export type { ClientAddressOptions } from './request/client-address'
+
 // Request context (AsyncLocalStorage-backed current request; lazy — see enableRequestContext)
 export { enableRequestContext, getCurrentRequest, request, runWithRequest, runWithRequestArguments, setCurrentRequest } from './request/context'
 

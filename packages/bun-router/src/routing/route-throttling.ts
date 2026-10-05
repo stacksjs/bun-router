@@ -1,5 +1,7 @@
+import type { ClientAddressOptions } from '../request/client-address'
 import type { EnhancedRequest, MiddlewareHandler, NextFunction, ThrottlePattern } from '../types'
 import { LRUCache } from '../cache/lru-cache'
+import { clientAddress } from '../request/client-address'
 
 /**
  * Throttle configuration for rate limiting
@@ -12,6 +14,17 @@ export interface ThrottleConfig {
   onLimitReached?: (req: EnhancedRequest, info: RateLimitInfo) => Response // Custom response when limit reached
   headers?: boolean // Include rate limit headers in response
   maxRequests?: number
+  /**
+   * Which proxies' forwarding headers name the client for the default key.
+   * See `clientAddress()`: loopback and private networks by default, and
+   * `CF-Connecting-IP` when the delivering hop is Cloudflare.
+   */
+  clientAddress?: ClientAddressOptions
+}
+
+/** The client address a limiter keys an anonymous request on. */
+function limiterAddress(req: EnhancedRequest, options?: ClientAddressOptions): string {
+  return clientAddress(req, options) ?? 'unknown'
 }
 
 /**
@@ -109,39 +122,24 @@ export class RateLimiter {
       return this.config.keyGenerator(req)
     }
 
-    // Default key generation: IP + User ID (if available)
-    const ip = this.getClientIP(req)
+    // Default key: the authenticated user when auth ran first, else the client
+    // address. Each user gets their own budget however many share an address.
     const userId = req.user?.id
 
     if (userId) {
       return `user:${userId}`
     }
 
-    return `ip:${ip}`
+    return `ip:${this.getClientIP(req)}`
   }
 
   /**
-   * Extract client IP from request
+   * The client's address. Forwarding headers count only as far as trusted
+   * proxies vouch for them - the first `X-Forwarded-For` entry is whatever the
+   * client wrote, so keying on it handed out a fresh budget per request.
    */
   private getClientIP(req: EnhancedRequest): string {
-    // Check common headers for real IP
-    const forwardedFor = req.headers.get('x-forwarded-for')
-    if (forwardedFor) {
-      return forwardedFor.split(',')[0].trim()
-    }
-
-    const realIP = req.headers.get('x-real-ip')
-    if (realIP) {
-      return realIP
-    }
-
-    const cfConnectingIP = req.headers.get('cf-connecting-ip')
-    if (cfConnectingIP) {
-      return cfConnectingIP
-    }
-
-    // Fallback to a default IP if none found
-    return 'unknown'
+    return limiterAddress(req, this.config.clientAddress)
   }
 
   /**
@@ -346,7 +344,7 @@ export const ThrottleFactory = {
     maxAttempts: 5,
     windowMs: 15 * 60 * 1000,
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      const ip = limiterAddress(req)
       const email = (req.jsonBody as any)?.email || (req.formBody as any)?.email || (req.query as any)?.email || 'unknown'
       return `auth:${ip}:${email}`
     },
@@ -377,8 +375,7 @@ export const ThrottleFactory = {
       if (userId) {
         return `upload:user:${userId}`
       }
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
-      return `upload:ip:${ip}`
+      return `upload:ip:${limiterAddress(req)}`
     },
   }),
 
@@ -416,13 +413,7 @@ export const ThrottleFactory = {
   perIP: (maxAttempts: number, windowMinutes: number): ThrottleConfig => ({
     maxAttempts,
     windowMs: windowMinutes * 60 * 1000,
-    keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]
-        || req.headers.get('x-real-ip')
-        || req.headers.get('cf-connecting-ip')
-        || 'unknown'
-      return `ip:${ip}`
-    },
+    keyGenerator: req => `ip:${limiterAddress(req)}`,
   }),
 
   /**
