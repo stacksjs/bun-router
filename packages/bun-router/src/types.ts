@@ -752,6 +752,13 @@ export interface RouterConfig {
    * }
    */
   queryPreservation?: QueryPreservationConfig
+  /**
+   * Answers a CORS preflight (`OPTIONS`) for a path with no `OPTIONS` route of
+   * its own. Defaults to the `server.cors` policy (see `corsPreflightResponse`).
+   * A framework with its own CORS configuration passes its preflight here, so
+   * the browser is answered by the policy the app actually configured.
+   */
+  preflight?: (req: Request) => Response | Promise<Response>
 }
 
 export type RouterOptions = Partial<RouterConfig>

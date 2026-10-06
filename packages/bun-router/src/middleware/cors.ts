@@ -41,16 +41,13 @@ export default class Cors {
     const origin = configuredOrigin || '*'
 
     if (origin === '*') {
-      // The `*` wildcard cannot be combined with credentials. When credentials
-      // are enabled, reflect the specific request origin instead (which is the
-      // only spec-compliant way to support credentialed cross-origin requests).
-      if (credentials) {
-        if (requestOrigin) {
-          return { value: requestOrigin, vary: true }
-        }
-        // No request origin to reflect — omit the header rather than send `*`.
+      // The `*` wildcard cannot be combined with credentials, and reflecting
+      // the request's Origin in its place - what this used to do - grants
+      // credentialed access to every site on the internet, which is exactly
+      // what the rule exists to prevent. A wildcard with credentials allows
+      // no origin: list the ones that may send credentials.
+      if (credentials)
         return { value: null, vary: true }
-      }
       return { value: '*', vary: false }
     }
 
@@ -58,7 +55,12 @@ export default class Cors {
     return { value: origin, vary: false }
   }
 
-  private getCorsHeaders(req: EnhancedRequest): Record<string, string> {
+  /** The preflight answer the `server.cors` policy gives `req`. */
+  preflight(req: Request): Response {
+    return new Response(null, { status: 204, headers: this.getCorsHeaders(req) })
+  }
+
+  private getCorsHeaders(req: Request): Record<string, string> {
     const corsConfig = config.server?.cors
     const requestOrigin = req.headers.get('origin')
 
@@ -101,6 +103,7 @@ export default class Cors {
       return new Response(null, { status: 204, headers: corsHeaders })
     }
 
+
     // Helper to add CORS headers to any response
     const addCorsHeaders = (response: Response): Response => {
       const newHeaders = new Headers(response.headers)
@@ -139,4 +142,15 @@ export default class Cors {
       })
     }
   }
+}
+
+/**
+ * The default answer to a preflight for a path with no `OPTIONS` route: the
+ * `server.cors` policy's headers. The router used to answer every such
+ * preflight itself, reflecting any Origin with `Allow-Credentials: true` and
+ * a fixed list of methods and headers, whatever the policy said - so a
+ * browser would send credentialed PUTs, DELETEs and JSON POSTs from any site.
+ */
+export function corsPreflightResponse(req: Request): Response {
+  return new Cors().preflight(req)
 }

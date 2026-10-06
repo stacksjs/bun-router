@@ -1,5 +1,6 @@
 import type { HTTPMethod, MatchResult, Route } from '../types'
 import type { Router } from './router'
+import { corsPreflightResponse } from '../middleware/cors'
 import { matchPath } from '../utils'
 
 /**
@@ -137,12 +138,16 @@ export function registerRouteMatching(RouterClass: typeof Router): void {
             const match = this.matchRoute(path, otherMethod as HTTPMethod, domain)
             if (match) {
               // We found a route that matches this path with another method,
-              // so this is a valid OPTIONS request
+              // so this is a valid OPTIONS request, answered by the same
+              // preflight policy as a path with no route at all. It was a bare
+              // 204 with no CORS headers, so the browser refused the request
+              // a preflight for an unregistered path would have allowed.
+              const router = this as Router
               const result = {
                 route: {
                   ...match.route,
                   method: 'OPTIONS',
-                  handler: (_req: Request) => new Response(null, { status: 204 }),
+                  handler: (req: Request) => (router.config.preflight ?? corsPreflightResponse)(req),
                 },
                 params: match.params,
               }

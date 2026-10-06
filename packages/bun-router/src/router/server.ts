@@ -6,6 +6,7 @@ import { registerPeerSource } from '../request/client-address'
 import { runWithRequest, runWithRequestArguments, setCurrentRequest } from '../request/context'
 import type { CompressionOptions } from '../response/compression'
 import { applyResponseCompression } from '../response/compression'
+import { corsPreflightResponse } from '../middleware/cors'
 import { markEnrichedNotFoundResponse } from '../response/markers'
 import { methodNotAllowedResponse } from '../response/method-not-allowed'
 import { createHandlerInvoker } from './handler-resolver'
@@ -589,25 +590,13 @@ export function registerServerHandling(RouterClass: typeof Router): void {
           // Find a matching route
           const match = this.matchRoute(pathname, req.method as HTTPMethod, hostname, true)
 
-          // CORS preflight: when no explicit OPTIONS route is registered,
-          // answer with a generic preflight response. A request with an
-          // Origin header gets that origin reflected (plus Vary: Origin)
-          // so credentials stay usable — `Access-Control-Allow-Credentials`
-          // combined with a wildcard origin is rejected by browsers.
-          if (req.method === 'OPTIONS' && !match) {
-            const origin = req.headers.get('origin')
-            const preflightHeaders: Record<string, string> = {
-              'Access-Control-Allow-Origin': origin || '*',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-              'Access-Control-Max-Age': '86400',
-            }
-            if (origin) {
-              preflightHeaders['Access-Control-Allow-Credentials'] = 'true'
-              preflightHeaders.Vary = 'Origin'
-            }
-            return new Response(null, { status: 204, headers: preflightHeaders })
-          }
+          // CORS preflight for a path with no OPTIONS route: answered by the
+          // configured policy (`config.preflight`, else `server.cors`). This
+          // used to reflect any Origin with `Allow-Credentials: true` and a
+          // fixed list of methods and headers, whatever the policy said, so a
+          // browser would send credentialed requests from any site.
+          if (req.method === 'OPTIONS' && !match)
+            return await (this.config.preflight ?? corsPreflightResponse)(req)
 
           if (match) {
             const response = this._dispatchMatchedRoute(match.route, req, match.params)

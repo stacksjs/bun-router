@@ -88,13 +88,16 @@ describe('native routes (serve({ nativeRoutes: true }))', () => {
     expect((await fetch(`${base}/orders/abc`)).status).toBe(404)
   })
 
-  it('answers the generic OPTIONS preflight for unregistered paths', async () => {
+  it('answers the OPTIONS preflight for unregistered paths with the configured policy', async () => {
     const res = await fetch(`${base}/users/42`, {
       method: 'OPTIONS',
       headers: { Origin: 'https://app.example' },
     })
     expect(res.status).toBe(204)
-    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+    // The default policy is a credential-free wildcard. The preflight used to
+    // reflect any origin with Allow-Credentials: true, whatever the policy.
+    expect(res.headers.get('access-control-allow-origin')).toBe('*')
+    expect(res.headers.get('access-control-allow-credentials')).toBeNull()
   })
 })
 

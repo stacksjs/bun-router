@@ -44,17 +44,16 @@ describe('CORS Middleware', () => {
     expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
   })
 
-  it('never emits "*" + credentials when origin is "*" and credentials enabled', async () => {
+  it('allows no origin when origin is "*" and credentials are enabled', async () => {
     ;(config.server as any).cors = { enabled: true, origin: '*', credentials: true }
     const cors = new Cors()
 
-    const res = await cors.handle(createMockRequest({ headers: { origin: 'https://app.example' } }), mockNext)
+    const res = await cors.handle(createMockRequest({ headers: { origin: 'https://evil.example' } }), mockNext)
 
-    // With credentials enabled and wildcard configured, it must reflect the
-    // request origin (never literal "*") and may set credentials.
-    expect(res.headers.get('Access-Control-Allow-Origin')).not.toBe('*')
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example')
-    expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+    // Reflecting the request origin here would hand every site credentialed
+    // access, which is what the wildcard-with-credentials rule forbids.
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
     expect(res.headers.get('Vary')).toBe('Origin')
   })
 
@@ -102,10 +101,10 @@ describe('CORS Middleware', () => {
     ;(config.server as any).cors = { enabled: true, origin: '*', credentials: true }
     const cors = new Cors()
 
-    const res = await cors.handle(createMockRequest({ method: 'OPTIONS', headers: { origin: 'https://app.example' } }), mockNext)
+    const res = await cors.handle(createMockRequest({ method: 'OPTIONS', headers: { origin: 'https://evil.example' } }), mockNext)
     expect(res.status).toBe(204)
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example')
-    expect(res.headers.get('Access-Control-Allow-Origin')).not.toBe('*')
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+    expect(res.headers.get('Access-Control-Allow-Credentials')).toBeNull()
   })
 
   it('default (no config) is permissive but credential-free', async () => {

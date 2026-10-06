@@ -1,5 +1,5 @@
 import type { EnhancedRequest, NextFunction } from '../src/types'
-import { beforeEach, describe, expect, it, jest } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, jest } from 'bun:test'
 import { config } from '../src/config'
 import { Cors, JsonBody, RequestId, Session } from '../src/middleware'
 import { Router } from '../src/router'
@@ -29,6 +29,18 @@ describe('Middleware', () => {
   })
 
   describe('CORS Middleware', () => {
+    // The CORS policy is process-wide config; a test that sets one restores
+    // it, or every later preflight in the run answers with this one.
+    let originalCors: unknown
+    beforeEach(() => {
+      originalCors = (config.server as any)?.cors
+    })
+    afterEach(() => {
+      if (config.server) {
+        ;(config.server as any).cors = originalCors
+      }
+    })
+
     it('should add CORS headers to response', async () => {
       // Configure CORS settings
       if (!config.server) {
@@ -90,6 +102,15 @@ describe('Middleware', () => {
           },
         },
       } as any
+      // Its own policy: it used to pass only because the test above left this
+      // one behind in the shared config.
+      ;(config.server as any).cors = {
+        enabled: true,
+        origin: 'https://example.com',
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+      }
       const corsMiddleware = new Cors()
 
       const req = new Request('https://api.example.com/test', {

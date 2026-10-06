@@ -21,6 +21,7 @@ import type {
 import { registerPeerSource } from '../request/client-address'
 import { createCookieAccessor } from '../request/cookie-accessor'
 import { getParsedQuery } from '../request/macros'
+import { corsPreflightResponse } from '../middleware/cors'
 import { markEnrichedNotFoundResponse } from '../response/markers'
 import { methodNotAllowedResponse } from '../response/method-not-allowed'
 import { createRateLimitMiddleware, parseThrottleString } from '../routing/route-throttling'
@@ -632,16 +633,8 @@ export class Router {
         const hostname = url.hostname || req.headers.get('host')?.split(':')[0] || 'localhost'
         const optionsMatch = this.matchRoute(url.pathname, 'OPTIONS', hostname)
         if (!optionsMatch) {
-          // No explicit OPTIONS route - return generic CORS preflight response
-          return new Response(null, {
-            status: 204,
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-              'Access-Control-Max-Age': '86400',
-            },
-          })
+          // No explicit OPTIONS route: the configured policy answers.
+          return await (this.config.preflight ?? corsPreflightResponse)(req)
         }
         // Let the registered OPTIONS route handle it (fall through to normal route matching)
       }
