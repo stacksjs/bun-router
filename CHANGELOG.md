@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.23...v0.1.24)
+
+## 🐛 Bug Fixes
+
+- **auth**: read the Bearer scheme case-insensitively, through one parser ([eccedd8](https://github.com/stacksjs/bun-router/commit/eccedd8)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.24 ([103ceca](https://github.com/stacksjs/bun-router/commit/103ceca)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.22...v0.1.23)
 
 ## 🐛 Bug Fixes
