@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.22...v0.1.23)
+
+## 🐛 Bug Fixes
+
+- **cors**: answer preflights with the configured policy, and never pair a wildcard with credentials ([73a5f6b](https://github.com/stacksjs/bun-router/commit/73a5f6b)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.1.23 ([46b19e5](https://github.com/stacksjs/bun-router/commit/46b19e5)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/bun-router/compare/v0.1.21...v0.1.22)
 
 ## 🐛 Bug Fixes
