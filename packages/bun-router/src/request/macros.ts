@@ -7,6 +7,7 @@
 import type { EnhancedRequest } from '../types'
 import type { ClientAddressOptions } from './client-address'
 import { clientAddress, clientAddressChain, isTrustedProxyPeer } from './client-address'
+import { parseBearerToken } from './bearer'
 
 export interface RequestMacro {
   name: string
@@ -345,11 +346,7 @@ export const BuiltInRequestMacros = {
    * Get authorization header
    */
   bearerToken(this: EnhancedRequest): string | null {
-    const auth = this.headers.get('authorization')
-    if (auth && auth.startsWith('Bearer ')) {
-      return auth.substring(7)
-    }
-    return null
+    return parseBearerToken(this.headers.get('authorization'))
   },
 
   /**

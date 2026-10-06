@@ -1,6 +1,7 @@
 import type { EnhancedRequest, MiddlewareHandler, Route } from '../types'
 import type { Router } from './router'
 import { clientAddress } from '../request/client-address'
+import { parseBearerToken } from '../request/bearer'
 
 // Type placeholders for middleware pipeline
 export type SkipConditionFn = (_req: EnhancedRequest) => boolean
@@ -100,12 +101,10 @@ export class MiddlewareFactory {
       }
 
       // Extract JWT token
-      const authHeader = req.headers.get('Authorization')
-      if (!authHeader?.startsWith('Bearer ')) {
+      const _token = parseBearerToken(req.headers.get('Authorization'))
+      if (!_token) {
         return new Response('Unauthorized', { status: 401 })
       }
-
-      const _token = authHeader.slice(7)
 
       // In a real implementation, this would verify the JWT
       // For demo purposes, we'll simulate user extraction

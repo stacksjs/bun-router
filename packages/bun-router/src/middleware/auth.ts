@@ -1,4 +1,5 @@
 import type { EnhancedRequest, Middleware, NextFunction } from '../types'
+import { parseBearerToken } from '../request/bearer'
 
 export interface AuthOptions {
   /**
@@ -68,11 +69,7 @@ export function extractBasicAuth(authHeader: string): { username: string, passwo
  * Extracts Bearer token from Authorization header
  */
 export function extractBearerToken(authHeader: string): string | null {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null
-  }
-
-  return authHeader.split(' ')[1]
+  return parseBearerToken(authHeader)
 }
 
 /**

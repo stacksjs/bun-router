@@ -28,6 +28,7 @@ import { createRateLimitMiddleware, parseThrottleString } from '../routing/route
 import { registerNamedRoute } from '../url'
 import { extractParamNames, joinPaths, matchPath } from '../utils'
 import { buildMiddlewareChain as buildCompatibleMiddlewareChain, resolveMiddlewareChain } from './middleware-chain'
+import { parseBearerToken } from '../request/bearer'
 
 /**
  * Result of the route scan behind the 405-vs-404 decision.
@@ -1253,15 +1254,7 @@ export class Router {
       return value !== undefined && value !== null ? [value as T] : []
     }
 
-    ;(enhancedReq as any).bearerToken = (): string | null => {
-      const authHeader
-        = req.headers.get('authorization')
-        || req.headers.get('Authorization')
-        || ''
-      if (authHeader.startsWith('Bearer '))
-        return authHeader.substring(7)
-      return null
-    }
+    ;(enhancedReq as any).bearerToken = (): string | null => parseBearerToken(req.headers.get('authorization'))
 
     ;(enhancedReq as any).header = (name: string): string | null => {
       return req.headers.get(name) || req.headers.get(name.toLowerCase()) || null

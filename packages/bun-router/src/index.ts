@@ -58,6 +58,7 @@ export {
   registerPeerSource,
 } from './request/client-address'
 export type { ClientAddressOptions } from './request/client-address'
+export { parseBearerToken } from './request/bearer'
 
 // Request context (AsyncLocalStorage-backed current request; lazy — see enableRequestContext)
 export { enableRequestContext, getCurrentRequest, request, runWithRequest, runWithRequestArguments, setCurrentRequest } from './request/context'
