@@ -267,11 +267,13 @@ export class RouteTrie {
         break
 
       case 'parameter':
-        if (!node.paramChild) {
+        // One node for every route with a parameter here, whatever each
+        // calls it or constrains it to. Its name and constraint are the
+        // route's own, applied once a route is matched (`paramsFor`): the
+        // first route registered used to name and constrain the node for
+        // all of them.
+        if (!node.paramChild)
           node.paramChild = new TrieNode()
-          node.paramChild.paramName = segment.paramName!
-          node.paramChild.pattern = segment.pattern || null
-        }
         this.insertRoute(node.paramChild, compiled, segmentIndex + 1)
         break
 
@@ -294,35 +296,61 @@ export class RouteTrie {
     // Try method-specific trie first for better performance
     const methodTrie = this.methodTries.get(method)
     if (methodTrie) {
-      const result = this.matchSegments(methodTrie, segments, 0, {}, method)
+      const result = this.matchSegments(methodTrie, segments, 0, [], method)
       if (result)
         return result
     }
 
     // Fallback to main trie
-    return this.matchSegments(this.root, segments, 0, {}, method)
+    return this.matchSegments(this.root, segments, 0, [], method)
+  }
+
+  /**
+   * A matched route's params: each value the walk captured, by position,
+   * under the name the route itself gives that position, and only if it
+   * meets the route's own constraint there. Null when one does not, so the
+   * walk backs up and tries the other branches.
+   */
+  private paramsFor(compiled: CompiledRoute, captures: string[], rest?: string[]): Record<string, string> | null {
+    const params: Record<string, string> = {}
+    let capture = 0
+    for (const segment of compiled.segments) {
+      if (segment.type === 'parameter') {
+        const value = captures[capture++]
+        if (value === undefined || (segment.pattern && !segment.pattern.test(value)))
+          return null
+        if (segment.paramName)
+          params[segment.paramName] = value
+      }
+      else if (segment.type === 'wildcard' && rest) {
+        // Per segment, then joined: decoding the joined string would let an
+        // encoded `/` inside one segment become a separator between two.
+        params[segment.paramName ?? 'wildcard'] = rest.map(decodeParam).join('/')
+      }
+    }
+    return params
   }
 
   /**
    * Recursively match path segments.
    *
    * Candidates are tried in specificity order — static, then parameter,
-   * then wildcard — and the first full match wins. This both fixes the
-   * old behavior (where a wildcard sibling could shadow a static route)
-   * and avoids allocating candidate arrays and params copies per segment:
-   * `params` is mutated in place and rolled back on backtrack.
+   * then wildcard — and the first full match wins. A parameter segment's
+   * decoded value is pushed onto `captures` and popped on backtrack; the
+   * names and constraints come from the route that matches (`paramsFor`).
    */
   private matchSegments(
     node: TrieNode,
     segments: string[],
     segmentIndex: number,
-    params: Record<string, string>,
+    captures: string[],
     method: HTTPMethod,
   ): RouteMatch | null {
     // If we've matched all segments, check for route
     if (segmentIndex >= segments.length) {
       const compiled = node.getRoute(method)
-      if (compiled) {
+      const params = compiled ? this.paramsFor(compiled, captures) : null
+      if (compiled && params) {
         return {
           route: compiled.route,
           params,
@@ -337,41 +365,29 @@ export class RouteTrie {
     // Try static match first (highest priority)
     const staticChild = node.children.get(segment)
     if (staticChild) {
-      const match = this.matchSegments(staticChild, segments, segmentIndex + 1, params, method)
+      const match = this.matchSegments(staticChild, segments, segmentIndex + 1, captures, method)
       if (match)
         return match
     }
 
-    // Try parameter match
-    const paramNode = node.paramChild
-    // Decoded BEFORE the constraint runs, so `{id}` constrained to `\d+` sees
-    // the `7` the client meant rather than the `%37` it sent. Testing the raw
-    // segment and storing the decoded one would be two different values.
-    const decodedSegment = paramNode?.paramName ? decodeParam(segment) : segment
-    if (paramNode && paramNode.paramName
-      && (!paramNode.pattern || paramNode.pattern.test(decodedSegment))) {
-      const previous = params[paramNode.paramName]
-      params[paramNode.paramName] = decodedSegment
-      const match = this.matchSegments(paramNode, segments, segmentIndex + 1, params, method)
+    // Try parameter match. Decoded BEFORE any constraint runs, so `{id}`
+    // constrained to `\d+` sees the `7` the client meant rather than the
+    // `%37` it sent. Testing the raw segment and storing the decoded one
+    // would be two different values.
+    if (node.paramChild) {
+      captures.push(decodeParam(segment))
+      const match = this.matchSegments(node.paramChild, segments, segmentIndex + 1, captures, method)
       if (match)
         return match
-      // Backtrack: restore params before trying lower-priority branches
-      if (previous === undefined)
-        delete params[paramNode.paramName]
-      else
-        params[paramNode.paramName] = previous
+      // Backtrack before trying lower-priority branches
+      captures.pop()
     }
 
     // Try wildcard match (lowest priority) — consumes all remaining segments
     if (node.wildcardChild) {
       const compiled = node.wildcardChild.getRoute(method)
-      if (compiled) {
-        // Per segment, then joined: decoding the joined string would let an
-        // encoded `/` inside one segment become a separator between two.
-        params[node.wildcardChild.paramName ?? 'wildcard'] = segments
-          .slice(segmentIndex)
-          .map(decodeParam)
-          .join('/')
+      const params = compiled ? this.paramsFor(compiled, captures, segments.slice(segmentIndex)) : null
+      if (compiled && params) {
         return {
           route: compiled.route,
           params,
